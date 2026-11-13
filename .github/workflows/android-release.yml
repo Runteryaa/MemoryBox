@@ -1,0 +1,111 @@
+name: Android Release
+
+# Builds a signed, single-ABI (arm64-v8a) release APK.
+# arm64-v8a only is the fastest meaningful Android build: it skips x86/x86_64/armeabi
+# native compilation entirely, which is the bulk of a React Native cold build.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Optional tag to publish (e.g. v1.0.1). Leave empty to only build an artifact.'
+        required: false
+
+permissions:
+  contents: write
+
+# One build at a time per ref; a newer push cancels the stale run.
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: '1'
+  EXPO_NO_TELEMETRY: '1'
+  EXPO_USE_METRO_WORKSPACE_ROOT: '1'
+
+jobs:
+  build:
+    name: Build arm64-v8a APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Caches ~/.gradle (wrapper, dependencies, build cache) between runs.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate native project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Ensure required Android SDK packages
+        run: |
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          if [ ! -d "$SDK/platforms/android-36" ]; then
+            yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+          fi
+
+      - name: Configure release signing
+        run: node scripts/ci/configure-signing.js
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Build release APK (arm64-v8a)
+        working-directory: android
+        run: |
+          ./gradlew assembleRelease \
+            -PreactNativeArchitectures=arm64-v8a \
+            --no-daemon --build-cache --parallel \
+            -x lintVitalRelease \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
+
+      - name: Rename APK
+        run: |
+          VERSION=$(node -p "require('./app.json').expo.version")
+          mkdir -p out
+          cp android/app/build/outputs/apk/release/app-release.apk "out/memory-box-${VERSION}-arm64-v8a.apk"
+          ls -lh out
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-box-arm64-v8a
+          path: out/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          name: ${{ inputs.release_tag || github.ref_name }}
+          files: out/*.apk
+          generate_release_notes: true
+          fail_on_unmatched_files: true

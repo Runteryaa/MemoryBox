@@ -1,25 +1,64 @@
 {
   "expo": {
-    "name": "memoryBox",
-    "slug": "memoryBox",
+    "name": "Memory Box",
+    "slug": "memory-box",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "scheme": "memorybox",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.memorybox.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Memory Box uses your location to stamp your memories with the place they happened.",
+        "NSPhotoLibraryUsageDescription": "Memory Box lets you pick photos from your library to tuck into your memory box.",
+        "NSCameraUsageDescription": "Memory Box uses the camera so you can capture a memory as it happens."
+      }
     },
     "android": {
+      "package": "com.memorybox.app",
+      "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FDFBF7",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Memory Box uses the camera so you can capture a memory as it happens.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Memory Box lets you pick photos from your library to tuck into your memory box.",
+          "cameraPermission": "Memory Box uses the camera so you can capture a memory as it happens.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Memory Box uses your location to stamp your memories with the place they happened."
+        }
+      ],
+      "expo-sqlite",
+      "expo-font",
+      "expo-image",
+      "expo-file-system"
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
