@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   FadeInDown,
@@ -39,6 +39,11 @@ export function UndoToast() {
       return;
     }
     setVisible(true);
+    // A toast that merely appears is invisible to a screen reader; say it out
+    // loud so nobody loses a memory just because they could not see it.
+    AccessibilityInfo.announceForAccessibility(
+      `${trash.shortTitle} was let go. Undo is available for a few seconds.`
+    );
     drain.value = 1;
     drain.value = withTiming(0, { duration: VISIBLE_MS, easing: Easing.linear });
     timer.current = setTimeout(() => {
@@ -67,6 +72,7 @@ export function UndoToast() {
       style={[styles.wrap, { bottom: insets.bottom + 178 }]}
     >
       <View
+        accessibilityLiveRegion="polite"
         style={[
           styles.toast,
           {
