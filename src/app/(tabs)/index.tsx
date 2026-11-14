@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Accelerometer } from 'expo-sensors';
 import { Camera, Moon, Sun } from 'lucide-react-native';
 import Animated, {
@@ -76,6 +76,9 @@ export default function HomeScreen() {
   }, []);
 
   const reminisce = useCallback(() => {
+    // A memory sheet is already open; picking another one would swap the page
+    // underneath it, so the box stays put until the sheet is closed.
+    if (inspectOpen) return;
     if (memories.length === 0) {
       haptics.soft();
       setShakeKey((key) => key + 1);
@@ -94,34 +97,44 @@ export default function HomeScreen() {
       setLidOpen(false);
       if (memory) openMemory(memory);
     }, 720);
-  }, [memories, openMemory]);
+  }, [inspectOpen, memories, openMemory]);
 
+  // The sensor callback outlives any single render, so it always calls the
+  // freshest version of the rummage action.
+  const reminisceRef = useRef(reminisce);
   useEffect(() => {
-    let subscription: { remove: () => void } | null = null;
+    reminisceRef.current = reminisce;
+  }, [reminisce]);
 
-    void Accelerometer.isAvailableAsync()
-      .then((supported) => {
-        if (!supported) return;
-        Accelerometer.setUpdateInterval(240);
-        let lastShake = 0;
-        subscription = Accelerometer.addListener(({ x, y, z }) => {
-          const force = Math.sqrt(x * x + y * y + z * z);
-          const now = Date.now();
-          if (force > 2.1 && now - lastShake > 1500) {
-            lastShake = now;
-            // Shaking while a memory is open would swap the page underneath the
-            // sheet, so the box only answers when it is the thing on screen.
-            if (inspectOpen) return;
-            reminisce();
-          }
-        });
-      })
-      .catch(() => undefined);
+  // The shake only makes sense while the box is the screen you are looking at,
+  // so the sensor goes quiet the moment another tab takes over.
+  useFocusEffect(
+    useCallback(() => {
+      let subscription: { remove: () => void } | null = null;
+      let cancelled = false;
 
-    return () => {
-      if (subscription) subscription.remove();
-    };
-  }, [inspectOpen, reminisce]);
+      void Accelerometer.isAvailableAsync()
+        .then((supported) => {
+          if (cancelled || !supported) return;
+          Accelerometer.setUpdateInterval(240);
+          let lastShake = 0;
+          subscription = Accelerometer.addListener(({ x, y, z }) => {
+            const force = Math.sqrt(x * x + y * y + z * z);
+            const now = Date.now();
+            if (force > 2.1 && now - lastShake > 1500) {
+              lastShake = now;
+              reminisceRef.current();
+            }
+          });
+        })
+        .catch(() => undefined);
+
+      return () => {
+        cancelled = true;
+        subscription?.remove();
+      };
+    }, [])
+  );
 
   useEffect(() => {
     return () => {
