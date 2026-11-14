@@ -15,6 +15,7 @@ import Animated, {
   Easing,
   FadeInDown,
   interpolate,
+  interpolateColor,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -61,6 +62,25 @@ export default function GalleryScreen() {
     [city, memories, mood, query]
   );
 
+  // The search bar warms up under the finger instead of just changing colour.
+  const focus = useSharedValue(searchFocused ? 1 : 0);
+  useEffect(() => {
+    focus.value = withTiming(searchFocused ? 1 : 0, { duration: 200 });
+  }, [focus, searchFocused]);
+
+  const searchBarStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(
+      focus.value,
+      [0, 1],
+      [theme.colors.border, theme.colors.rose]
+    ),
+    transform: [{ scale: 1 + focus.value * 0.012 }],
+  }));
+
+  const searchGlowStyle = useAnimatedStyle(() => ({
+    opacity: focus.value * 0.5,
+  }));
+
   const topMemory = filtered.length > 0 ? filtered[pileIndex % filtered.length] ?? null : null;
 
   const openMemory = useCallback((memory: Memory) => {
@@ -105,15 +125,11 @@ export default function GalleryScreen() {
         </View>
       </View>
 
-      <View
-        style={[
-          styles.searchBar,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: searchFocused ? theme.colors.rose : theme.colors.border,
-          },
-        ]}
-      >
+      <Animated.View style={[styles.searchBar, { backgroundColor: theme.colors.surface }, searchBarStyle]}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.searchGlow, { backgroundColor: theme.colors.roseSoft }, searchGlowStyle]}
+        />
         <Search
           color={searchFocused ? theme.colors.rose : theme.colors.faint}
           size={17}
@@ -141,7 +157,7 @@ export default function GalleryScreen() {
             <X color={theme.colors.muted} size={13} strokeWidth={2.6} />
           </PressableScale>
         ) : null}
-      </View>
+      </Animated.View>
 
       <View>
         <ScrollView
@@ -745,8 +761,17 @@ const styles = StyleSheet.create({
     gap: 8,
     marginHorizontal: 18,
     marginTop: 12,
+    overflow: 'hidden',
     paddingHorizontal: 14,
     paddingVertical: 10,
+  },
+  searchGlow: {
+    borderRadius: radii.pill,
+    bottom: -1,
+    left: -1,
+    position: 'absolute',
+    right: -1,
+    top: -1,
   },
   searchInput: {
     flex: 1,
