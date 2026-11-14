@@ -75,6 +75,12 @@ export function FlippablePolaroidCard({
   const develop = useSharedValue(developing ? 0 : 1);
   const heart = useSharedValue(1);
   const storyInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  // A new memory means a new photo; clear any previous failure.
+  useEffect(() => {
+    setImageFailed(false);
+  }, [memory.imageUri]);
 
   const heartStyle = useAnimatedStyle(() => ({
     transform: [{ scale: heart.value }],
@@ -221,10 +227,22 @@ export function FlippablePolaroidCard({
           >
             <Image
               contentFit="cover"
+              onError={() => setImageFailed(true)}
               source={{ uri: memory.imageUri }}
               style={StyleSheet.absoluteFill}
               transition={220}
             />
+            {imageFailed ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.missingPhoto]}
+              >
+                <RotateCcw color={theme.colors.faint} size={22 * scale} strokeWidth={2} />
+                <Text style={[styles.missingText, { color: theme.colors.faint, fontSize: 9 * scale }]}>
+                  the photo drifted away
+                </Text>
+              </Animated.View>
+            ) : null}
             <Animated.View style={[StyleSheet.absoluteFill, blurOverlayStyle]}>
               <Image
                 blurRadius={26}
@@ -648,6 +666,14 @@ const styles = StyleSheet.create({
   photoFrame: {
     borderRadius: 2,
     overflow: 'hidden',
+  },
+  missingPhoto: {
+    alignItems: 'center',
+    gap: 5,
+    justifyContent: 'center',
+  },
+  missingText: {
+    fontFamily: fonts.hand,
   },
   tape: {
     position: 'absolute',
