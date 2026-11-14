@@ -15,6 +15,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   FadeIn,
+  ReduceMotion,
+  ReducedMotionConfig,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -80,6 +82,9 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
+      {/* Honour the system "reduce motion" preference: the ambient loops calm
+          down instead of fighting a setting the person explicitly chose. */}
+      <ReducedMotionConfig mode={ReduceMotion.System} />
       <SafeAreaProvider>
         <StatusBar style={theme.isDark ? 'light' : 'dark'} />
         <Stack
