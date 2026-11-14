@@ -11,12 +11,15 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, LocateFixed, MapPin, Sparkles, X } from 'lucide-react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   FadeIn,
   FadeOut,
   SlideInDown,
   SlideOutDown,
+  interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -149,6 +152,34 @@ export function LocationStampPicker({
     transform: [{ scale: stampScale.value }, { rotate: `${stampRotate.value}deg` }],
   }));
 
+  // The sheet follows the finger when dragged by its grabber, then springs back
+  // or leaves, exactly like the memory sheet.
+  const pull = useSharedValue(0);
+  const sheetDrag = Gesture.Pan()
+    .activeOffsetY([-10, 10])
+    .onUpdate((event) => {
+      pull.value = Math.max(0, event.translationY * 0.9);
+    })
+    .onEnd((event) => {
+      if (pull.value > 110 || event.velocityY > 950) {
+        pull.value = withTiming(480, { duration: 190, easing: Easing.in(Easing.quad) }, (finished) => {
+          if (!finished) return;
+          runOnJS(onClose)();
+          pull.value = 0;
+        });
+        return;
+      }
+      pull.value = withSpring(0, { damping: 16, stiffness: 210 });
+    });
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: pull.value }],
+  }));
+
+  const backdropDimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(pull.value, [0, 300], [1, 0.4], 'clamp'),
+  }));
+
   const detectIconStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${detectSpin.value * 360}deg` }],
   }));
@@ -198,23 +229,27 @@ export function LocationStampPicker({
     >
       <Pressable accessibilityLabel="Close location picker" onPress={onClose} style={StyleSheet.absoluteFill} />
 
+      <Animated.View style={[StyleSheet.absoluteFill, backdropDimStyle]} pointerEvents="none" />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         pointerEvents="box-none"
         style={styles.keyboardWrap}
       >
-        <Animated.View
-          entering={SlideInDown.springify().damping(18).stiffness(160)}
-          exiting={SlideOutDown.duration(200)}
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              shadowColor: theme.colors.shadow,
-            },
-          ]}
-        >
+        <GestureDetector gesture={sheetDrag}>
+          <Animated.View
+            entering={SlideInDown.springify().damping(18).stiffness(160)}
+            exiting={SlideOutDown.duration(200)}
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+              sheetStyle,
+            ]}
+          >
             <View style={[styles.grabber, { backgroundColor: theme.colors.borderStrong }]} />
 
             <View style={styles.header}>
@@ -359,6 +394,7 @@ export function LocationStampPicker({
               </PressableScale>
             </View>
           </Animated.View>
+        </GestureDetector>
         </KeyboardAvoidingView>
       </Animated.View>
   );
