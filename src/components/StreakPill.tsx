@@ -85,7 +85,7 @@ export function StreakPill({
   // Today's empty bubble keeps a slow, quiet heartbeat until it is filled.
   const breath = useSharedValue(0);
   useEffect(() => {
-    if (!pendingToday) {
+    if (!pendingToday || reducedMotion) {
       breath.value = withTiming(0, { duration: 220 });
       return;
     }
@@ -94,7 +94,7 @@ export function StreakPill({
       -1,
       true
     );
-  }, [breath, pendingToday]);
+  }, [breath, pendingToday, reducedMotion]);
 
   const todayStyle = useAnimatedStyle(() => ({
     opacity: 0.7 + breath.value * 0.3,
@@ -142,7 +142,10 @@ export function StreakPill({
 
       <View style={styles.copy}>
         <View style={styles.countRow}>
-          <Text style={[styles.count, { color: theme.colors.ink }]}>
+          <Text
+            maxFontSizeMultiplier={1.2}
+            style={[styles.count, { color: theme.colors.ink }]}
+          >
             {currentStreak}
             <Text style={[styles.countLabel, { color: theme.colors.inkSoft }]}>
               {' '}
