@@ -16,6 +16,9 @@ export const MOOD_MAP = Object.fromEntries(
 export const MAX_TITLE_LENGTH = 60;
 export const MAX_DESCRIPTION_LENGTH = 1500;
 
+/** Shown when reverse geocoding knows the pin but not its name. */
+export const FALLBACK_PLACE_NAME = 'A Place Worth Remembering';
+
 export const MILESTONE_DEFINITIONS = [
   {
     id: 'first-keepsake',

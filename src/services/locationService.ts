@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 
+import { FALLBACK_PLACE_NAME } from '@/constants';
 import type { MemoryLocation } from '@/types';
 
 export type LocationFailureCode = 'denied' | 'services-disabled' | 'timeout' | 'unknown';
@@ -14,7 +15,7 @@ export class LocationFailure extends Error {
   }
 }
 
-const PLACE_FALLBACK = 'A Place Worth Remembering';
+const PLACE_FALLBACK = FALLBACK_PLACE_NAME;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {

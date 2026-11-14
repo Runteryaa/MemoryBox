@@ -1,4 +1,4 @@
-import { MOODS } from '@/constants';
+import { FALLBACK_PLACE_NAME, MOODS } from '@/constants';
 import { toDateKey } from '@/lib/date';
 import type { MilestoneId } from '@/constants';
 import type { Memory } from '@/types';
@@ -22,7 +22,9 @@ export function getStats(memories: Memory[], now = new Date()): MemoryStats {
 
   for (const memory of memories) {
     // A city on its own still counts as a place worth remembering.
-    const place = memory.location?.placeName?.trim() || memory.location?.city?.trim();
+    const namedPlace = memory.location?.placeName?.trim();
+    const place =
+      namedPlace && namedPlace !== FALLBACK_PLACE_NAME ? namedPlace : memory.location?.city?.trim();
     if (place) {
       places.add(place.toLowerCase());
     } else if (memory.location?.latitude != null && memory.location?.longitude != null) {
@@ -55,7 +57,11 @@ export function getDistinctCities(memories: Memory[]): string[] {
   const cities = new Set<string>();
   for (const memory of memories) {
     const city = memory.location?.city ?? memory.location?.placeName?.split(',')[0];
-    if (city) cities.add(city.trim());
+    if (!city) continue;
+    const trimmed = city.trim();
+    // A failed lookup leaves a placeholder, not a city worth filtering by.
+    if (!trimmed || trimmed === FALLBACK_PLACE_NAME) continue;
+    cities.add(trimmed);
   }
   return [...cities].sort((a, b) => a.localeCompare(b));
 }
