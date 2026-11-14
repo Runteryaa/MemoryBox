@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -126,6 +127,8 @@ export function MemoryInspectionModal({
     setTitle(nextTitle);
     haptics.success();
     setEditing(false);
+    // The story field is gone once edits are saved; the keyboard should go too.
+    Keyboard.dismiss();
   }, [description, memory, mood, title, updateMemory]);
 
   const dismiss = useCallback(() => {
