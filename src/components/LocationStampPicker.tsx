@@ -21,6 +21,7 @@ import Animated, {
   interpolate,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -29,6 +30,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { PressableScale } from '@/components/ui/PressableScale';
+import { FALLBACK_PLACE_NAME } from '@/constants';
 import { formatCoordinatesShort, detectCurrentPlace, locationErrorMessage } from '@/services/locationService';
 import { haptics } from '@/lib/haptics';
 import { formatStampDate } from '@/lib/date';
@@ -54,6 +56,7 @@ export function LocationStampPicker({
   embedded = false,
 }: LocationStampPickerProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const [placeName, setPlaceName] = useState(value?.placeName ?? '');
   const [city, setCity] = useState(value?.city ?? '');
   const [country, setCountry] = useState(value?.country ?? '');
@@ -79,7 +82,7 @@ export function LocationStampPicker({
 
   // The little compass keeps turning while the GPS fix is in flight.
   useEffect(() => {
-    if (detecting) {
+    if (detecting && !reducedMotion) {
       detectSpin.value = 0;
       detectSpin.value = withRepeat(
         withTiming(1, { duration: 1300, easing: Easing.linear }),
@@ -89,7 +92,7 @@ export function LocationStampPicker({
       return;
     }
     detectSpin.value = withTiming(0, { duration: 260 });
-  }, [detectSpin, detecting]);
+  }, [detectSpin, detecting, reducedMotion]);
 
   const reset = useCallback(() => {
     setPlaceName(value?.placeName ?? '');
@@ -119,14 +122,16 @@ export function LocationStampPicker({
       setCountry(location.country ?? '');
       setCoords({ latitude: location.latitude, longitude: location.longitude });
       setStamped(true);
-      stampScale.value = withSequence(
-        withTiming(1.16, { duration: 130 }),
-        withSpring(1, { damping: 9, stiffness: 220 })
-      );
-      stampRotate.value = withSequence(
-        withTiming(-4, { duration: 120 }),
-        withSpring(-1.5, { damping: 8 })
-      );
+      if (!reducedMotion) {
+        stampScale.value = withSequence(
+          withTiming(1.16, { duration: 130 }),
+          withSpring(1, { damping: 9, stiffness: 220 })
+        );
+        stampRotate.value = withSequence(
+          withTiming(-4, { duration: 120 }),
+          withSpring(-1.5, { damping: 8 })
+        );
+      }
       haptics.success();
     } catch (caught) {
       setError(locationErrorMessage(caught));
@@ -134,7 +139,7 @@ export function LocationStampPicker({
     } finally {
       setDetecting(false);
     }
-  }, [detecting, stampRotate, stampScale]);
+  }, [detecting, reducedMotion, stampRotate, stampScale]);
 
   useEffect(() => {
     if (visible && autoDetect && !autoTried.current) {
@@ -210,7 +215,7 @@ export function LocationStampPicker({
     onSave({
       latitude: coords.latitude,
       longitude: coords.longitude,
-      placeName: trimmedPlace || city.trim() || 'A Place Worth Remembering',
+      placeName: trimmedPlace || city.trim() || FALLBACK_PLACE_NAME,
       city: city.trim() || null,
       country: country.trim() || null,
     });
