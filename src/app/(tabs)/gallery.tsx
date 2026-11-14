@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -90,9 +90,12 @@ export default function GalleryScreen() {
   );
 
   const cities = useMemo(() => getDistinctCities(memories), [memories]);
+  // Typing must never stutter, so the list re-filters against a deferred copy
+  // of the query while the field itself updates on every keystroke.
+  const deferredQuery = useDeferredValue(query);
   const filtered = useMemo(
-    () => filterMemories(memories, { query, mood, city, sort, onlyLoved }),
-    [city, memories, mood, onlyLoved, query, sort]
+    () => filterMemories(memories, { query: deferredQuery, mood, city, sort, onlyLoved }),
+    [city, deferredQuery, memories, mood, onlyLoved, sort]
   );
 
   // The search bar warms up under the finger instead of just changing colour.
@@ -323,7 +326,7 @@ export default function GalleryScreen() {
           memories={filtered}
           onOpen={openMemory}
           onToggleFavorite={toggleFavorite}
-          resetKey={`${query}|${mood}|${city}|${sort}|${onlyLoved}`}
+          resetKey={`${deferredQuery}|${mood}|${city}|${sort}|${onlyLoved}`}
           width={width}
         />
       )}
