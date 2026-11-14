@@ -579,7 +579,7 @@ export default function CaptureScreen() {
 
             <View style={styles.cameraBottomSide}>
               <PressableScale
-                accessibilityLabel="Use the camera roll instead"
+                accessibilityLabel="Cancel and close the camera"
                 haptic="soft"
                 onPress={close}
                 style={styles.rollButton}
