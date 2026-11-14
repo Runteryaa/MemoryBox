@@ -207,7 +207,7 @@ export function MemoryInspectionModal({
                   borderColor="transparent"
                   color={theme.colors.white}
                   icon={X}
-                  onPress={onClose}
+                  onPress={dismiss}
                 />
                 <View style={styles.topActionsGroup}>
                   <Animated.View style={heartStyle}>
