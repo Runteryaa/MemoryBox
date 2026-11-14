@@ -813,6 +813,7 @@ function GridCard({
           <PressableScale
             accessibilityLabel={memory.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
             haptic="tap"
+            selected={memory.isFavorite}
             onPress={pop}
             style={[
               styles.gridHeart,
