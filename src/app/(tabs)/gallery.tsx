@@ -177,6 +177,7 @@ export default function GalleryScreen() {
           strokeWidth={2.3}
         />
         <TextInput
+          accessibilityHint="Finds memories by title, story, place, mood or date"
           accessibilityLabel="Search your memories"
           autoCorrect={false}
           maxFontSizeMultiplier={1.2}
