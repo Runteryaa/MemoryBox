@@ -345,6 +345,11 @@ export default function StreakScreen() {
                         </Text>
                       )}
                       {isLogged ? <View style={[styles.dayDot, { backgroundColor: theme.colors.amber }]} /> : null}
+                      {(dayMemories?.length ?? 0) > 1 ? (
+                        <View style={[styles.dayCount, { backgroundColor: theme.colors.rose }]}>
+                          <Text style={styles.dayCountText}>{dayMemories?.length}</Text>
+                        </View>
+                      ) : null}
                       {isToday ? <TodayRing color={theme.colors.rose} size={cellSize} /> : null}
                     </PressableScale>
                   );
@@ -830,6 +835,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 2,
     width: 3,
+  },
+  dayCount: {
+    alignItems: 'center',
+    borderRadius: 6,
+    height: 11,
+    justifyContent: 'center',
+    left: 2,
+    minWidth: 11,
+    paddingHorizontal: 3,
+    position: 'absolute',
+    top: 2,
+  },
+  dayCountText: {
+    color: '#FFFFFF',
+    fontFamily: fonts.sansBold,
+    fontSize: 7,
   },
   todayRing: {
     borderRadius: 9,
