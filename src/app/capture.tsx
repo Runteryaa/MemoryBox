@@ -38,6 +38,7 @@ import Animated, {
   interpolate,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -77,6 +78,7 @@ interface CapturedPhoto {
 
 export default function CaptureScreen() {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const addMemory = useMemoryStore((state) => state.addMemory);
@@ -410,7 +412,10 @@ export default function CaptureScreen() {
 
   // The shutter ring breathes gently, inviting the tap.
   useEffect(() => {
-    if (step !== 'camera') return;
+    if (step !== 'camera' || reducedMotion) {
+      shutterBreath.value = 0;
+      return;
+    }
     shutterBreath.value = withRepeat(
       withTiming(1, { duration: 1900, easing: Easing.out(Easing.quad) }),
       -1,
@@ -419,7 +424,7 @@ export default function CaptureScreen() {
     return () => {
       cancelAnimation(shutterBreath);
     };
-  }, [shutterBreath, step]);
+  }, [reducedMotion, shutterBreath, step]);
 
   const shutterRingStyle = useAnimatedStyle(() => ({
     opacity: interpolate(shutterBreath.value, [0, 1], [0.55, 0]),

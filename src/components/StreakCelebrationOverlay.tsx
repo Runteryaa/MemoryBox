@@ -8,6 +8,7 @@ import Animated, {
   ZoomIn,
   interpolate,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -34,17 +35,21 @@ const MESSAGES = [
 
 export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationOverlayProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const visible = streak != null && streak > 0;
   const drift = useSharedValue(0);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || reducedMotion) {
+      drift.value = 0;
+      return;
+    }
     drift.value = withRepeat(
       withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
-  }, [drift, visible]);
+  }, [drift, reducedMotion, visible]);
 
   const sparkleTopStyle = useAnimatedStyle(() => ({
     opacity: 0.55 + drift.value * 0.45,
@@ -159,10 +164,16 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
 
 /** The flame breathes and casts a warm halo, like a candle behind paper. */
 function FlameBadge({ colors }: { colors: ComponentProps<typeof LinearGradient>['colors'] }) {
+  const reducedMotion = useReducedMotion();
   const pulse = useSharedValue(0);
   const flicker = useSharedValue(0);
 
   useEffect(() => {
+    if (reducedMotion) {
+      pulse.value = 0;
+      flicker.value = 0;
+      return;
+    }
     pulse.value = withRepeat(
       withTiming(1, { duration: 1700, easing: Easing.out(Easing.quad) }),
       -1,
@@ -173,7 +184,7 @@ function FlameBadge({ colors }: { colors: ComponentProps<typeof LinearGradient>[
       -1,
       true
     );
-  }, [flicker, pulse]);
+  }, [flicker, pulse, reducedMotion]);
 
   const haloStyle = useAnimatedStyle(() => ({
     opacity: interpolate(pulse.value, [0, 1], [0.42, 0]),

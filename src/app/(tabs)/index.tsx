@@ -9,6 +9,7 @@ import Animated, {
   Easing,
   FadeInDown,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -36,6 +37,7 @@ import type { Memory } from '@/types';
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const boxWidth = Math.min(318, width - 64);
@@ -59,12 +61,16 @@ export default function HomeScreen() {
   const lidTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (reducedMotion) {
+      breathe.value = 1;
+      return;
+    }
     breathe.value = withRepeat(
       withTiming(1.07, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
-  }, [breathe]);
+  }, [breathe, reducedMotion]);
 
   const cameraStyle = useAnimatedStyle(() => ({
     transform: [{ scale: breathe.value }],

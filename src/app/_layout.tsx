@@ -19,6 +19,7 @@ import Animated, {
   ReduceMotion,
   ReducedMotionConfig,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -137,17 +138,24 @@ export default function RootLayout() {
 
 function LoadingMark() {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const breathe = useSharedValue(0.92);
   const shimmer = useSharedValue(0);
 
   useEffect(() => {
+    // The opening beat should feel alive, but never insist on it.
+    if (reducedMotion) {
+      breathe.value = 1;
+      shimmer.value = 0;
+      return;
+    }
     breathe.value = withRepeat(withTiming(1.06, { duration: 1500 }), -1, true);
     shimmer.value = withRepeat(
       withTiming(1, { duration: 2100, easing: Easing.inOut(Easing.quad) }),
       -1,
       false
     );
-  }, [breathe, shimmer]);
+  }, [breathe, reducedMotion, shimmer]);
 
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: breathe.value }],

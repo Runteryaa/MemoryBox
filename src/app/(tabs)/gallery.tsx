@@ -19,6 +19,7 @@ import Animated, {
   interpolateColor,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -893,10 +894,16 @@ function EmptyState({
   onReset?: () => void;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const drift = useSharedValue(0);
   const halo = useSharedValue(0);
 
   useEffect(() => {
+    if (reducedMotion) {
+      drift.value = 0;
+      halo.value = 0;
+      return;
+    }
     drift.value = withRepeat(
       withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
       -1,
@@ -908,7 +915,7 @@ function EmptyState({
       -1,
       false
     );
-  }, [drift, halo]);
+  }, [drift, halo, reducedMotion]);
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [
