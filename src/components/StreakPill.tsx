@@ -36,6 +36,10 @@ export function StreakPill({
   const logged = new Set(loggedDates);
   const week = getWeekDays();
   const todayKey = toDateKey();
+  // An unlit flame still reads as a flame, just one waiting for a match.
+  const restingFlame: [string, string, string] = theme.isDark
+    ? ['#4C443D', '#3A332D', '#2A2420']
+    : ['#EFE6DB', '#D9C8B7', '#B9A692'];
 
   useEffect(() => {
     if (pendingToday) {
@@ -49,14 +53,19 @@ export function StreakPill({
     }
   }, [pendingToday, pulse]);
 
-  // Even a settled streak should look like it is burning, not like an icon.
+  // Even a settled streak should look like it is burning, not like an icon —
+  // but a box that has never been remembered stays quiet until it starts.
   useEffect(() => {
+    if (currentStreak === 0) {
+      flicker.value = withTiming(0, { duration: 320 });
+      return;
+    }
     flicker.value = withRepeat(
       withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
-  }, [flicker]);
+  }, [currentStreak, flicker]);
 
   const flameStyle = useAnimatedStyle(() => ({
     transform: [
@@ -117,9 +126,9 @@ export function StreakPill({
           pointerEvents="none"
           style={[styles.flameGlow, { backgroundColor: theme.colors.amber }, glowStyle]}
         />
-        <Animated.View style={flameStyle}>
+        <Animated.View style={[flameStyle, currentStreak === 0 && styles.flameResting]}>
           <LinearGradient
-            colors={theme.gradients.flame}
+            colors={currentStreak === 0 ? restingFlame : theme.gradients.flame}
             end={{ x: 1, y: 1 }}
             start={{ x: 0, y: 0 }}
             style={styles.flame}
@@ -237,6 +246,9 @@ const styles = StyleSheet.create({
     height: 36,
     justifyContent: 'center',
     width: 36,
+  },
+  flameResting: {
+    opacity: 0.7,
   },
   flameGlow: {
     borderRadius: 18,
