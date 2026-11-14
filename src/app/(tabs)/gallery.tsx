@@ -666,6 +666,7 @@ function GridCard({
   return (
     <Animated.View
       entering={FadeInDown.duration(300).delay(Math.min(index, 9) * 34)}
+      style={{ transform: [{ rotate: `${memory.rotationAngle * 0.35}deg` }] }}
     >
       <PressableScale
         accessibilityLabel={`Open memory ${memory.shortTitle}`}
@@ -679,7 +680,6 @@ function GridCard({
           {
             backgroundColor: theme.colors.white,
             borderColor: theme.colors.paperEdge,
-            transform: [{ rotate: `${memory.rotationAngle * 0.35}deg` }],
           },
           shadows.soft,
         ]}
