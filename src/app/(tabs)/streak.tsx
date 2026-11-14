@@ -565,6 +565,7 @@ function MilestoneBadge({
   index: number;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const [flipped, setFlipped] = useState(false);
   const flip = useSharedValue(0);
   const fill = useSharedValue(0);
@@ -579,23 +580,26 @@ function MilestoneBadge({
       return;
     }
     wasUnlocked.current = true;
+    if (reducedMotion) return;
     stamp.value = 1.55;
     stamp.value = withSequence(
       withTiming(0.94, { duration: 120, easing: Easing.out(Easing.quad) }),
       withSpring(1, { damping: 9, stiffness: 240 })
     );
-  }, [stamp, unlocked]);
+  }, [reducedMotion, stamp, unlocked]);
 
   useEffect(() => {
     flip.value = withTiming(flipped ? 1 : 0, {
-      duration: 520,
+      duration: reducedMotion ? 0 : 520,
       easing: Easing.inOut(Easing.cubic),
     });
-  }, [flip, flipped]);
+  }, [flip, flipped, reducedMotion]);
 
   useEffect(() => {
-    fill.value = withTiming(ratio, { duration: 760, easing: Easing.out(Easing.cubic) });
-  }, [fill, ratio]);
+    fill.value = reducedMotion
+      ? ratio
+      : withTiming(ratio, { duration: 760, easing: Easing.out(Easing.cubic) });
+  }, [fill, ratio, reducedMotion]);
 
   // One hinge for the whole stamp: the back face simply starts rotated 180°.
   // The press-in scale is folded into the same transform so neither wins.

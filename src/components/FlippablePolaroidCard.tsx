@@ -16,6 +16,7 @@ import Animated, {
   Easing,
   interpolate,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSequence,
   withSpring,
@@ -74,6 +75,7 @@ export function FlippablePolaroidCard({
   maxHeight,
 }: FlippablePolaroidCardProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const [flipped, setFlipped] = useState(initialFlipped);
   const flip = useSharedValue(initialFlipped ? 1 : 0);
   const develop = useSharedValue(developing ? 0 : 1);
@@ -151,22 +153,24 @@ export function FlippablePolaroidCard({
   }, [develop, developing, memory.id]);
 
   useEffect(() => {
+    // Turning a card through the air is a big, sweeping motion. A reader who
+    // asked for less simply gets the other side, without the flight.
     flip.value = withTiming(flipped ? 1 : 0, {
-      duration: 540,
+      duration: reducedMotion ? 0 : 540,
       easing: Easing.inOut(Easing.cubic),
     });
     onFlipChange?.(flipped);
     // onFlipChange is intentionally excluded to avoid re-running on identity changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flipped, flip]);
+  }, [flipped, flip, reducedMotion]);
 
   // Writing is the whole point of flipping to the back during capture, so open
   // the keyboard once the card has finished turning over.
   useEffect(() => {
     if (!autoFocusStory || !editable || !flipped) return;
-    const timer = setTimeout(() => storyInputRef.current?.focus(), 560);
+    const timer = setTimeout(() => storyInputRef.current?.focus(), reducedMotion ? 60 : 560);
     return () => clearTimeout(timer);
-  }, [autoFocusStory, editable, flipped]);
+  }, [autoFocusStory, editable, flipped, reducedMotion]);
 
   const flipStyle = useAnimatedStyle(() => ({
     transform: [
