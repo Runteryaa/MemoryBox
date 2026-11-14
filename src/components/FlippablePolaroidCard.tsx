@@ -441,7 +441,6 @@ export function FlippablePolaroidCard({
             </View>
           </View>
 
-          {/* Whole card is the flip target, so a stray tap anywhere on the paper works. */}
           <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.paperGloss]} />
         </Animated.View>
 
