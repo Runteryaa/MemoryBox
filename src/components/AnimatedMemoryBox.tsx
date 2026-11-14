@@ -100,9 +100,15 @@ export function AnimatedMemoryBox({
   const stackStyle = useAnimatedStyle(() => ({
     opacity: interpolate(open.value, [0, 0.35, 1], [0.92, 1, 1]),
     transform: [
-      { translateY: interpolate(open.value, [0, 1], [0, -16]) },
+      { translateY: interpolate(open.value, [0, 1], [0, -16]) + float.value * 2 },
       { scale: 1 + open.value * 0.04 },
     ],
+  }));
+
+  // The warm pool of light under the box swells and settles with the float.
+  const auraStyle = useAnimatedStyle(() => ({
+    opacity: 0.34 + float.value * 0.14,
+    transform: [{ scale: 0.96 + float.value * 0.07 }],
   }));
 
   // Each keepsake leans out at its own tempo, like a hand rummaging through them.
@@ -186,9 +192,9 @@ export function AnimatedMemoryBox({
           style={styles.press}
         >
           <View style={styles.shadow} />
-          <View
+          <Animated.View
             pointerEvents="none"
-            style={[styles.aura, { backgroundColor: theme.colors.roseSoft, opacity: 0.4 }]}
+            style={[styles.aura, { backgroundColor: theme.colors.roseSoft }, auraStyle]}
           />
 
           <Animated.View style={[styles.polaroidStack, stackStyle]}>
