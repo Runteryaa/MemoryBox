@@ -450,6 +450,7 @@ function PileView({
   onOpen: (memory: Memory) => void;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const translateX = useSharedValue(0);
   const rotate = useSharedValue(0);
   const pull = useSharedValue(0);
@@ -462,9 +463,13 @@ function PileView({
 
   // A fresh card rises from the middle of the deck instead of popping into place.
   useEffect(() => {
+    if (reducedMotion) {
+      enter.value = 1;
+      return;
+    }
     enter.value = 0;
     enter.value = withSpring(1, { damping: 15, stiffness: 180 });
-  }, [currentIndex, enter]);
+  }, [currentIndex, enter, reducedMotion]);
 
   const pan = Gesture.Pan()
     .activeOffsetX([-12, 12])
@@ -567,6 +572,7 @@ function PileView({
 
       <View style={styles.pileActions}>
         <PressableScale
+          accessibilityHint="Moves the pile back one keepsake"
           accessibilityLabel="Previous memory"
           disabled={memories.length < 2}
           haptic="none"
@@ -592,6 +598,7 @@ function PileView({
           </Text>
         </View>
         <PressableScale
+          accessibilityHint="Moves the pile forward one keepsake"
           accessibilityLabel="Next memory"
           disabled={memories.length < 2}
           haptic="none"
