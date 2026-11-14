@@ -537,6 +537,7 @@ function PileView({
         <PressableScale
           accessibilityLabel="Previous memory"
           disabled={memories.length < 2}
+          haptic="none"
           onPress={() => cyclePile(-1)}
           style={[
             styles.pileNav,
@@ -561,6 +562,7 @@ function PileView({
         <PressableScale
           accessibilityLabel="Next memory"
           disabled={memories.length < 2}
+          haptic="none"
           onPress={() => cyclePile(1)}
           style={[
             styles.pileNav,
