@@ -253,7 +253,7 @@ export default function GalleryScreen() {
       <View style={styles.resultRow}>
         <Text style={[styles.resultText, { color: theme.colors.muted }]}>
           {filtered.length} {filtered.length === 1 ? 'memory' : 'memories'}
-          {mood !== 'all' || city !== 'all' || query.trim() ? ' found' : ' in your box'}
+          {mood !== 'all' || city !== 'all' || onlyLoved || query.trim() ? ' found' : ' in your box'}
         </Text>
         {filtered.length > 0 && mode === 'pile' ? (
           <Text style={[styles.pileCount, { color: theme.colors.faint }]}>
