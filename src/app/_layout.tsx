@@ -10,6 +10,7 @@ import { Caveat_500Medium, Caveat_700Bold } from '@expo-google-fonts/caveat';
 import { Fraunces_400Regular, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import type { ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -24,6 +25,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppErrorFallback } from '@/components/AppErrorFallback';
 import { StreakCelebrationOverlay } from '@/components/StreakCelebrationOverlay';
 import { UndoToast } from '@/components/UndoToast';
 import { handlePendingImagePickerResult } from '@/services/pendingCapture';
@@ -33,7 +35,12 @@ import { fonts, useTheme } from '@/theme';
 
 export const unstable_settings = {
   anchor: '(tabs)',
+  screenErrorBoundary: AppErrorFallback,
 };
+
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <AppErrorFallback {...props} />;
+}
 
 export default function RootLayout() {
   const theme = useTheme();
