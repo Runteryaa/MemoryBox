@@ -196,7 +196,13 @@ export function LocationStampPicker({
 
   const handleSave = () => {
     const trimmedPlace = placeName.trim();
-    if (!trimmedPlace && coords.latitude == null) {
+    // A city or country on its own still counts as a place worth stamping.
+    const hasAnything =
+      trimmedPlace.length > 0 ||
+      city.trim().length > 0 ||
+      country.trim().length > 0 ||
+      coords.latitude != null;
+    if (!hasAnything) {
       onSave(null);
       haptics.tap();
       slamAndClose();
@@ -205,7 +211,7 @@ export function LocationStampPicker({
     onSave({
       latitude: coords.latitude,
       longitude: coords.longitude,
-      placeName: trimmedPlace || 'A Place Worth Remembering',
+      placeName: trimmedPlace || city.trim() || 'A Place Worth Remembering',
       city: city.trim() || null,
       country: country.trim() || null,
     });
@@ -216,10 +222,16 @@ export function LocationStampPicker({
   const previewLocation: MemoryLocation = {
     latitude: coords.latitude,
     longitude: coords.longitude,
-    placeName: placeName.trim() || 'Somewhere lovely',
+    placeName: placeName.trim() || city.trim() || 'Somewhere lovely',
     city: city.trim() || null,
     country: country.trim() || null,
   };
+
+  const canStamp =
+    placeName.trim().length > 0 ||
+    city.trim().length > 0 ||
+    country.trim().length > 0 ||
+    coords.latitude != null;
 
   const content = (
     <Animated.View
@@ -374,7 +386,15 @@ export function LocationStampPicker({
                 accessibilityLabel="Save this place"
                 haptic="none"
                 onPress={handleSave}
-                style={[styles.saveButton, { backgroundColor: theme.colors.rose }]}
+                style={[
+                  styles.saveButton,
+                  {
+                    backgroundColor: theme.colors.rose,
+                    // An empty postmark can still clear the place, but it shouldn't
+                    // look like the main thing to do.
+                    opacity: canStamp ? 1 : 0.55,
+                  },
+                ]}
               >
                 <Check color={contrastInk(theme.colors.rose)} size={16} strokeWidth={3} />
                 <Text style={[styles.saveText, { color: contrastInk(theme.colors.rose) }]}>Stamp it</Text>
