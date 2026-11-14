@@ -247,12 +247,15 @@ export function FlippablePolaroidCard({
               caption so the favourite heart above it still gets its own taps. */}
           <Pressable
             accessibilityLabel={
-              onPressFront ? 'Open this memory' : 'Flip this memory to read the story'
+              onPressFront
+                ? `Open memory ${memory.shortTitle}`
+                : `Flip ${memory.shortTitle} to read the story`
             }
             onPress={handleFrontPress}
             style={[StyleSheet.absoluteFill, styles.frontTapTarget]}
           />
           <View
+            pointerEvents="box-none"
             style={[
               styles.photoFrame,
               {
@@ -266,6 +269,7 @@ export function FlippablePolaroidCard({
             <Image
               contentFit="cover"
               onError={() => setImageFailed(true)}
+              pointerEvents="none"
               onLoad={(event) => {
                 const { width: photoPixelWidth, height: photoPixelHeight } = event.source;
                 if (!photoPixelWidth || !photoPixelHeight) return;
@@ -294,7 +298,7 @@ export function FlippablePolaroidCard({
                 developing — keeping it mounted forever doubles the decode cost
                 of every card in the gallery. */}
             {developing ? (
-              <Animated.View style={[StyleSheet.absoluteFill, blurOverlayStyle]}>
+              <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, blurOverlayStyle]}>
                 <Image
                   blurRadius={26}
                   contentFit="cover"
@@ -333,7 +337,7 @@ export function FlippablePolaroidCard({
               style={[StyleSheet.absoluteFill, { top: '62%' }]}
             />
 
-            <View style={[styles.tape, { backgroundColor: theme.colors.roseSoft }]} />
+            <View pointerEvents="none" style={[styles.tape, { backgroundColor: theme.colors.roseSoft }]} />
 
             {showFavorite ? (
               <Pressable
@@ -365,6 +369,7 @@ export function FlippablePolaroidCard({
             ) : null}
 
             <View
+              pointerEvents="none"
               style={[
                 styles.moodBadge,
                 { backgroundColor: theme.isDark ? 'rgba(28,25,23,0.72)' : 'rgba(255,255,255,0.86)' },
@@ -376,6 +381,7 @@ export function FlippablePolaroidCard({
 
             {memory.location ? (
               <View
+                pointerEvents="none"
                 style={[
                   styles.locationStamp,
                   {
@@ -408,7 +414,10 @@ export function FlippablePolaroidCard({
             ) : null}
           </View>
 
-          <View style={[styles.captionArea, { paddingHorizontal: padding * 1.1 }]}>
+          <View
+            pointerEvents="none"
+            style={[styles.captionArea, { paddingHorizontal: padding * 1.1 }]}
+          >
             <Text
               maxFontSizeMultiplier={1.15}
               numberOfLines={2}
