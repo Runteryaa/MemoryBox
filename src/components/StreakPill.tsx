@@ -6,6 +6,7 @@ import Animated, {
   Easing,
   ZoomIn,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -31,6 +32,7 @@ export function StreakPill({
   onPress,
 }: StreakPillProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const pulse = useSharedValue(1);
   const flicker = useSharedValue(0);
   const logged = new Set(loggedDates);
@@ -42,7 +44,7 @@ export function StreakPill({
     : ['#EFE6DB', '#D9C8B7', '#B9A692'];
 
   useEffect(() => {
-    if (pendingToday) {
+    if (pendingToday && !reducedMotion) {
       pulse.value = withRepeat(
         withTiming(1.12, { duration: 950, easing: Easing.inOut(Easing.ease) }),
         -1,
@@ -51,12 +53,12 @@ export function StreakPill({
     } else {
       pulse.value = withTiming(1, { duration: 250 });
     }
-  }, [pendingToday, pulse]);
+  }, [pendingToday, pulse, reducedMotion]);
 
   // Even a settled streak should look like it is burning, not like an icon —
   // but a box that has never been remembered stays quiet until it starts.
   useEffect(() => {
-    if (currentStreak === 0) {
+    if (currentStreak === 0 || reducedMotion) {
       flicker.value = withTiming(0, { duration: 320 });
       return;
     }
@@ -65,7 +67,7 @@ export function StreakPill({
       -1,
       true
     );
-  }, [currentStreak, flicker]);
+  }, [currentStreak, flicker, reducedMotion]);
 
   const flameStyle = useAnimatedStyle(() => ({
     transform: [

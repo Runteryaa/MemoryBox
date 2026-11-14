@@ -13,6 +13,7 @@ import Animated, {
   interpolate,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -43,6 +44,7 @@ const DAY_LABELS = WEEK_LABELS;
 
 export default function StreakScreen() {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const { width } = useWindowDimensions();
   const memories = useMemoryStore((state) => state.memories);
   const streak = useMemoryStore((state) => state.streak);
@@ -77,6 +79,11 @@ export default function StreakScreen() {
   const flamePulse = useSharedValue(1);
   const flameFlicker = useSharedValue(0);
   useEffect(() => {
+    if (reducedMotion) {
+      flamePulse.value = withTiming(1, { duration: 200 });
+      flameFlicker.value = withTiming(0, { duration: 200 });
+      return;
+    }
     flamePulse.value = withRepeat(
       withTiming(1.05, { duration: 1400, easing: Easing.inOut(Easing.sin) }),
       -1,
@@ -87,7 +94,7 @@ export default function StreakScreen() {
       -1,
       true
     );
-  }, [flameFlicker, flamePulse]);
+  }, [flameFlicker, flamePulse, reducedMotion]);
 
   const flameStyle = useAnimatedStyle(() => ({
     transform: [

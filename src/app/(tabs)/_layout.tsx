@@ -8,6 +8,7 @@ import Animated, {
   Easing,
   cancelAnimation,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -124,13 +125,14 @@ function TabIcon({
   focused: boolean;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const scale = useSharedValue(focused ? 1.06 : 1);
   const lift = useSharedValue(0);
   const glow = useSharedValue(focused ? 1 : 0);
   const breathe = useSharedValue(0);
 
   useEffect(() => {
-    if (focused) {
+    if (focused && !reducedMotion) {
       breathe.value = withRepeat(
         withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
         -1,
@@ -140,7 +142,7 @@ function TabIcon({
       cancelAnimation(breathe);
       breathe.value = withTiming(0, { duration: 200 });
     }
-  }, [breathe, focused]);
+  }, [breathe, focused, reducedMotion]);
 
   useEffect(() => {
     scale.value = withSpring(focused ? 1.07 : 1, { damping: 14, stiffness: 220 });
