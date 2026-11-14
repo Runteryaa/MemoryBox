@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { MOOD_MAP } from '@/constants';
 import { diffCalendarDays, toDateKey } from '@/lib/date';
 import { createId, randomRotation } from '@/lib/random';
 import { deleteMemoryImage } from '@/services/fileStorage';
@@ -251,12 +252,16 @@ export function filterMemories(memories: Memory[], filters: MemoryFilters): Memo
       if (!locationText.includes(filters.city.toLowerCase())) return false;
     }
     if (!query) return true;
+    const mood = MOOD_MAP[memory.moodTag];
     const haystack = [
       memory.shortTitle,
       memory.description,
       memory.location?.placeName ?? '',
       memory.location?.city ?? '',
       memory.location?.country ?? '',
+      // Searching a feeling should find the memories that felt that way.
+      mood?.label ?? memory.moodTag,
+      memory.isFavorite ? 'loved favourite favorite heart' : '',
     ]
       .join(' ')
       .toLowerCase();
