@@ -35,11 +35,18 @@ import { MOODS } from '@/constants';
 import { formatMediumDate } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
 import { getDistinctCities } from '@/lib/stats';
-import { filterMemories, useMemoryStore } from '@/store/useMemoryStore';
+import { filterMemories, useMemoryStore, type MemorySort } from '@/store/useMemoryStore';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
 import type { Memory, MoodTag } from '@/types';
 
 type ViewMode = 'pile' | 'grid';
+
+const SORT_OPTIONS: { id: MemorySort; label: string }[] = [
+  { id: 'newest', label: 'newest' },
+  { id: 'oldest', label: 'oldest' },
+  { id: 'loved', label: 'loved' },
+  { id: 'title', label: 'a–z' },
+];
 
 export default function GalleryScreen() {
   const theme = useTheme();
@@ -52,14 +59,15 @@ export default function GalleryScreen() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [mood, setMood] = useState<MoodTag | 'all'>('all');
   const [city, setCity] = useState<string | 'all'>('all');
+  const [sort, setSort] = useState<MemorySort>('newest');
   const [pileIndex, setPileIndex] = useState(0);
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
 
   const cities = useMemo(() => getDistinctCities(memories), [memories]);
   const filtered = useMemo(
-    () => filterMemories(memories, { query, mood, city }),
-    [city, memories, mood, query]
+    () => filterMemories(memories, { query, mood, city, sort }),
+    [city, memories, mood, query, sort]
   );
 
   // The search bar warms up under the finger instead of just changing colour.
@@ -217,6 +225,41 @@ export default function GalleryScreen() {
           </Text>
         ) : null}
       </View>
+
+      {filtered.length > 1 ? (
+        <View style={styles.sortRow}>
+          {SORT_OPTIONS.map((option) => {
+            const active = sort === option.id;
+            return (
+              <PressableScale
+                accessibilityLabel={`Sort by ${option.label}`}
+                haptic="selection"
+                key={option.id}
+                onPress={() => {
+                  setSort(option.id);
+                  setPileIndex(0);
+                }}
+                style={[
+                  styles.sortPill,
+                  {
+                    backgroundColor: active ? theme.colors.surfaceRaised : 'transparent',
+                    borderColor: active ? theme.colors.rose : theme.colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.sortText,
+                    { color: active ? theme.colors.rose : theme.colors.faint },
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </PressableScale>
+            );
+          })}
+        </View>
+      ) : null}
 
       {filtered.length === 0 ? (
         <EmptyState hasMemories={memories.length > 0} />
@@ -823,6 +866,25 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansBold,
     fontSize: 10,
     letterSpacing: 0.5,
+  },
+  sortRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingTop: 7,
+  },
+  sortPill: {
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  sortText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 9,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   pileStage: {
     flex: 1,

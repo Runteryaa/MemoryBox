@@ -11,7 +11,10 @@ export interface MemoryFilters {
   query: string;
   mood: MoodTag | 'all';
   city: string | 'all';
+  sort?: MemorySort;
 }
+
+export type MemorySort = 'newest' | 'oldest' | 'loved' | 'title';
 
 interface MemoryStore {
   memories: Memory[];
@@ -203,7 +206,7 @@ export const useMemoryStore = create<MemoryStore>()(
 
 export function filterMemories(memories: Memory[], filters: MemoryFilters): Memory[] {
   const query = filters.query.trim().toLowerCase();
-  return memories.filter((memory) => {
+  const matched = memories.filter((memory) => {
     if (filters.mood !== 'all' && memory.moodTag !== filters.mood) return false;
     if (filters.city !== 'all') {
       const locationText = `${memory.location?.city ?? ''} ${
@@ -223,6 +226,27 @@ export function filterMemories(memories: Memory[], filters: MemoryFilters): Memo
       .toLowerCase();
     return haystack.includes(query);
   });
+
+  return sortMemories(matched, filters.sort ?? 'newest');
+}
+
+/** Ordering lives in one place so the pile, grid and counters always agree. */
+export function sortMemories(memories: Memory[], sort: MemorySort): Memory[] {
+  if (sort === 'newest' || sort === 'oldest') {
+    const direction = sort === 'newest' ? -1 : 1;
+    return [...memories].sort(
+      (a, b) => direction * (a.dateCreated.localeCompare(b.dateCreated))
+    );
+  }
+  if (sort === 'loved') {
+    return [...memories].sort((a, b) => {
+      if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
+      return b.dateCreated.localeCompare(a.dateCreated);
+    });
+  }
+  return [...memories].sort((a, b) =>
+    a.shortTitle.localeCompare(b.shortTitle, undefined, { sensitivity: 'base' })
+  );
 }
 
 export function getMemoryStreakStatus(streak: StreakState) {
