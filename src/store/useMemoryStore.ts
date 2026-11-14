@@ -22,6 +22,8 @@ interface MemoryStore {
   streak: StreakState;
   hasHydrated: boolean;
   pendingCelebration: number | null;
+  /** The most recent memory let go, kept briefly so it can be taken back. */
+  trash: Memory | null;
 
   markHydrated: () => void;
   evaluateStreak: () => void;
@@ -30,6 +32,8 @@ interface MemoryStore {
   updateLocation: (id: string, location: MemoryLocation | null) => void;
   toggleFavorite: (id: string) => void;
   deleteMemory: (id: string) => Promise<void>;
+  restoreTrash: () => void;
+  dismissTrash: () => void;
   clearCelebration: () => void;
 }
 
@@ -51,6 +55,7 @@ export const useMemoryStore = create<MemoryStore>()(
       streak: emptyStreak,
       hasHydrated: false,
       pendingCelebration: null,
+      trash: null,
 
       markHydrated: () => set({ hasHydrated: true }),
 
@@ -181,10 +186,33 @@ export const useMemoryStore = create<MemoryStore>()(
         const memory = get().memories.find((item) => item.id === id);
         set((state) => ({
           memories: state.memories.filter((item) => item.id !== id),
+          trash: memory ?? null,
         }));
+        // The photo stays on disk until the undo window closes, so a mis-tap is recoverable.
         if (memory) {
-          await deleteMemoryImage(memory.imageUri);
+          setTimeout(() => {
+            if (get().trash?.id === memory.id) {
+              void deleteMemoryImage(memory.imageUri);
+              set({ trash: null });
+            }
+          }, 8000);
         }
+      },
+
+      restoreTrash: () => {
+        const { trash } = get();
+        if (!trash) return;
+        set((state) => ({
+          trash: null,
+          memories: [trash, ...state.memories.filter((item) => item.id !== trash.id)],
+        }));
+      },
+
+      dismissTrash: () => {
+        const { trash } = get();
+        if (!trash) return;
+        void deleteMemoryImage(trash.imageUri);
+        set({ trash: null });
       },
 
       clearCelebration: () => set({ pendingCelebration: null }),

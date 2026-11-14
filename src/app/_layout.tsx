@@ -23,6 +23,7 @@ import Animated, {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { StreakCelebrationOverlay } from '@/components/StreakCelebrationOverlay';
+import { UndoToast } from '@/components/UndoToast';
 import { handlePendingImagePickerResult } from '@/services/pendingCapture';
 import { useMemoryStore } from '@/store/useMemoryStore';
 import { hydrateSettings, useSettingsStore } from '@/store/useSettingsStore';
@@ -101,6 +102,7 @@ export default function RootLayout() {
           onClose={clearCelebration}
           streak={pendingCelebration}
         />
+        <UndoToast />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
