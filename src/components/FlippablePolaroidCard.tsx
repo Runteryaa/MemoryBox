@@ -108,6 +108,7 @@ export function FlippablePolaroidCard({
   }));
 
   const popHeart = () => {
+    if (reducedMotion) return;
     heart.value = withSequence(
       withTiming(1.32, { duration: 105 }),
       withSpring(1, { damping: 9, stiffness: 250 })

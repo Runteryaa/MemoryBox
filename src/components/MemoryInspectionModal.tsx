@@ -22,6 +22,7 @@ import Animated, {
   interpolate,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSequence,
   withSpring,
@@ -51,6 +52,7 @@ export function MemoryInspectionModal({
   onClose,
 }: MemoryInspectionModalProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const updateMemory = useMemoryStore((state) => state.updateMemory);
@@ -92,6 +94,7 @@ export function MemoryInspectionModal({
   }));
 
   const popHeart = () => {
+    if (reducedMotion) return;
     heart.value = withSequence(
       withTiming(1.3, { duration: 110 }),
       withSpring(1, { damping: 9, stiffness: 240 })

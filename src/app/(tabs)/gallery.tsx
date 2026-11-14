@@ -782,6 +782,7 @@ function GridCard({
   onToggleFavorite: (id: string) => void;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const heart = useSharedValue(1);
   const [imageFailed, setImageFailed] = useState(false);
   // The card frames the photo by its own shape once it has loaded, so a tall
@@ -810,10 +811,12 @@ function GridCard({
   })();
 
   const pop = () => {
-    heart.value = withSequence(
-      withTiming(1.32, { duration: 110 }),
-      withSpring(1, { damping: 9, stiffness: 240 })
-    );
+    if (!reducedMotion) {
+      heart.value = withSequence(
+        withTiming(1.32, { duration: 110 }),
+        withSpring(1, { damping: 9, stiffness: 240 })
+      );
+    }
     onToggleFavorite(memory.id);
   };
 

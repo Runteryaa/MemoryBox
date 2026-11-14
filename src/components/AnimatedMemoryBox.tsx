@@ -59,13 +59,19 @@ export function AnimatedMemoryBox({
   }, [float, reducedMotion]);
 
   useEffect(() => {
+    // The lid swings on its hinge; for a reader who asked for less motion, it
+    // simply is open or shut.
+    if (reducedMotion) {
+      open.value = lidOpen ? 1 : 0;
+      return;
+    }
     open.value = withSpring(lidOpen ? 1 : 0, {
       damping: 16,
       stiffness: 145,
       mass: 0.75,
       overshootClamping: false,
     });
-  }, [lidOpen, open]);
+  }, [lidOpen, open, reducedMotion]);
 
   useEffect(() => {
     if (shakeKey <= 0 || reducedMotion) return;

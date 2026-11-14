@@ -985,15 +985,16 @@ function MoodChip({
   onPress: () => void;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || reducedMotion) return;
     scale.value = withSequence(
       withTiming(1.12, { duration: 90 }),
       withSpring(1, { damping: 10, stiffness: 260 })
     );
-  }, [active, scale]);
+  }, [active, reducedMotion, scale]);
 
   const emojiStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
