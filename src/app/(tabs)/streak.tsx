@@ -495,24 +495,30 @@ function TodayRing({ color, size }: { color: string; size: number }) {
 
 function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const grow = useSharedValue(0);
   const previous = useRef(value);
 
   // The accent rule draws itself in, then gives a small nudge whenever the
   // number behind it changes.
   useEffect(() => {
+    if (reducedMotion) {
+      grow.value = 1;
+      return;
+    }
     grow.value = withSpring(1, { damping: 14, stiffness: 170 });
-  }, [grow]);
+  }, [grow, reducedMotion]);
 
   useEffect(() => {
     // Mounting is the draw-in's job; only a real change deserves a nudge.
     if (previous.current === value) return;
     previous.current = value;
+    if (reducedMotion) return;
     grow.value = withSequence(
       withTiming(1.9, { duration: 130 }),
       withSpring(1, { damping: 10, stiffness: 220 })
     );
-  }, [grow, value]);
+  }, [grow, reducedMotion, value]);
 
   const barStyle = useAnimatedStyle(() => ({
     transform: [{ scaleX: grow.value }],

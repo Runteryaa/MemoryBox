@@ -326,6 +326,7 @@ function MiniStat({
   soft: string;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const pop = useSharedValue(1);
   const previous = useRef(value);
 
@@ -333,11 +334,12 @@ function MiniStat({
   useEffect(() => {
     if (previous.current === value) return;
     previous.current = value;
+    if (reducedMotion) return;
     pop.value = withSequence(
       withTiming(1.08, { duration: 130, easing: Easing.out(Easing.quad) }),
       withSpring(1, { damping: 9, stiffness: 210 })
     );
-  }, [pop, value]);
+  }, [pop, reducedMotion, value]);
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pop.value }],
