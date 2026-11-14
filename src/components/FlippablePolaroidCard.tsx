@@ -151,6 +151,15 @@ export function FlippablePolaroidCard({
     opacity: interpolate(flip.value, [0, 0.49, 0.5, 1], [0, 0, 1, 1]),
   }));
 
+  // A sheen sweeps across the paper as the card turns, as if it caught the light.
+  const sheenStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(flip.value, [0, 0.25, 0.5, 0.75, 1], [0, 0.5, 0.75, 0.4, 0]),
+    transform: [
+      { translateX: interpolate(flip.value, [0, 1], [-width * 1.1, width * 1.1]) },
+      { rotate: '16deg' },
+    ],
+  }));
+
   const developOverlayStyle = useAnimatedStyle(() => ({
     opacity: interpolate(develop.value, [0, 1], [1, 0]),
   }));
@@ -584,6 +593,11 @@ export function FlippablePolaroidCard({
           </View>
         </Animated.View>
       </Animated.View>
+
+      {/* A thin band of light skates over the paper while the card turns over. */}
+      <View pointerEvents="none" style={styles.sheenMask}>
+        <Animated.View style={[styles.sheen, sheenStyle]} />
+      </View>
     </View>
   );
 }
@@ -591,6 +605,22 @@ export function FlippablePolaroidCard({
 const styles = StyleSheet.create({
   flipper: {
     position: 'relative',
+  },
+  sheenMask: {
+    borderRadius: 6,
+    bottom: 0,
+    left: 0,
+    overflow: 'hidden',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  sheen: {
+    backgroundColor: 'rgba(255,255,255,0.45)',
+    bottom: -40,
+    position: 'absolute',
+    top: -40,
+    width: 46,
   },
   card: {
     position: 'absolute',
