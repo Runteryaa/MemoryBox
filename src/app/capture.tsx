@@ -111,6 +111,7 @@ export default function CaptureScreen() {
   const dragRotate = useSharedValue(0);
   const dragOpacity = useSharedValue(1);
   const lidOpen = useSharedValue(0);
+  const armed = useSharedValue(0);
   const boxBounce = useSharedValue(1);
   const shutter = useSharedValue(0);
   const shutterBreath = useSharedValue(0);
@@ -318,14 +319,26 @@ export default function CaptureScreen() {
     .enabled(!cardFlipped)
     .activeOffsetY([-14, 14])
     .failOffsetX([-40, 40])
+    .onBegin(() => {
+      armed.value = 0;
+    })
     .onUpdate((event) => {
       dragY.value = Math.max(-24, event.translationY);
       dragScale.value = interpolate(event.translationY, [-24, 260], [1.01, 0.74], 'clamp');
       dragRotate.value = interpolate(event.translationY, [0, 240], [0, 6], 'clamp');
       dragOpacity.value = interpolate(event.translationY, [180, 320], [1, 0.9], 'clamp');
       lidOpen.value = interpolate(event.translationY, [60, 160], [0, 1], 'clamp');
+      // One soft tick the moment the card is far enough to be let go, so the
+      // drop never feels like a guess.
+      if (event.translationY > 96 && armed.value === 0) {
+        armed.value = 1;
+        runOnJS(haptics.selection)();
+      } else if (event.translationY <= 96 && armed.value === 1) {
+        armed.value = 0;
+      }
     })
     .onEnd((event) => {
+      armed.value = 0;
       if (event.translationY > 100 || event.velocityY > 700) {
         runOnJS(dropIntoBox)();
         return;
