@@ -451,7 +451,10 @@ export default function CaptureScreen() {
             style={styles.bottomShade}
           />
 
-          <View style={[styles.cameraTop, { paddingTop: insets.top + 6 }]}>
+          <Animated.View
+            entering={FadeInDown.duration(420)}
+            style={[styles.cameraTop, { paddingTop: insets.top + 6 }]}
+          >
             <IconButton
               accessibilityLabel="Close camera"
               backgroundColor="rgba(28,25,23,0.55)"
@@ -484,7 +487,7 @@ export default function CaptureScreen() {
                 }}
               />
             </View>
-          </View>
+          </Animated.View>
 
           <View style={styles.cameraCenter}>
             {!permission?.granted ? (
@@ -515,7 +518,10 @@ export default function CaptureScreen() {
             </Animated.View>
           ) : null}
 
-          <View style={[styles.cameraBottom, { paddingBottom: insets.bottom + 16 }]}>
+          <Animated.View
+            entering={FadeInDown.duration(460).delay(80)}
+            style={[styles.cameraBottom, { paddingBottom: insets.bottom + 16 }]}
+          >
             <View style={styles.cameraBottomSide}>
               <PressableScale
                 accessibilityLabel="Pick a photo from your library"
@@ -568,7 +574,7 @@ export default function CaptureScreen() {
               </PressableScale>
               <Text style={styles.rollLabel}>cancel</Text>
             </View>
-          </View>
+          </Animated.View>
         </View>
       ) : (
         <KeyboardAvoidingView
