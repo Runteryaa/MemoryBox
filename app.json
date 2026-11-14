@@ -2,7 +2,7 @@
   "expo": {
     "name": "Memory Box",
     "slug": "memory-box",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "memorybox",
@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.memorybox.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "backgroundColor": "#FDFBF7",
