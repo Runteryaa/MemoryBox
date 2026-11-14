@@ -251,9 +251,24 @@ export default function StreakScreen() {
             ]}
           >
             <View style={styles.calendarHeader}>
-              <Text style={[styles.calendarTitle, { color: theme.colors.ink }]}>
-                {formatMonthYear(month)}
-              </Text>
+              <View style={styles.calendarTitleRow}>
+                <Text numberOfLines={1} style={[styles.calendarTitle, { color: theme.colors.ink }]}>
+                  {formatMonthYear(month)}
+                </Text>
+                {!atCurrentMonth ? (
+                  <PressableScale
+                    accessibilityLabel="Jump back to this month"
+                    haptic="tap"
+                    onPress={() => {
+                      setMonthDir(1);
+                      setMonth(new Date());
+                    }}
+                    style={[styles.todayChip, { backgroundColor: theme.colors.roseSoft }]}
+                  >
+                    <Text style={[styles.todayChipText, { color: theme.colors.roseDeep }]}>today</Text>
+                  </PressableScale>
+                ) : null}
+              </View>
               <View style={styles.calendarNav}>
                 <PressableScale
                   accessibilityLabel="Previous month"
@@ -793,6 +808,22 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
     fontSize: 20,
     letterSpacing: -0.4,
+  },
+  calendarTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexShrink: 1,
+    gap: 7,
+  },
+  todayChip: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  todayChipText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 9.5,
+    letterSpacing: 0.3,
   },
   calendarNav: {
     flexDirection: 'row',
