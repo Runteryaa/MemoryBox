@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeInDown,
+  FadeOutDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Undo2 } from 'lucide-react-native';
 
@@ -22,6 +29,8 @@ export function UndoToast() {
   const dismissTrash = useMemoryStore((state) => state.dismissTrash);
   const [visible, setVisible] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A thin line drains away, so the undo window is something you can see.
+  const drain = useSharedValue(1);
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
@@ -30,6 +39,8 @@ export function UndoToast() {
       return;
     }
     setVisible(true);
+    drain.value = 1;
+    drain.value = withTiming(0, { duration: VISIBLE_MS, easing: Easing.linear });
     timer.current = setTimeout(() => {
       setVisible(false);
       dismissTrash();
@@ -40,6 +51,11 @@ export function UndoToast() {
     // dismissTrash is stable from the store; re-running on trash identity is enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trash?.id]);
+
+  const drainStyle = useAnimatedStyle(() => ({
+    opacity: drain.value > 0.02 ? 0.75 : 0,
+    transform: [{ scaleX: drain.value }],
+  }));
 
   if (!trash || !visible) return null;
 
@@ -80,6 +96,10 @@ export function UndoToast() {
           <Undo2 color={contrastInk(theme.colors.rose)} size={13} strokeWidth={2.6} />
           <Text style={[styles.buttonText, { color: contrastInk(theme.colors.rose) }]}>Undo</Text>
         </PressableScale>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.drain, { backgroundColor: theme.colors.rose }, drainStyle]}
+        />
       </View>
     </Animated.View>
   );
@@ -97,8 +117,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     gap: 12,
+    overflow: 'hidden',
     paddingHorizontal: 14,
     paddingVertical: 11,
+  },
+  drain: {
+    bottom: 0,
+    height: 2.5,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    transformOrigin: 'left',
   },
   copy: {
     flex: 1,
