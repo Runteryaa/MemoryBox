@@ -378,6 +378,7 @@ function OnThisDayCard({ memory, onPress }: { memory: Memory; onPress: () => voi
 
   return (
     <PressableScale
+      accessibilityHint="Opens this memory's story"
       accessibilityLabel={`Memory from ${yearsAgo}: ${memory.shortTitle}`}
       haptic="paperRustle"
       onPress={onPress}

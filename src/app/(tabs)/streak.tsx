@@ -345,6 +345,7 @@ export default function StreakScreen() {
                   const future = date.getTime() > new Date().setHours(23, 59, 59, 999);
                   return (
                     <PressableScale
+                      accessibilityHint={first ? 'Opens the memory kept that day' : undefined}
                       accessibilityLabel={`${formatSpokenDate(date)}${
                         (dayMemories?.length ?? 0) > 1 ? `, ${dayMemories?.length} memories` : ''
                       }${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
