@@ -182,7 +182,7 @@ export default function GalleryScreen() {
           }}
           onFocus={() => setSearchFocused(true)}
           onSubmitEditing={() => Keyboard.dismiss()}
-          placeholder="Search titles, stories, places…"
+          placeholder="Search titles, stories, places, dates…"
           placeholderTextColor={theme.colors.faint}
           returnKeyType="search"
           style={[styles.searchInput, { color: theme.colors.ink }]}

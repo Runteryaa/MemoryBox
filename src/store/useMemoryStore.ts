@@ -242,6 +242,23 @@ export const useMemoryStore = create<MemoryStore>()(
   )
 );
 
+/** Month names and years are worth searching too, so a memory can be found by when it happened. */
+const dateSearchCache = new Map<string, string>();
+
+function searchableDate(iso: string): string {
+  const cached = dateSearchCache.get(iso);
+  if (cached) return cached;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const text = [
+    date.toLocaleDateString(undefined, { month: 'long' }),
+    date.toLocaleDateString(undefined, { month: 'short' }),
+    String(date.getFullYear()),
+  ].join(' ');
+  dateSearchCache.set(iso, text);
+  return text;
+}
+
 export function filterMemories(memories: Memory[], filters: MemoryFilters): Memory[] {
   const query = filters.query.trim().toLowerCase();
   const matched = memories.filter((memory) => {
@@ -264,6 +281,7 @@ export function filterMemories(memories: Memory[], filters: MemoryFilters): Memo
       // Searching a feeling should find the memories that felt that way.
       mood?.label ?? memory.moodTag,
       memory.isFavorite ? 'loved favourite favorite heart' : '',
+      searchableDate(memory.dateCreated),
     ]
       .join(' ')
       .toLowerCase();
