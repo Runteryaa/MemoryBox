@@ -148,6 +148,12 @@ function TabIcon({
   }, [breathe, focused, reducedMotion]);
 
   useEffect(() => {
+    if (reducedMotion) {
+      scale.value = focused ? 1.07 : 1;
+      glow.value = focused ? 1 : 0;
+      lift.value = 0;
+      return;
+    }
     scale.value = withSpring(focused ? 1.07 : 1, { damping: 14, stiffness: 220 });
     glow.value = withTiming(focused ? 1 : 0, { duration: focused ? 220 : 160 });
     // A tiny hop when the tab becomes active, like a stamp pressing down.
@@ -158,7 +164,7 @@ function TabIcon({
           withSpring(0, { damping: 12, stiffness: 200 })
         )
       : withSpring(0, { damping: 14, stiffness: 220 });
-  }, [focused, glow, lift, scale]);
+  }, [focused, glow, lift, reducedMotion, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: lift.value }, { scale: scale.value }],

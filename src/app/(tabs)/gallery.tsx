@@ -372,6 +372,7 @@ function ModeButton({
   onPress: () => void;
 }) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const activeInk = contrastInk(theme.colors.rose);
   const iconScale = useSharedValue(1);
   const iconTurn = useSharedValue(0);
@@ -379,6 +380,12 @@ function ModeButton({
 
   useEffect(() => {
     // The pill fills with rose instead of jumping between two colours.
+    if (reducedMotion) {
+      fill.value = active ? 1 : 0;
+      iconScale.value = 1;
+      iconTurn.value = 0;
+      return;
+    }
     fill.value = withTiming(active ? 1 : 0, { duration: 180 });
     if (!active) {
       iconScale.value = withSpring(1, { damping: 14, stiffness: 220 });
@@ -392,7 +399,7 @@ function ModeButton({
       withTiming(-12, { duration: 110 }),
       withSpring(0, { damping: 10, stiffness: 240 })
     );
-  }, [active, fill, iconScale, iconTurn]);
+  }, [active, fill, iconScale, iconTurn, reducedMotion]);
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [{ scale: iconScale.value }, { rotate: `${iconTurn.value}deg` }],
