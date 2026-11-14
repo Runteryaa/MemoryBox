@@ -194,7 +194,10 @@ export default function GalleryScreen() {
           <PressableScale
             accessibilityLabel="Clear search"
             haptic="none"
-            onPress={() => setQuery('')}
+            onPress={() => {
+              setQuery('');
+              setPileIndex(0);
+            }}
             style={[styles.clearButton, { backgroundColor: theme.colors.surfaceRaised }]}
           >
             <X color={theme.colors.muted} size={13} strokeWidth={2.6} />
