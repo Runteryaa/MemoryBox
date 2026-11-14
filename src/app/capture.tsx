@@ -340,7 +340,7 @@ export default function CaptureScreen() {
   }, [boxBounce, dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen]);
 
   const dragGesture = Gesture.Pan()
-    .enabled(!cardFlipped)
+    .enabled(!cardFlipped && !saved)
     .activeOffsetY([-14, 14])
     .failOffsetX([-40, 40])
     .onBegin(() => {
@@ -740,6 +740,8 @@ export default function CaptureScreen() {
           >
             <View style={styles.titleWrap}>
               <TextInput
+                accessibilityLabel="Name this moment"
+                maxFontSizeMultiplier={1.3}
                 maxLength={MAX_TITLE_LENGTH}
                 onChangeText={setTitle}
                 placeholder="Name this moment…"
@@ -897,12 +899,13 @@ export default function CaptureScreen() {
 
             <PressableScale
               accessibilityLabel="Tuck this memory in without dragging"
+              disabled={saved}
               haptic="none"
               onPress={() => {
                 dropIntoBox();
               }}
               scaleTo={0.94}
-              style={styles.dropFallback}
+              style={[styles.dropFallback, saved && styles.dropFallbackSpent]}
             >
               <Text style={[styles.dropFallbackText, { color: theme.colors.rose }]}>
                 or tap here to tuck it in
@@ -1411,6 +1414,9 @@ const styles = StyleSheet.create({
   dropFallback: {
     marginTop: 2,
     paddingVertical: 4,
+  },
+  dropFallbackSpent: {
+    opacity: 0.4,
   },
   dropFallbackText: {
     fontFamily: fonts.sansBold,
