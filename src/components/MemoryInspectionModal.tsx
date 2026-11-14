@@ -30,11 +30,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlippablePolaroidCard } from '@/components/FlippablePolaroidCard';
 import { LocationStampPicker } from '@/components/LocationStampPicker';
 import { IconButton } from '@/components/ui/IconButton';
-import { MAX_TITLE_LENGTH } from '@/constants';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { MAX_TITLE_LENGTH, MOODS } from '@/constants';
 import { haptics } from '@/lib/haptics';
 import { useMemoryStore } from '@/store/useMemoryStore';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
-import type { Memory } from '@/types';
+import type { Memory, MoodTag } from '@/types';
 
 interface MemoryInspectionModalProps {
   memory: Memory | null;
@@ -65,6 +66,7 @@ export function MemoryInspectionModal({
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [mood, setMood] = useState<MoodTag>('happy');
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
 
   const heart = useSharedValue(1);
@@ -114,13 +116,14 @@ export function MemoryInspectionModal({
     setEditing(false);
     setTitle(memory?.shortTitle ?? '');
     setDescription(memory?.description ?? '');
+    setMood(memory?.moodTag ?? 'happy');
     setLocationPickerOpen(false);
-  }, [memory?.id, memory?.shortTitle, memory?.description, visible]);
+  }, [memory?.id, memory?.shortTitle, memory?.description, memory?.moodTag, visible]);
 
   const liveMemory = useMemo(() => {
     if (!memory) return null;
-    return editing ? { ...memory, shortTitle: title, description } : memory;
-  }, [description, editing, memory, title]);
+    return editing ? { ...memory, shortTitle: title, description, moodTag: mood } : memory;
+  }, [description, editing, memory, mood, title]);
 
   const saveEdits = useCallback(() => {
     if (!memory) return;
@@ -128,11 +131,12 @@ export function MemoryInspectionModal({
     updateMemory(memory.id, {
       shortTitle: nextTitle,
       description,
+      moodTag: mood,
     });
     setTitle(nextTitle);
     haptics.success();
     setEditing(false);
-  }, [description, memory, title, updateMemory]);
+  }, [description, memory, mood, title, updateMemory]);
 
   const confirmDelete = useCallback(() => {
     if (!memory) return;
@@ -297,6 +301,46 @@ export function MemoryInspectionModal({
                   value={title}
                 />
 
+                <Text style={[styles.editLabel, { color: theme.colors.muted, marginTop: 12 }]}>
+                  How it felt
+                </Text>
+                <ScrollView
+                  contentContainerStyle={styles.moodRow}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                >
+                  {MOODS.map((option) => {
+                    const active = mood === option.id;
+                    return (
+                      <PressableScale
+                        accessibilityLabel={`${option.label} mood`}
+                        haptic="selection"
+                        key={option.id}
+                        onPress={() => {
+                          setMood(option.id);
+                        }}
+                        style={[
+                          styles.moodChip,
+                          {
+                            backgroundColor: active ? option.soft : theme.colors.surfaceRaised,
+                            borderColor: active ? option.color : theme.colors.border,
+                          },
+                        ]}
+                      >
+                        <Text style={styles.moodEmoji}>{option.emoji}</Text>
+                        <Text
+                          style={[
+                            styles.moodText,
+                            { color: active ? option.color : theme.colors.muted },
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                      </PressableScale>
+                    );
+                  })}
+                </ScrollView>
+
                 <View style={styles.editRow}>
                   <View
                     style={[
@@ -431,6 +475,27 @@ const styles = StyleSheet.create({
   editRow: {
     flexDirection: 'row',
     marginTop: 10,
+  },
+  moodRow: {
+    gap: 6,
+    paddingTop: 6,
+    paddingBottom: 2,
+  },
+  moodChip: {
+    alignItems: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  moodEmoji: {
+    fontSize: 11,
+  },
+  moodText: {
+    fontFamily: fonts.sansSemiBold,
+    fontSize: 11,
   },
   locationPill: {
     alignItems: 'center',
