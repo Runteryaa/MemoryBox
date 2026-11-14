@@ -344,6 +344,11 @@ export default function CaptureScreen() {
     opacity: interpolate(lidOpen.value, [0, 1], [0, 0.8]),
   }));
 
+  const dropHintStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(lidOpen.value, [0, 1], [0.55, 1], 'clamp'),
+    transform: [{ translateY: interpolate(lidOpen.value, [0, 1], [0, 3], 'clamp') }],
+  }));
+
   const boxBounceStyle = useAnimatedStyle(() => ({
     transform: [{ scale: boxBounce.value }],
   }));
@@ -749,12 +754,12 @@ export default function CaptureScreen() {
               keyboardVisible && styles.dropZoneHidden,
             ]}
           >
-            <View style={styles.dropHintWrap}>
+            <Animated.View style={[styles.dropHintWrap, dropHintStyle]}>
               <ArrowDown color={theme.colors.faint} size={13} strokeWidth={2.4} />
               <Text style={[styles.dropHint, { color: theme.colors.muted }]}>
                 {cardFlipped ? 'flip back, then drag it down' : 'drag the photo down to tuck it in'}
               </Text>
-            </View>
+            </Animated.View>
 
             <Animated.View style={[styles.dropBoxWrap, boxBounceStyle]}>
               <SparkleBurst burstKey={burstKey} particleCount={26} />

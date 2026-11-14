@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sparkles } from 'lucide-react-native';
@@ -38,6 +38,7 @@ export function AnimatedMemoryBox({
 }: AnimatedMemoryBoxProps) {
   const theme = useTheme();
   const shake = useSharedValue(0);
+  const longPressed = useRef(false);
   const open = useSharedValue(lidOpen ? 1 : 0);
   const float = useSharedValue(0);
 
@@ -150,8 +151,18 @@ export function AnimatedMemoryBox({
         <PressableScale
           accessibilityLabel={`Memory box with ${count} memories`}
           haptic="none"
-          onLongPress={onLongPress}
-          onPress={onPress}
+          onLongPress={() => {
+            longPressed.current = true;
+            onLongPress?.();
+          }}
+          onPress={() => {
+            // Long-pressing already opened a random memory; don't also toggle the lid.
+            if (longPressed.current) {
+              longPressed.current = false;
+              return;
+            }
+            onPress?.();
+          }}
           scaleTo={0.97}
           style={styles.press}
         >

@@ -77,3 +77,21 @@ export function getMilestones(memories: Memory[], longestStreak: number) {
     'mood-keeper': moodCount >= MOODS.length,
   } satisfies Record<MilestoneId, boolean>;
 }
+
+/** How far along each stamp is, so locked badges can show a little progress. */
+export function getMilestoneProgress(memories: Memory[], longestStreak: number) {
+  const stats = getStats(memories);
+  const longestStory = memories.reduce(
+    (longest, memory) => Math.max(longest, memory.description.trim().length),
+    0
+  );
+  const moodCount = new Set(memories.map((memory) => memory.moodTag)).size;
+  return {
+    'first-keepsake': { current: Math.min(stats.totalMemories, 1), goal: 1 },
+    'week-storyteller': { current: Math.min(longestStreak, 7), goal: 7 },
+    'globe-trotter': { current: Math.min(stats.distinctPlaces, 5), goal: 5 },
+    'deep-diver': { current: Math.min(longestStory, 300), goal: 300 },
+    collector: { current: Math.min(stats.totalMemories, 10), goal: 10 },
+    'mood-keeper': { current: moodCount, goal: MOODS.length },
+  } satisfies Record<MilestoneId, { current: number; goal: number }>;
+}

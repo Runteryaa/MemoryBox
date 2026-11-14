@@ -27,7 +27,7 @@ import {
   toDateKey,
 } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
-import { getMemoriesByDate, getMilestones, getStats } from '@/lib/stats';
+import { getMemoriesByDate, getMilestoneProgress, getMilestones, getStats } from '@/lib/stats';
 import { getMemoryStreakStatus, useMemoryStore } from '@/store/useMemoryStore';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
 import type { Memory } from '@/types';
@@ -49,6 +49,10 @@ export default function StreakScreen() {
   const byDate = useMemo(() => getMemoriesByDate(memories), [memories]);
   const milestones = useMemo(
     () => getMilestones(memories, streak.longestStreak),
+    [memories, streak.longestStreak]
+  );
+  const milestoneProgress = useMemo(
+    () => getMilestoneProgress(memories, streak.longestStreak),
     [memories, streak.longestStreak]
   );
 
@@ -317,6 +321,7 @@ export default function StreakScreen() {
                 description={definition.description}
                 emoji={definition.emoji}
                 index={index}
+                progress={milestoneProgress[definition.id as MilestoneId]}
                 target={definition.target}
                 title={definition.title}
                 unlocked={Boolean(milestones[definition.id as MilestoneId])}
@@ -378,7 +383,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
       ]}
     >
       <View style={[styles.statBar, { backgroundColor: tone }]} />
-      <Text style={[styles.statValue, { color: theme.colors.ink }]}>{value}</Text>
+      <CountUp style={[styles.statValue, { color: theme.colors.ink }]} value={value} />
       <Text style={[styles.statLabel, { color: theme.colors.muted }]}>{label}</Text>
     </View>
   );
@@ -390,6 +395,7 @@ function MilestoneBadge({
   emoji,
   target,
   unlocked,
+  progress,
   index,
 }: {
   title: string;
@@ -397,11 +403,14 @@ function MilestoneBadge({
   emoji: string;
   target: string;
   unlocked: boolean;
+  progress: { current: number; goal: number };
   index: number;
 }) {
   const theme = useTheme();
   const [flipped, setFlipped] = useState(false);
   const flip = useSharedValue(0);
+  const fill = useSharedValue(0);
+  const ratio = progress.goal > 0 ? Math.min(1, progress.current / progress.goal) : 0;
 
   useEffect(() => {
     flip.value = withTiming(flipped ? 1 : 0, {
@@ -410,6 +419,10 @@ function MilestoneBadge({
     });
   }, [flip, flipped]);
 
+  useEffect(() => {
+    fill.value = withTiming(ratio, { duration: 760, easing: Easing.out(Easing.cubic) });
+  }, [fill, ratio]);
+
   // One hinge for the whole stamp: the back face simply starts rotated 180°.
   const flipperStyle = useAnimatedStyle(() => ({
     transform: [
@@ -417,6 +430,10 @@ function MilestoneBadge({
       { rotateY: `${interpolate(flip.value, [0, 1], [0, 180])}deg` },
       { scale: interpolate(flip.value, [0, 0.5, 1], [1, 0.95, 1]) },
     ],
+  }));
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${fill.value * 100}%`,
   }));
 
   return (
@@ -461,6 +478,23 @@ function MilestoneBadge({
                   <Text style={[styles.badgeTagText, { color: theme.colors.locked }]}>{target}</Text>
                 </View>
               )}
+
+              {!unlocked ? (
+                <View style={styles.badgeProgressWrap}>
+                  <View style={[styles.badgeProgressTrack, { backgroundColor: theme.colors.border }]}>
+                    <Animated.View
+                      style={[
+                        styles.badgeProgressFill,
+                        { backgroundColor: theme.colors.amber },
+                        progressStyle,
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.badgeProgressLabel, { color: theme.colors.faint }]}>
+                    {progress.current} / {progress.goal}
+                  </Text>
+                </View>
+              ) : null}
             </View>
 
             <View
@@ -823,6 +857,27 @@ const styles = StyleSheet.create({
     fontSize: 7,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+  badgeProgressWrap: {
+    alignSelf: 'stretch',
+    gap: 3,
+    marginTop: 6,
+    paddingHorizontal: 2,
+  },
+  badgeProgressTrack: {
+    borderRadius: 999,
+    height: 3,
+    overflow: 'hidden',
+  },
+  badgeProgressFill: {
+    borderRadius: 999,
+    height: '100%',
+  },
+  badgeProgressLabel: {
+    alignSelf: 'flex-end',
+    fontFamily: fonts.sansSemiBold,
+    fontSize: 7.5,
+    letterSpacing: 0.3,
   },
   badgeBackTitle: {
     fontFamily: fonts.handBold,
