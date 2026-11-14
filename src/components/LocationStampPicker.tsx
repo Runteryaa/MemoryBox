@@ -372,7 +372,7 @@ export function LocationStampPicker({
             <View style={styles.footer}>
               <PressableScale
                 accessibilityLabel="Save this place"
-                haptic="medium"
+                haptic="none"
                 onPress={handleSave}
                 style={[styles.saveButton, { backgroundColor: theme.colors.rose }]}
               >
@@ -382,7 +382,7 @@ export function LocationStampPicker({
 
               <PressableScale
                 accessibilityLabel="Remove location"
-                haptic="tap"
+                haptic="none"
                 onPress={() => {
                   haptics.tap();
                   onSave(null);

@@ -150,7 +150,7 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
           <Animated.View entering={FadeInDown.delay(360)} style={styles.footer}>
             <PressableScale
               accessibilityLabel="Keep going"
-              haptic="medium"
+              haptic="none"
               onPress={() => {
                 haptics.tap();
                 onClose();

@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Undo2 } from 'lucide-react-native';
 
 import { PressableScale } from '@/components/ui/PressableScale';
-import { haptics } from '@/lib/haptics';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
 import { useMemoryStore } from '@/store/useMemoryStore';
 
@@ -70,9 +69,8 @@ export function UndoToast() {
         </View>
         <PressableScale
           accessibilityLabel="Put the memory back"
-          haptic="medium"
+          haptic="success"
           onPress={() => {
-            haptics.success();
             if (timer.current) clearTimeout(timer.current);
             restoreTrash();
             setVisible(false);

@@ -246,7 +246,7 @@ export default function StreakScreen() {
               <View style={styles.calendarNav}>
                 <PressableScale
                   accessibilityLabel="Previous month"
-                  haptic="tap"
+                  haptic="none"
                   onPress={() => {
                     shiftMonth(-1);
                   }}
@@ -257,7 +257,7 @@ export default function StreakScreen() {
                 <PressableScale
                   accessibilityLabel="Next month"
                   disabled={atCurrentMonth}
-                  haptic="tap"
+                  haptic="none"
                   onPress={() => {
                     shiftMonth(1);
                   }}
@@ -305,7 +305,7 @@ export default function StreakScreen() {
                     <PressableScale
                       accessibilityLabel={`${key}${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
                       disabled={!first}
-                      haptic={first ? 'tap' : 'none'}
+                      haptic="none"
                       key={key}
                       onPress={() => openFirstOfDay(key)}
                       scaleTo={0.9}

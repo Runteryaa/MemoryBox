@@ -762,8 +762,8 @@ function GridCard({
     >
       <PressableScale
         accessibilityLabel={`Open memory ${memory.shortTitle}`}
+        haptic="paperRustle"
         onPress={() => {
-          haptics.paperRustle();
           onOpen(memory);
         }}
         scaleTo={0.96}

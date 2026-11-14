@@ -486,7 +486,6 @@ export default function CaptureScreen() {
                 color={flash === 'off' ? '#FFFFFF' : theme.colors.gold}
                 icon={flashIcon}
                 onPress={() => {
-                  haptics.tap();
                   setFlash((current) => (current === 'off' ? 'on' : current === 'on' ? 'auto' : 'off'));
                 }}
               />
@@ -497,7 +496,6 @@ export default function CaptureScreen() {
                 color="#FFFFFF"
                 icon={SwitchCamera}
                 onPress={() => {
-                  haptics.tap();
                   setFacing((current) => (current === 'back' ? 'front' : 'back'));
                 }}
               />

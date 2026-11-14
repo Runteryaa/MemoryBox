@@ -219,7 +219,6 @@ export function MemoryInspectionModal({
                       icon={Heart}
                       onPress={() => {
                         if (!memory) return;
-                        haptics.tap();
                         popHeart();
                         toggleFavorite(memory.id);
                       }}
@@ -241,7 +240,6 @@ export function MemoryInspectionModal({
                       if (editing) {
                         saveEdits();
                       } else {
-                        haptics.tap();
                         setEditing(true);
                       }
                     }}

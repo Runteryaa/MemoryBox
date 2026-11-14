@@ -15,7 +15,15 @@ interface PressableScaleProps {
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   scaleTo?: number;
-  haptic?: 'tap' | 'soft' | 'medium' | 'heavy' | 'selection' | 'paperRustle' | 'none';
+  haptic?:
+    | 'tap'
+    | 'soft'
+    | 'medium'
+    | 'heavy'
+    | 'selection'
+    | 'paperRustle'
+    | 'success'
+    | 'none';
   accessibilityLabel?: string;
   accessibilityRole?: 'button' | 'link' | 'image' | 'none';
   /** Lets toggles such as chips and sort pills announce whether they are on. */
