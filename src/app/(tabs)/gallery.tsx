@@ -353,10 +353,15 @@ function PileView({
     opacity: interpolate(enter.value, [0, 1], [0, 1]),
     transform: [
       { translateX: translateX.value },
-      { translateY: interpolate(enter.value, [0, 1], [18, 0]) },
-      { scale: interpolate(enter.value, [0, 1], [0.965, 1]) },
+      { translateY: interpolate(enter.value, [0, 1], [18, 0]) - pull.value * 6 },
+      { scale: interpolate(enter.value, [0, 1], [0.965, 1]) + pull.value * 0.025 },
       { rotate: `${rotate.value + (topMemory?.rotationAngle ?? 0) * 0.4}deg` },
     ],
+  }));
+
+  // The card tilts toward the edge it is being thrown off, and dims a touch.
+  const dimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(pull.value, [0, 1], [0, 0.18]),
   }));
 
   // The deck behind leans forward and evens out as the front card is pulled away.
@@ -381,16 +386,19 @@ function PileView({
 
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.pileCard, dragStyle]}>
-            <FlippablePolaroidCard
-              memory={topMemory}
-              onPressFront={() => {
-                haptics.paperRustle();
-                onOpen(topMemory);
-              }}
-              rotation={0}
-              showHint={false}
-              width={cardWidth}
-            />
+            <View>
+              <FlippablePolaroidCard
+                memory={topMemory}
+                onPressFront={() => {
+                  haptics.paperRustle();
+                  onOpen(topMemory);
+                }}
+                rotation={0}
+                showHint={false}
+                width={cardWidth}
+              />
+              <Animated.View pointerEvents="none" style={[styles.pileDim, dimStyle]} />
+            </View>
           </Animated.View>
         </GestureDetector>
       </View>
@@ -783,6 +791,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     bottom: 0,
     justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  pileDim: {
+    bottom: 0,
+    backgroundColor: '#2D241D',
+    borderRadius: 6,
     left: 0,
     position: 'absolute',
     right: 0,
