@@ -222,6 +222,8 @@ export default function CaptureScreen() {
   const takePicture = useCallback(async () => {
     if (taking || !cameraRef.current) return;
     setTaking(true);
+    // A fresh attempt deserves a clean slate.
+    setCameraError(null);
     haptics.medium();
     shutter.value = withSequence(
       withTiming(0.92, { duration: 55 }),
@@ -251,6 +253,7 @@ export default function CaptureScreen() {
   const pickFromLibrary = useCallback(async () => {
     if (busy) return;
     setBusy(true);
+    setCameraError(null);
     haptics.soft();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -437,6 +440,7 @@ export default function CaptureScreen() {
   };
 
   const resetToCamera = () => {
+    setCameraError(null);
     discardDraft();
     if (photo) {
       setPhoto(null);
