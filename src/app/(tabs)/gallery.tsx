@@ -403,6 +403,7 @@ function PileView({
   const rotate = useSharedValue(0);
   const pull = useSharedValue(0);
   const enter = useSharedValue(1);
+  const armed = useSharedValue(0);
   const currentIndex = pileIndex % memories.length;
 
   // A fresh card rises from the middle of the deck instead of popping into place.
@@ -413,12 +414,23 @@ function PileView({
 
   const pan = Gesture.Pan()
     .activeOffsetX([-12, 12])
+    .onBegin(() => {
+      armed.value = 0;
+    })
     .onUpdate((event) => {
       translateX.value = event.translationX;
       rotate.value = event.translationX / 18;
       pull.value = Math.min(1, Math.abs(event.translationX) / 150);
+      // A single paper tick when the swipe is far enough to turn the card over.
+      if (Math.abs(event.translationX) > 70 && armed.value === 0) {
+        armed.value = 1;
+        runOnJS(haptics.paperRustle)();
+      } else if (Math.abs(event.translationX) <= 70 && armed.value === 1) {
+        armed.value = 0;
+      }
     })
     .onEnd((event) => {
+      armed.value = 0;
       const shouldAdvance = Math.abs(event.translationX) > 70 || Math.abs(event.velocityX) > 650;
       if (shouldAdvance) {
         const direction = event.translationX > 0 ? -1 : 1;
