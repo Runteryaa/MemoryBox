@@ -456,11 +456,16 @@ export default function StreakScreen() {
 
 /** Soft breathing ring so today's square is easy to find at a glance. */
 function TodayRing({ color, size }: { color: string; size: number }) {
+  const reducedMotion = useReducedMotion();
   const pulse = useSharedValue(0);
 
   useEffect(() => {
+    if (reducedMotion) {
+      pulse.value = withTiming(0.35, { duration: 200 });
+      return;
+    }
     pulse.value = withRepeat(withTiming(1, { duration: 1900, easing: Easing.out(Easing.quad) }), -1, false);
-  }, [pulse]);
+  }, [pulse, reducedMotion]);
 
   const style = useAnimatedStyle(() => ({
     opacity: interpolate(pulse.value, [0, 1], [0.6, 0]),
@@ -487,6 +492,7 @@ function TodayRing({ color, size }: { color: string; size: number }) {
 function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   const theme = useTheme();
   const grow = useSharedValue(0);
+  const previous = useRef(value);
 
   // The accent rule draws itself in, then gives a small nudge whenever the
   // number behind it changes.
@@ -495,6 +501,9 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
   }, [grow]);
 
   useEffect(() => {
+    // Mounting is the draw-in's job; only a real change deserves a nudge.
+    if (previous.current === value) return;
+    previous.current = value;
     grow.value = withSequence(
       withTiming(1.9, { duration: 130 }),
       withSpring(1, { damping: 10, stiffness: 220 })
