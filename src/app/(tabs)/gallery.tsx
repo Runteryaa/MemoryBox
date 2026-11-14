@@ -31,7 +31,7 @@ import { MemoryInspectionModal } from '@/components/MemoryInspectionModal';
 import { Screen } from '@/components/ui/Screen';
 import { Chip } from '@/components/ui/Chip';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { MOODS } from '@/constants';
+import { MOODS, MOOD_MAP } from '@/constants';
 import { formatMediumDate } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
 import { getDistinctCities } from '@/lib/stats';
@@ -681,9 +681,12 @@ function GridCard({
           >
             {memory.shortTitle}
           </Text>
-          <Text style={[styles.gridDate, { color: theme.colors.muted }]}>
-            {formatMediumDate(memory.dateCreated)}
-          </Text>
+          <View style={styles.gridMetaRow}>
+            <Text style={[styles.gridMoodEmoji]}>{MOOD_MAP[memory.moodTag].emoji}</Text>
+            <Text style={[styles.gridDate, { color: theme.colors.muted }]}>
+              {formatMediumDate(memory.dateCreated)}
+            </Text>
+          </View>
         </View>
       </PressableScale>
     </Animated.View>
@@ -1029,6 +1032,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 2,
     textTransform: 'uppercase',
+  },
+  gridMetaRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 3,
+  },
+  gridMoodEmoji: {
+    fontSize: 7.5,
+    marginTop: 2,
   },
   empty: {
     alignItems: 'center',
