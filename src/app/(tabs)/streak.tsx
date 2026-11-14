@@ -29,6 +29,7 @@ import {
   WEEK_LABELS,
   addMonths,
   formatMonthYear,
+  formatSpokenDate,
   getMonthGrid,
   toDateKey,
 } from '@/lib/date';
@@ -313,7 +314,9 @@ export default function StreakScreen() {
                   const future = date.getTime() > new Date().setHours(23, 59, 59, 999);
                   return (
                     <PressableScale
-                      accessibilityLabel={`${key}${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
+                      accessibilityLabel={`${formatSpokenDate(date)}${
+                        (dayMemories?.length ?? 0) > 1 ? `, ${dayMemories?.length} memories` : ''
+                      }${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
                       disabled={!first}
                       haptic="none"
                       key={key}

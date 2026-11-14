@@ -77,6 +77,15 @@ export function formatMonthYear(date: Date): string {
   return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
+/** A date written the way a person would read it aloud, for screen readers. */
+export function formatSpokenDate(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
 export function formatStampDate(date: Date = new Date()): string {
   return date
     .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
