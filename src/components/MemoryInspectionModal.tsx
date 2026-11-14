@@ -192,7 +192,7 @@ export function MemoryInspectionModal({
       >
         <Animated.View entering={FadeIn.duration(220)} style={StyleSheet.absoluteFill} />
 
-        <Animated.View style={[styles.keyboard, sheetStyle]}>
+        <Animated.View accessibilityViewIsModal style={[styles.keyboard, sheetStyle]}>
           <GestureDetector gesture={dragGesture}>
             <View style={[styles.topBar, { paddingTop: insets.top + 6 }]}>
               <View style={styles.grabberWrap}>
@@ -422,6 +422,7 @@ export function MemoryInspectionModal({
 
         {confirmingDelete ? (
           <Animated.View
+            accessibilityViewIsModal
             entering={FadeIn.duration(150)}
             exiting={FadeOut.duration(120)}
             style={[StyleSheet.absoluteFill, styles.confirmOverlay]}
