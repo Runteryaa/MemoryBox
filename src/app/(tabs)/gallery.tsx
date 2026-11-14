@@ -574,11 +574,13 @@ function PileView({
         </PressableScale>
         <View style={styles.pileHintWrap}>
           <Text style={[styles.pileHint, { color: theme.colors.muted }]}>
-            {memories.length < 2 ? 'the only one in this pile' : 'swipe the photo to rummage'}
+            {memories.length < 2
+              ? 'the only one in this pile'
+              : `${currentIndex + 1} of ${memories.length}`}
           </Text>
           <View style={[styles.pileHintLine, { backgroundColor: theme.colors.borderStrong }]} />
           <Text style={[styles.pileHintSub, { color: theme.colors.faint }]}>
-            tap it to open the story
+            {memories.length < 2 ? 'tap it to open the story' : 'swipe to rummage · tap to open'}
           </Text>
         </View>
         <PressableScale

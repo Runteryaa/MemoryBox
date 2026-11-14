@@ -243,10 +243,12 @@ export function FlippablePolaroidCard({
             frontOpacity,
           ]}
         >
-          {/* Whole card is the flip target. It sits underneath the photo and
+          {/* Whole card is the tap target. It sits underneath the photo and
               caption so the favourite heart above it still gets its own taps. */}
           <Pressable
-            accessibilityLabel="Flip this memory to read the story"
+            accessibilityLabel={
+              onPressFront ? 'Open this memory' : 'Flip this memory to read the story'
+            }
             onPress={handleFrontPress}
             style={[StyleSheet.absoluteFill, styles.frontTapTarget]}
           />
