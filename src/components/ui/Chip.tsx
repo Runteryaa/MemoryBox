@@ -68,6 +68,7 @@ export function Chip({
     <PressableScale
       accessibilityLabel={label}
       onPress={onPress}
+      selected={onPress ? selected : undefined}
       style={[styles.chip, size === 'sm' && styles.chipSmall]}
     >
       <Animated.View pointerEvents="none" style={[styles.fill, surfaceStyle]} />

@@ -275,6 +275,7 @@ export default function GalleryScreen() {
                   setSort(option.id);
                   setPileIndex(0);
                 }}
+                selected={active}
                 style={[
                   styles.sortPill,
                   {
@@ -383,6 +384,7 @@ function ModeButton({
       accessibilityLabel={`${label} view`}
       haptic="selection"
       onPress={onPress}
+      selected={active}
       style={styles.modeButton}
     >
       <Animated.View

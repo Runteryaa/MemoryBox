@@ -18,6 +18,8 @@ interface PressableScaleProps {
   haptic?: 'tap' | 'soft' | 'medium' | 'heavy' | 'selection' | 'paperRustle' | 'none';
   accessibilityLabel?: string;
   accessibilityRole?: 'button' | 'link' | 'image' | 'none';
+  /** Lets toggles such as chips and sort pills announce whether they are on. */
+  selected?: boolean;
   testID?: string;
 }
 
@@ -33,6 +35,7 @@ export function PressableScale({
   haptic = 'tap',
   accessibilityLabel,
   accessibilityRole = 'button',
+  selected,
   testID,
 }: PressableScaleProps) {
   const scale = useSharedValue(1);
@@ -45,6 +48,7 @@ export function PressableScale({
     <AnimatedPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}
+      accessibilityState={selected === undefined ? undefined : { selected }}
       disabled={disabled}
       onLongPress={onLongPress}
       onPress={() => {
