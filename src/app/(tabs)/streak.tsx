@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-n
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, ChevronRight, Flame, Lock, Sparkles } from 'lucide-react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   FadeIn,
@@ -10,6 +11,7 @@ import Animated, {
   FadeInLeft,
   FadeInRight,
   interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -96,6 +98,32 @@ export default function StreakScreen() {
 
   const calendarWidth = Math.min(width, 560) - 36;
   const cellSize = (calendarWidth - 24 - 6 * 4) / 7;
+
+  // Swiping the calendar sideways flips through months, like a wall planner.
+  const shiftMonth = (direction: number) => {
+    haptics.tap();
+    setMonthDir(direction);
+    setMonth((current) => addMonths(current, direction));
+  };
+
+  const swipeX = useSharedValue(0);
+  const monthSwipe = Gesture.Pan()
+    .activeOffsetX([-18, 18])
+    .failOffsetY([-24, 24])
+    .onUpdate((event) => {
+      swipeX.value = event.translationX * 0.55;
+    })
+    .onEnd((event) => {
+      const shouldShift = Math.abs(event.translationX) > 54 || Math.abs(event.velocityX) > 620;
+      if (shouldShift) {
+        runOnJS(shiftMonth)(event.translationX > 0 ? -1 : 1);
+      }
+      swipeX.value = withSpring(0, { damping: 18, stiffness: 220 });
+    });
+
+  const monthSwipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: swipeX.value }],
+  }));
 
   const openFirstOfDay = (key: string) => {
     const list = byDate.get(key);
@@ -196,9 +224,7 @@ export default function StreakScreen() {
                   accessibilityLabel="Previous month"
                   haptic="tap"
                   onPress={() => {
-                    haptics.tap();
-                    setMonthDir(-1);
-                    setMonth((current) => addMonths(current, -1));
+                    shiftMonth(-1);
                   }}
                   style={[styles.navButton, { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border }]}
                 >
@@ -208,9 +234,7 @@ export default function StreakScreen() {
                   accessibilityLabel="Next month"
                   haptic="tap"
                   onPress={() => {
-                    haptics.tap();
-                    setMonthDir(1);
-                    setMonth((current) => addMonths(current, 1));
+                    shiftMonth(1);
                   }}
                   style={[styles.navButton, { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border }]}
                 >
@@ -219,11 +243,13 @@ export default function StreakScreen() {
               </View>
             </View>
 
-            <Animated.View
-              entering={(monthDir > 0 ? FadeInRight : FadeInLeft).duration(260)}
-              key={`month-${monthKey}`}
-              style={styles.calendarBody}
-            >
+            <GestureDetector gesture={monthSwipe}>
+              <Animated.View style={monthSwipeStyle}>
+                <Animated.View
+                  entering={(monthDir > 0 ? FadeInRight : FadeInLeft).duration(260)}
+                  key={`month-${monthKey}`}
+                  style={styles.calendarBody}
+                >
               <View style={[styles.dayLabels, { gap: 4 }]}>
                 {DAY_LABELS.map((label, index) => (
                   <View key={`${label}-${index}`} style={{ width: cellSize }}>
@@ -300,7 +326,9 @@ export default function StreakScreen() {
                   );
                 })}
               </View>
-            </Animated.View>
+                </Animated.View>
+              </Animated.View>
+            </GestureDetector>
 
             <Text style={[styles.calendarFoot, { color: theme.colors.muted }]}>
               little thumbnails mark the days you remembered
