@@ -63,3 +63,37 @@ export function memoryImageExists(uri: string): boolean {
     return false;
   }
 }
+
+/**
+ * Photos are copied into the app's folder as soon as they are captured, so a
+ * crash or a kill mid-arrange can leave a file that no memory points to. Sweep
+ * those away once at launch; anything still referenced is left untouched.
+ */
+export function pruneOrphanedImages(activeUris: readonly string[]): number {
+  const directory = memoriesDirectory();
+  if (!directory.exists) return 0;
+  const keep = new Set(
+    activeUris.map((uri) => {
+      const cleaned = uri.split('?')[0] ?? uri;
+      return cleaned.split('/').pop() ?? cleaned;
+    })
+  );
+  let removed = 0;
+  let entries: ReturnType<Directory['list']>;
+  try {
+    entries = directory.list();
+  } catch {
+    return 0;
+  }
+  for (const entry of entries) {
+    if (!(entry instanceof File)) continue;
+    if (keep.has(entry.name)) continue;
+    try {
+      entry.delete();
+      removed += 1;
+    } catch {
+      // A file that refuses to go is harmless; the next launch can try again.
+    }
+  }
+  return removed;
+}

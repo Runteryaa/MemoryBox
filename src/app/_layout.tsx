@@ -28,6 +28,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppErrorFallback } from '@/components/AppErrorFallback';
 import { StreakCelebrationOverlay } from '@/components/StreakCelebrationOverlay';
 import { UndoToast } from '@/components/UndoToast';
+import { pruneOrphanedImages } from '@/services/fileStorage';
 import { handlePendingImagePickerResult } from '@/services/pendingCapture';
 import { useMemoryStore } from '@/store/useMemoryStore';
 import { hydrateSettings, useSettingsStore } from '@/store/useSettingsStore';
@@ -67,6 +68,20 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (hasHydrated) void handlePendingImagePickerResult();
+  }, [hasHydrated]);
+
+  // Once the box has loaded, clear out any photo file that no memory points to
+  // (an abandoned capture, or one lost when the app was killed mid-save).
+  useEffect(() => {
+    if (!hasHydrated) return;
+    const { memories } = useMemoryStore.getState();
+    // An empty box could also mean hydration failed, so never sweep on nothing.
+    if (memories.length === 0) return;
+    try {
+      pruneOrphanedImages(memories.map((memory) => memory.imageUri));
+    } catch {
+      // Housekeeping must never interrupt opening the app.
+    }
   }, [hasHydrated]);
 
   useEffect(() => {
