@@ -3,6 +3,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Canvas, Circle, Group, Path, RoundedRect, useClock } from '@shopify/react-native-skia';
 import {
   useDerivedValue,
+  useReducedMotion,
   useSharedValue,
   withTiming,
   type SharedValue,
@@ -81,6 +82,7 @@ function BurstParticle({
 /** Skia particle burst used when the memory box opens or a memory lands inside. */
 export function SparkleBurst({ burstKey, color, particleCount = 26 }: SparkleBurstProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const [size, setSize] = useState({ width: 0, height: 0 });
   const progress = useSharedValue(0);
 
@@ -117,7 +119,7 @@ export function SparkleBurst({ burstKey, color, particleCount = 26 }: SparkleBur
       pointerEvents="none"
       style={[StyleSheet.absoluteFill, styles.center]}
     >
-      {size.width > 0 ? (
+      {size.width > 0 && !reducedMotion ? (
         <Canvas style={{ width: size.width, height: size.height }}>
           {particles.map((particle, index) => (
             <BurstParticle
@@ -130,6 +132,7 @@ export function SparkleBurst({ burstKey, color, particleCount = 26 }: SparkleBur
           ))}
         </Canvas>
       ) : null}
+      {/* With motion reduced, the burst becomes a single warm breath of light. */}
       <View
         pointerEvents="none"
         style={[
@@ -210,7 +213,12 @@ function ConfettiParticle({
 /** Continuous confetti rain for the streak celebration overlay. */
 export function CelebrationConfetti({ count = 34 }: ConfettiProps) {
   const { width, height } = useWindowDimensions();
+  const reducedMotion = useReducedMotion();
   const clock = useClock();
+
+  // Confetti is pure decoration; with motion reduced the overlay's own words
+  // carry the celebration instead of a screen full of falling paper.
+  if (reducedMotion) return null;
 
   return (
     <Canvas pointerEvents="none" style={StyleSheet.absoluteFill}>
