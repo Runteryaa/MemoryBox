@@ -652,7 +652,7 @@ function PileBackCard({
           {
             width: cardWidth,
             height: cardHeight,
-            backgroundColor: theme.colors.white,
+            backgroundColor: theme.colors.photoPaper,
             borderColor: theme.colors.paperEdge,
           },
         ]}
@@ -665,7 +665,7 @@ function PileBackCard({
         />
         <Text
           numberOfLines={2}
-          style={[styles.pilePlaceholderText, { color: theme.colors.ink }]}
+          style={[styles.pilePlaceholderText, { color: theme.colors.photoInk }]}
         >
           {memory.shortTitle}
         </Text>
@@ -815,7 +815,7 @@ function GridCard({
         style={[
           styles.gridCard,
           {
-            backgroundColor: theme.colors.white,
+            backgroundColor: theme.colors.photoPaper,
             borderColor: theme.colors.paperEdge,
           },
           shadows.soft,
@@ -874,7 +874,7 @@ function GridCard({
           <Text
             maxFontSizeMultiplier={1.2}
             numberOfLines={2}
-            style={[styles.gridTitle, { color: theme.colors.ink }]}
+            style={[styles.gridTitle, { color: theme.colors.photoInk }]}
           >
             {memory.shortTitle}
           </Text>
@@ -885,7 +885,7 @@ function GridCard({
             <Text
               maxFontSizeMultiplier={1.3}
               numberOfLines={1}
-              style={[styles.gridDate, { color: theme.colors.muted }]}
+              style={[styles.gridDate, { color: theme.colors.photoInkSoft }]}
             >
               {formatMediumDate(memory.dateCreated)}
             </Text>

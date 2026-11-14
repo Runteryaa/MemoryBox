@@ -238,7 +238,7 @@ export function FlippablePolaroidCard({
             {
               width,
               height: cardHeight,
-              backgroundColor: theme.colors.white,
+              backgroundColor: theme.colors.photoPaper,
               borderColor: theme.colors.paperEdge,
               shadowColor: theme.colors.shadow,
             },
@@ -426,7 +426,7 @@ export function FlippablePolaroidCard({
               numberOfLines={2}
               style={[
                 styles.caption,
-                { color: theme.colors.ink, fontSize: 24 * scale, lineHeight: 25 * scale },
+                { color: theme.colors.photoInk, fontSize: 24 * scale, lineHeight: 25 * scale },
               ]}
             >
               {memory.shortTitle}
@@ -434,18 +434,18 @@ export function FlippablePolaroidCard({
             <View style={styles.captionMeta}>
               <Text
                 maxFontSizeMultiplier={1.3}
-                style={[styles.dateText, { color: theme.colors.muted, fontSize: 8.5 * scale }]}
+                style={[styles.dateText, { color: theme.colors.photoInkSoft, fontSize: 8.5 * scale }]}
               >
                 {formatMediumDate(memory.dateCreated)}
               </Text>
               {showHint && !onPressFront ? (
                 <View style={styles.flipHint}>
-                  <RotateCcw color={theme.colors.faint} size={9 * scale} strokeWidth={2.4} />
+                  <RotateCcw color={theme.colors.photoInkSoft} size={9 * scale} strokeWidth={2.4} />
                   <Text
                     maxFontSizeMultiplier={1.3}
                     style={[
                       styles.flipHintText,
-                      { color: theme.colors.faint, fontSize: 8 * scale },
+                      { color: theme.colors.photoInkSoft, fontSize: 8 * scale },
                     ]}
                   >
                     tap to read the story

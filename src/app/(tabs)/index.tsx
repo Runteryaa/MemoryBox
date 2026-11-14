@@ -383,7 +383,7 @@ function OnThisDayCard({ memory, onPress }: { memory: Memory; onPress: () => voi
       style={[
         styles.onThisDayCard,
         {
-          backgroundColor: theme.colors.white,
+          backgroundColor: theme.colors.photoPaper,
           borderColor: theme.colors.paperEdge,
         },
         shadows.soft,
@@ -398,18 +398,21 @@ function OnThisDayCard({ memory, onPress }: { memory: Memory; onPress: () => voi
       />
       {imageFailed ? (
         <View pointerEvents="none" style={[styles.onThisDayImage, styles.onThisDayMissing]}>
-          <Text style={[styles.onThisDayMissingText, { color: theme.colors.faint }]}>
+          <Text style={[styles.onThisDayMissingText, { color: theme.colors.photoInkSoft }]}>
             photo drifted away
           </Text>
         </View>
       ) : null}
       <View style={styles.onThisDayCopy}>
-        <Text numberOfLines={2} style={[styles.onThisDayTitle, { color: theme.colors.ink }]}>
+        <Text
+          numberOfLines={2}
+          style={[styles.onThisDayTitle, { color: theme.colors.photoInk }]}
+        >
           {memory.shortTitle}
         </Text>
         <View style={styles.onThisDayMeta}>
           <Text style={styles.onThisDayMood}>{mood.emoji}</Text>
-          <Text style={[styles.onThisDayAge, { color: theme.colors.muted }]}>{yearsAgo}</Text>
+          <Text style={[styles.onThisDayAge, { color: theme.colors.photoInkSoft }]}>{yearsAgo}</Text>
         </View>
       </View>
     </PressableScale>

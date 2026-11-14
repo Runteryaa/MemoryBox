@@ -28,6 +28,11 @@ export interface AppColors {
   stamp: string;
   stampSoft: string;
   white: string;
+  /** The physical paper a polaroid is printed on — white in either theme. */
+  photoPaper: string;
+  /** Ink printed on that paper, so dark mode never writes light-on-white. */
+  photoInk: string;
+  photoInkSoft: string;
   shadow: string;
   overlay: string;
   tabBar: string;
@@ -84,6 +89,9 @@ const lightColors: AppColors = {
   stamp: '#64748B',
   stampSoft: '#EEF2F6',
   white: '#FFFFFF',
+  photoPaper: '#FFFFFF',
+  photoInk: '#2D241D',
+  photoInkSoft: '#8A7768',
   shadow: 'rgba(83, 57, 37, 0.18)',
   overlay: 'rgba(41, 29, 20, 0.55)',
   tabBar: 'rgba(255, 252, 246, 0.94)',
@@ -126,6 +134,9 @@ const darkColors: AppColors = {
   stamp: '#A8B6C6',
   stampSoft: '#30363D',
   white: '#FFFFFF',
+  photoPaper: '#FBF6EE',
+  photoInk: '#3B2E25',
+  photoInkSoft: '#8A7666',
   shadow: 'rgba(0, 0, 0, 0.4)',
   overlay: 'rgba(10, 8, 6, 0.72)',
   tabBar: 'rgba(36, 31, 28, 0.94)',
