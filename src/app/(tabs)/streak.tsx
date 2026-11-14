@@ -375,6 +375,7 @@ export default function StreakScreen() {
                       {first && !lostPhotos.has(first.imageUri) ? (
                         <>
                           <Image
+                            cachePolicy="memory-disk"
                             contentFit="cover"
                             onError={() => markPhotoLost(first.imageUri)}
                             source={{ uri: first.imageUri }}
