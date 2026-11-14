@@ -334,8 +334,13 @@ function MiniStat({
 function OnThisDayCard({ memory, onPress }: { memory: Memory; onPress: () => void }) {
   const theme = useTheme();
   const mood = MOOD_MAP[memory.moodTag] ?? MOOD_MAP.cozy;
+  const [imageFailed, setImageFailed] = useState(false);
   const years = Math.max(1, new Date().getFullYear() - new Date(memory.dateCreated).getFullYear());
   const yearsAgo = years === 1 ? 'a year ago' : `${years} years ago`;
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [memory.imageUri]);
 
   return (
     <PressableScale
@@ -354,10 +359,18 @@ function OnThisDayCard({ memory, onPress }: { memory: Memory; onPress: () => voi
     >
       <Image
         contentFit="cover"
+        onError={() => setImageFailed(true)}
         source={{ uri: memory.imageUri }}
         style={styles.onThisDayImage}
         transition={160}
       />
+      {imageFailed ? (
+        <View pointerEvents="none" style={[styles.onThisDayImage, styles.onThisDayMissing]}>
+          <Text style={[styles.onThisDayMissingText, { color: theme.colors.faint }]}>
+            photo drifted away
+          </Text>
+        </View>
+      ) : null}
       <View style={styles.onThisDayCopy}>
         <Text numberOfLines={2} style={[styles.onThisDayTitle, { color: theme.colors.ink }]}>
           {memory.shortTitle}
@@ -510,6 +523,19 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     height: 60,
     width: 60,
+  },
+  onThisDayMissing: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    left: 8,
+    paddingHorizontal: 4,
+    position: 'absolute',
+    top: 8,
+  },
+  onThisDayMissingText: {
+    fontFamily: fonts.hand,
+    fontSize: 9,
+    textAlign: 'center',
   },
   onThisDayCopy: {
     flex: 1,
