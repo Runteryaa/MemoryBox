@@ -628,6 +628,7 @@ export default function CaptureScreen() {
           </Animated.View>
         </View>
       ) : (
+        <Animated.View entering={FadeIn.duration(240)} style={styles.arrangeRoot}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.arrangeRoot}
@@ -933,6 +934,7 @@ export default function CaptureScreen() {
             visible={locationPickerOpen}
           />
         </KeyboardAvoidingView>
+        </Animated.View>
       )}
     </View>
   );
