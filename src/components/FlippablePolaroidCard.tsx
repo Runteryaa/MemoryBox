@@ -221,6 +221,9 @@ export function FlippablePolaroidCard({
   };
 
   const description = editable ? descriptionDraft ?? memory.description : memory.description;
+  // A stamp with only a city (or only a pin) should still say something.
+  const placeLabel =
+    memory.location?.placeName?.trim() || memory.location?.city?.trim() || '';
   const lineCount = Math.max(4, Math.floor((cardHeight - 138 * scale) / (26 * scale)));
   const lines = useMemo(() => Array.from({ length: lineCount }, (_, index) => index), [lineCount]);
 
@@ -400,9 +403,9 @@ export function FlippablePolaroidCard({
                   numberOfLines={2}
                   style={[styles.stampPlace, { color: theme.colors.ink }]}
                 >
-                  {memory.location.placeName}
+                  {placeLabel || 'somewhere worth keeping'}
                 </Text>
-                {memory.location.city ? (
+                {memory.location.city && memory.location.city.trim() !== placeLabel ? (
                   <Text
                     numberOfLines={1}
                     style={[styles.stampCity, { color: theme.colors.stamp }]}
@@ -629,7 +632,7 @@ export function FlippablePolaroidCard({
                   numberOfLines={1}
                   style={[styles.backLocationText, { color: theme.colors.sage }]}
                 >
-                  {memory.location.placeName}
+                  {placeLabel || 'a place worth keeping'}
                 </Text>
               </Pressable>
             ) : (

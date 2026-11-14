@@ -296,7 +296,9 @@ export function LocationStampPicker({
                     </Text>
                   </View>
                   <Text numberOfLines={2} style={[styles.stampPlace, { color: theme.colors.ink }]}>
-                    {previewLocation.placeName}
+                    {previewLocation.placeName?.trim() ||
+                      previewLocation.city ||
+                      'a place on the map'}
                   </Text>
                   <Text numberOfLines={1} style={[styles.stampCity, { color: theme.colors.stamp }]}>
                     {[previewLocation.city, previewLocation.country].filter(Boolean).join(' · ').toUpperCase() ||

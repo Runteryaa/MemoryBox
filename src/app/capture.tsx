@@ -795,7 +795,9 @@ export default function CaptureScreen() {
                     { color: location ? theme.colors.sage : theme.colors.muted },
                   ]}
                 >
-                  {location ? location.placeName : 'Add a place'}
+                  {location
+                    ? location.placeName?.trim() || location.city || 'Somewhere lovely'
+                    : 'Add a place'}
                 </Text>
               </PressableScale>
 

@@ -382,7 +382,9 @@ export function MemoryInspectionModal({
                         { color: memory?.location ? theme.colors.sage : theme.colors.muted },
                       ]}
                     >
-                      {memory?.location?.placeName ?? 'Add a place'}
+                      {memory?.location?.placeName?.trim() ||
+                        memory?.location?.city ||
+                        'Add a place'}
                     </Text>
                     <View style={styles.locationButtonWrap}>
                       <IconButton
