@@ -49,7 +49,7 @@ export function UndoToast() {
       entering={FadeInDown.springify().damping(16).stiffness(180)}
       exiting={FadeOutDown.duration(180)}
       pointerEvents="box-none"
-      style={[styles.wrap, { bottom: insets.bottom + 96 }]}
+      style={[styles.wrap, { bottom: insets.bottom + 178 }]}
     >
       <View
         style={[
