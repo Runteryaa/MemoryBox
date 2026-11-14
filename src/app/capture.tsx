@@ -107,6 +107,8 @@ export default function CaptureScreen() {
   const dragRotate = useSharedValue(0);
   const dragOpacity = useSharedValue(1);
   const lidOpen = useSharedValue(0);
+  const boxBounce = useSharedValue(1);
+  const shutter = useSharedValue(0);
   const [burstKey, setBurstKey] = useState(0);
 
   // While the keyboard is up the stage shrinks; keep the card the same size so
@@ -194,6 +196,10 @@ export default function CaptureScreen() {
     if (taking || !cameraRef.current) return;
     setTaking(true);
     haptics.medium();
+    shutter.value = withSequence(
+      withTiming(0.92, { duration: 55 }),
+      withTiming(0, { duration: 240, easing: Easing.out(Easing.quad) })
+    );
     try {
       const picture = await cameraRef.current.takePictureAsync({
         quality: 0.86,
@@ -212,7 +218,7 @@ export default function CaptureScreen() {
     } finally {
       setTaking(false);
     }
-  }, [adoptPhoto, taking]);
+  }, [adoptPhoto, shutter, taking]);
 
   const pickFromLibrary = useCallback(async () => {
     if (busy) return;
@@ -283,7 +289,16 @@ export default function CaptureScreen() {
       withTiming(0, { duration: 190 })
     );
     setTimeout(finishCapture, 410);
-  }, [dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen]);
+    // The keepsake lands: a sparkle burst plus a soft bounce of the box itself.
+    setTimeout(() => {
+      setBurstKey((key) => key + 1);
+      haptics.soft();
+      boxBounce.value = withSequence(
+        withTiming(1.05, { duration: 120 }),
+        withSpring(1, { damping: 9, stiffness: 200 })
+      );
+    }, 320);
+  }, [boxBounce, dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen]);
 
   const dragGesture = Gesture.Pan()
     .enabled(!cardFlipped)
@@ -327,6 +342,14 @@ export default function CaptureScreen() {
 
   const boxGlowStyle = useAnimatedStyle(() => ({
     opacity: interpolate(lidOpen.value, [0, 1], [0, 0.8]),
+  }));
+
+  const boxBounceStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: boxBounce.value }],
+  }));
+
+  const shutterStyle = useAnimatedStyle(() => ({
+    opacity: shutter.value,
   }));
 
   const discardDraft = () => {
@@ -375,6 +398,11 @@ export default function CaptureScreen() {
           ) : (
             <LinearGradient colors={['#2A211B', '#171310']} style={StyleSheet.absoluteFill} />
           )}
+
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, styles.shutterFlash, shutterStyle]}
+          />
 
           <LinearGradient
             colors={['rgba(12,9,7,0.72)', 'rgba(12,9,7,0)']}
@@ -728,7 +756,7 @@ export default function CaptureScreen() {
               </Text>
             </View>
 
-            <View style={styles.dropBoxWrap}>
+            <Animated.View style={[styles.dropBoxWrap, boxBounceStyle]}>
               <SparkleBurst burstKey={burstKey} particleCount={26} />
               <View style={[styles.dropShadow, { backgroundColor: theme.colors.shadow }]} />
               <View
@@ -775,7 +803,7 @@ export default function CaptureScreen() {
                 <Text style={[styles.dropLidText, { color: theme.colors.roseDeep }]}>our little</Text>
                 <Text style={[styles.dropLidTitle, { color: theme.colors.ink }]}>keepsakes</Text>
               </Animated.View>
-            </View>
+            </Animated.View>
 
             <Pressable
               accessibilityLabel="Tuck this memory in without dragging"
@@ -827,6 +855,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
+  },
+  shutterFlash: {
+    backgroundColor: '#FFFFFF',
   },
   bottomShade: {
     bottom: 0,

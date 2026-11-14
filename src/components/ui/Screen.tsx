@@ -1,6 +1,13 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme';
@@ -21,6 +28,32 @@ export function Screen({
   withGradient = true,
 }: ScreenProps) {
   const theme = useTheme();
+  const drift = useSharedValue(0);
+
+  // Very slow ambience: the warm blobs breathe so the paper never feels static.
+  useEffect(() => {
+    drift.value = withRepeat(
+      withTiming(1, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [drift]);
+
+  const topBlobStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: -drift.value * 12 },
+      { translateY: drift.value * 10 },
+      { scale: 1 + drift.value * 0.05 },
+    ],
+  }));
+
+  const bottomBlobStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: drift.value * 16 },
+      { translateY: -drift.value * 14 },
+      { scale: 1.04 - drift.value * 0.06 },
+    ],
+  }));
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }, style]}>
@@ -34,20 +67,22 @@ export function Screen({
           style={StyleSheet.absoluteFill}
         />
       ) : null}
-      <View
+      <Animated.View
         pointerEvents="none"
         style={[
           styles.blob,
           styles.blobTop,
           { backgroundColor: theme.isDark ? 'rgba(244,114,182,0.07)' : 'rgba(244,114,182,0.1)' },
+          topBlobStyle,
         ]}
       />
-      <View
+      <Animated.View
         pointerEvents="none"
         style={[
           styles.blob,
           styles.blobBottom,
           { backgroundColor: theme.isDark ? 'rgba(245,158,11,0.06)' : 'rgba(245,158,11,0.09)' },
+          bottomBlobStyle,
         ]}
       />
       <SafeAreaView edges={edges} style={[styles.safe, contentStyle]}>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Canvas, Circle, useClock } from '@shopify/react-native-skia';
+import { Canvas, Circle, Group, Path, RoundedRect, useClock } from '@shopify/react-native-skia';
 import {
   useDerivedValue,
   useSharedValue,
@@ -23,9 +23,14 @@ interface ParticleConfig {
   color: string;
   delay: number;
   spin: number;
+  drift: number;
 }
 
 const BURST_COLORS = ['#F59E0B', '#F472B6', '#E11D48', '#FDE68A', '#FCA5A5', '#FBBF24'];
+
+/** A soft four-point sparkle, drawn around the origin and scaled per particle. */
+const STAR_PATH =
+  'M 0 -1 L 0.2 -0.2 L 1 0 L 0.2 0.2 L 0 1 L -0.2 0.2 L -1 0 L -0.2 -0.2 Z';
 
 function seeded(index: number, salt: number): number {
   const value = Math.sin(index * 127.1 + salt * 311.7) * 43758.5453;
@@ -43,25 +48,33 @@ function BurstParticle({
   centerX: number;
   centerY: number;
 }) {
-  const cx = useDerivedValue(
-    () =>
-      centerX +
-      Math.cos(config.angle) * config.distance * Math.max(0, progress.value - config.delay * 0.2)
-  );
-  const cy = useDerivedValue(
-    () =>
-      centerY +
-      Math.sin(config.angle) * config.distance * Math.max(0, progress.value - config.delay * 0.2) +
-      progress.value * progress.value * 34
-  );
-  const radius = useDerivedValue(() => config.size * (1 - progress.value * 0.45));
+  // Skia only accepts plain numbers inside a transform array, so the whole
+  // matrix is derived at once instead of per-property.
+  const transform = useDerivedValue(() => {
+    const travel = config.distance * Math.max(0, progress.value - config.delay * 0.2);
+    const grow = Math.min(1, Math.max(0, (progress.value - config.delay) / 0.16));
+    return [
+      { translateX: centerX + Math.cos(config.angle) * travel },
+      {
+        translateY:
+          centerY +
+          Math.sin(config.angle) * travel +
+          progress.value * progress.value * (24 + config.drift),
+      },
+      { rotate: config.spin * Math.PI * 2 + progress.value * Math.PI * (0.6 + config.spin) },
+      { scale: config.size * (0.25 + grow * 0.75) * (1 - progress.value * 0.5) },
+    ];
+  });
   const opacity = useDerivedValue(() => {
     const local = Math.min(1, Math.max(0, (progress.value - config.delay) / 0.35));
     return Math.max(0, 1 - local) * (progress.value > 0 ? 1 : 0);
   });
 
   return (
-    <Circle cx={cx} cy={cy} r={radius} color={config.color} opacity={opacity} />
+    <Group opacity={opacity} transform={transform}>
+      <Path color={config.color} path={STAR_PATH} />
+      <Circle color={config.color} cx={0} cy={0} opacity={0.35} r={1.7} />
+    </Group>
   );
 }
 
@@ -76,10 +89,11 @@ export function SparkleBurst({ burstKey, color, particleCount = 26 }: SparkleBur
       Array.from({ length: particleCount }, (_, index) => ({
         angle: seeded(index, 1) * Math.PI * 2,
         distance: 30 + seeded(index, 2) * Math.max(60, Math.min(size.width, size.height) * 0.34),
-        size: 1.8 + seeded(index, 3) * 3.6,
+        size: 6 + seeded(index, 3) * 9,
         color: color ?? BURST_COLORS[index % BURST_COLORS.length] ?? '#F59E0B',
         delay: seeded(index, 4) * 0.2,
         spin: seeded(index, 5),
+        drift: seeded(index, 6) * 26,
       })),
     [color, particleCount, size.height, size.width]
   );
@@ -164,25 +178,32 @@ function ConfettiParticle({
   const sway = 14 + seeded(index, 13) * 40;
   const phase = seeded(index, 14) * Math.PI * 2;
   const offset = seeded(index, 15);
-  const radius = 2 + seeded(index, 16) * 4;
+  const size = 3 + seeded(index, 16) * 5;
+  const spin = 0.6 + seeded(index, 17) * 1.8;
 
-  const cx = useDerivedValue(
-    () => baseX + Math.sin(clock.value / 700 + phase) * sway
-  );
-  const cy = useDerivedValue(() => {
+  const transform = useDerivedValue(() => {
     const travel = (clock.value / 1000) * 90 * speed + offset * height;
-    return (travel % (height + 100)) - 50;
+    return [
+      { translateX: baseX + Math.sin(clock.value / 700 + phase) * sway },
+      { translateY: (travel % (height + 100)) - 50 },
+      { rotate: (clock.value / 1000) * spin * Math.PI + phase },
+      // Flipping the strip on its own axis reads as a real paper flake, not a dot.
+      { scaleX: Math.max(0.18, Math.abs(Math.cos(clock.value / 420 + phase * 1.7))) },
+    ];
   });
-  const opacity = useDerivedValue(() => 0.65 + Math.sin(clock.value / 500 + phase) * 0.25);
+  const opacity = useDerivedValue(() => 0.6 + Math.sin(clock.value / 500 + phase) * 0.3);
 
   return (
-    <Circle
-      color={FALL_COLORS[index % FALL_COLORS.length] ?? '#E11D48'}
-      cx={cx}
-      cy={cy}
-      opacity={opacity}
-      r={radius}
-    />
+    <Group opacity={opacity} transform={transform}>
+      <RoundedRect
+        color={FALL_COLORS[index % FALL_COLORS.length] ?? '#E11D48'}
+        height={size * 1.8}
+        r={size * 0.35}
+        width={size}
+        x={-size / 2}
+        y={-size * 0.9}
+      />
+    </Group>
   );
 }
 

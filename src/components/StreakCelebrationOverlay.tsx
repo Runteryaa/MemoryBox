@@ -1,8 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentProps } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Flame, Sparkles } from 'lucide-react-native';
-import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeInDown,
+  ZoomIn,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { CelebrationConfetti } from '@/components/SkiaParticles';
 import { PressableScale } from '@/components/ui/PressableScale';
@@ -81,14 +91,7 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
             entering={ZoomIn.delay(100).springify().damping(10)}
             style={[styles.flameWrap, shadows.card]}
           >
-            <LinearGradient
-              colors={theme.gradients.flame}
-              end={{ x: 1, y: 1 }}
-              start={{ x: 0, y: 0 }}
-              style={styles.flame}
-            >
-              <Flame color="#FFFFFF" fill="rgba(255,255,255,0.3)" size={44} strokeWidth={2} />
-            </LinearGradient>
+            <FlameBadge colors={theme.gradients.flame} />
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(220)} style={styles.copy}>
@@ -126,6 +129,53 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
   );
 }
 
+/** The flame breathes and casts a warm halo, like a candle behind paper. */
+function FlameBadge({ colors }: { colors: ComponentProps<typeof LinearGradient>['colors'] }) {
+  const pulse = useSharedValue(0);
+  const flicker = useSharedValue(0);
+
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 1700, easing: Easing.out(Easing.quad) }),
+      -1,
+      false
+    );
+    flicker.value = withRepeat(
+      withTiming(1, { duration: 1350, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [flicker, pulse]);
+
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(pulse.value, [0, 1], [0.42, 0]),
+    transform: [{ scale: interpolate(pulse.value, [0, 1], [0.88, 1.5]) }],
+  }));
+
+  const flameStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scaleY: interpolate(flicker.value, [0, 1], [1, 1.055]) },
+      { scaleX: interpolate(flicker.value, [0, 1], [1, 0.972]) },
+    ],
+  }));
+
+  return (
+    <View style={styles.flameStage}>
+      <Animated.View style={[styles.halo, haloStyle]} />
+      <Animated.View style={flameStyle}>
+        <LinearGradient
+          colors={colors}
+          end={{ x: 1, y: 1 }}
+          start={{ x: 0, y: 0 }}
+          style={styles.flame}
+        >
+          <Flame color="#FFFFFF" fill="rgba(255,255,255,0.3)" size={44} strokeWidth={2} />
+        </LinearGradient>
+      </Animated.View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   backdrop: {
     alignItems: 'center',
@@ -159,13 +209,26 @@ const styles = StyleSheet.create({
   },
   flameWrap: {
     borderRadius: 999,
-    overflow: 'hidden',
+  },
+  flameStage: {
+    alignItems: 'center',
+    height: 96,
+    justifyContent: 'center',
+    width: 96,
+  },
+  halo: {
+    backgroundColor: 'rgba(245,158,11,0.3)',
+    borderRadius: 999,
+    height: 96,
+    position: 'absolute',
+    width: 96,
   },
   flame: {
     alignItems: 'center',
     borderRadius: 999,
     height: 96,
     justifyContent: 'center',
+    overflow: 'hidden',
     width: 96,
   },
   copy: {

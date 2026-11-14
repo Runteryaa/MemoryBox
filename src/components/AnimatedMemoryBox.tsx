@@ -79,7 +79,7 @@ export function AnimatedMemoryBox({
 
   const lidStyle = useAnimatedStyle(() => ({
     opacity: interpolate(open.value, [0, 0.82, 1], [1, 1, 0.97]),
-    shadowOpacity: interpolate(open.value, [0, 1], [0.18, 0.04]),
+    shadowOpacity: interpolate(open.value, [0, 1], [0.18, 0.03]),
     transform: [
       { perspective: 900 },
       { translateY: open.value * -12 },
@@ -87,16 +87,59 @@ export function AnimatedMemoryBox({
     ],
   }));
 
+  // The underside of the lid catches light as it tips back.
+  const lidInsideStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(open.value, [0.1, 0.85], [0, 0.92], 'clamp'),
+  }));
+
+  const lidShadowStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(open.value, [0, 1], [0.55, 0], 'clamp'),
+  }));
+
   const stackStyle = useAnimatedStyle(() => ({
     opacity: interpolate(open.value, [0, 0.35, 1], [0.92, 1, 1]),
     transform: [
-      { translateY: open.value * -12 },
-      { scale: 1 + open.value * 0.05 },
+      { translateY: interpolate(open.value, [0, 1], [0, -16]) },
+      { scale: 1 + open.value * 0.04 },
+    ],
+  }));
+
+  // Each keepsake leans out at its own tempo, like a hand rummaging through them.
+  const cardOneStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: open.value * -13 },
+      { translateY: open.value * -20 },
+      { rotate: `${-11 - open.value * 7}deg` },
+    ],
+  }));
+
+  const cardTwoStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: open.value * 2 },
+      { translateY: open.value * -32 },
+      { rotate: `${5 - open.value * 4}deg` },
+    ],
+  }));
+
+  const cardThreeStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: open.value * 15 },
+      { translateY: open.value * -18 },
+      { rotate: `${12 + open.value * 8}deg` },
     ],
   }));
 
   const insideGlowStyle = useAnimatedStyle(() => ({
     opacity: interpolate(open.value, [0, 1], [0, 0.75]),
+  }));
+
+  // A warm shaft of light escapes the open lid.
+  const lightShaftStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(open.value, [0, 0.55, 1], [0, 0.35, 0.55], 'clamp'),
+    transform: [
+      { translateY: interpolate(open.value, [0, 1], [10, -26]) },
+      { scaleY: interpolate(open.value, [0, 1], [0.4, 1]) },
+    ],
   }));
 
   const scale = width / 310;
@@ -119,15 +162,21 @@ export function AnimatedMemoryBox({
           />
 
           <Animated.View style={[styles.polaroidStack, stackStyle]}>
-            <View style={[styles.miniPolaroid, styles.miniOne, { backgroundColor: theme.colors.white }]}>
+            <Animated.View
+              style={[styles.miniPolaroid, styles.miniOne, { backgroundColor: theme.colors.white }, cardOneStyle]}
+            >
               <LinearGradient colors={theme.gradients.rose} style={styles.miniPhoto} />
-            </View>
-            <View style={[styles.miniPolaroid, styles.miniTwo, { backgroundColor: theme.colors.white }]}>
+            </Animated.View>
+            <Animated.View
+              style={[styles.miniPolaroid, styles.miniTwo, { backgroundColor: theme.colors.white }, cardTwoStyle]}
+            >
               <LinearGradient colors={theme.gradients.warm} style={styles.miniPhoto} />
-            </View>
-            <View style={[styles.miniPolaroid, styles.miniThree, { backgroundColor: theme.colors.white }]}>
+            </Animated.View>
+            <Animated.View
+              style={[styles.miniPolaroid, styles.miniThree, { backgroundColor: theme.colors.white }, cardThreeStyle]}
+            >
               <LinearGradient colors={theme.gradients.flame} style={styles.miniPhoto} />
-            </View>
+            </Animated.View>
           </Animated.View>
 
           <View
@@ -142,6 +191,14 @@ export function AnimatedMemoryBox({
               start={{ x: 0, y: 0 }}
               style={StyleSheet.absoluteFill}
             />
+            <LinearGradient
+              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0)', 'rgba(40,22,12,0.16)']}
+              end={{ x: 0.8, y: 1 }}
+              locations={[0, 0.52, 1]}
+              pointerEvents="none"
+              start={{ x: 0.15, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
             <View style={[styles.insideRim, { backgroundColor: theme.colors.boxInside }]}>
               <Animated.View
                 style={[
@@ -151,6 +208,21 @@ export function AnimatedMemoryBox({
                 ]}
               />
             </View>
+
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.lightShaft,
+                {
+                  backgroundColor: theme.isDark ? 'rgba(251,191,36,0.35)' : 'rgba(255,236,190,0.75)',
+                },
+                lightShaftStyle,
+              ]}
+            />
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.lidShadow, { backgroundColor: theme.colors.shadow }, lidShadowStyle]}
+            />
 
             <View style={[styles.ribbonBody, { backgroundColor: theme.colors.ribbon }]} />
             <View
@@ -214,6 +286,21 @@ export function AnimatedMemoryBox({
             />
             <Text style={[styles.lidText, { color: theme.colors.roseDeep }]}>our little</Text>
             <Text style={[styles.lidTitle, { color: theme.colors.ink }]}>keepsakes</Text>
+
+            {/* Inside of the lid — visible while it tips back on its hinge. */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.lidInside,
+                {
+                  backgroundColor: theme.isDark ? '#3A2118' : '#E7B893',
+                  borderColor: theme.colors.boxInside,
+                },
+                lidInsideStyle,
+              ]}
+            >
+              <View style={styles.lidInsideSheen} />
+            </Animated.View>
           </Animated.View>
 
           <View style={styles.sparkleFloat}>
@@ -290,6 +377,23 @@ const styles = StyleSheet.create({
     height: 9,
     borderRadius: 999,
   },
+  lightShaft: {
+    position: 'absolute',
+    alignSelf: 'center',
+    borderRadius: 999,
+    height: 46,
+    top: 0,
+    width: 180,
+    opacity: 0,
+  },
+  lidShadow: {
+    position: 'absolute',
+    height: 26,
+    left: 0,
+    right: 0,
+    top: 0,
+    opacity: 0.55,
+  },
   ribbonBody: {
     position: 'absolute',
     top: 0,
@@ -348,6 +452,26 @@ const styles = StyleSheet.create({
   },
   lidGradient: {
     borderRadius: 20,
+  },
+  lidInside: {
+    borderRadius: 20,
+    borderWidth: 1,
+    bottom: 0,
+    left: 0,
+    opacity: 0,
+    overflow: 'hidden',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  lidInsideSheen: {
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderRadius: 999,
+    height: 22,
+    left: 24,
+    position: 'absolute',
+    right: 24,
+    top: 12,
   },
   ribbonLid: {
     position: 'absolute',

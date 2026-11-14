@@ -12,7 +12,14 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { StreakCelebrationOverlay } from '@/components/StreakCelebrationOverlay';
@@ -102,13 +109,23 @@ export default function RootLayout() {
 function LoadingMark() {
   const theme = useTheme();
   const breathe = useSharedValue(0.92);
+  const shimmer = useSharedValue(0);
 
   useEffect(() => {
     breathe.value = withRepeat(withTiming(1.06, { duration: 1500 }), -1, true);
-  }, [breathe]);
+    shimmer.value = withRepeat(
+      withTiming(1, { duration: 2100, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      false
+    );
+  }, [breathe, shimmer]);
 
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: breathe.value }],
+  }));
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -80 + shimmer.value * 200 }, { rotate: '18deg' }],
   }));
 
   return (
@@ -116,6 +133,7 @@ function LoadingMark() {
       <Animated.View style={[style, styles.loadingBox, { backgroundColor: theme.colors.boxBase }]}>
         <View style={[styles.loadingLid, { backgroundColor: theme.colors.rose }]} />
         <View style={[styles.loadingRibbon, { backgroundColor: theme.colors.ribbon }]} />
+        <Animated.View pointerEvents="none" style={[styles.shimmer, shimmerStyle]} />
       </Animated.View>
       <Text style={[styles.loadingText, { color: theme.colors.ink }]}>Memory Box</Text>
       <Text style={[styles.loadingHint, { color: theme.colors.muted }]}>
@@ -157,6 +175,14 @@ const styles = StyleSheet.create({
     opacity: 0.85,
     position: 'absolute',
     width: 10,
+  },
+  shimmer: {
+    backgroundColor: 'rgba(255,255,255,0.26)',
+    borderRadius: 8,
+    height: 140,
+    position: 'absolute',
+    top: -30,
+    width: 20,
   },
   loadingText: {
     fontFamily: fonts.serif,

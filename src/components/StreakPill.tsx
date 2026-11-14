@@ -32,6 +32,7 @@ export function StreakPill({
 }: StreakPillProps) {
   const theme = useTheme();
   const pulse = useSharedValue(1);
+  const flicker = useSharedValue(0);
   const logged = new Set(loggedDates);
   const week = getWeekDays();
   const todayKey = toDateKey();
@@ -48,8 +49,26 @@ export function StreakPill({
     }
   }, [pendingToday, pulse]);
 
+  // Even a settled streak should look like it is burning, not like an icon.
+  useEffect(() => {
+    flicker.value = withRepeat(
+      withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [flicker]);
+
   const flameStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
+    transform: [
+      { scale: pulse.value },
+      { scaleY: 1 + flicker.value * 0.06 },
+      { scaleX: 1 - flicker.value * 0.03 },
+    ],
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: pendingToday ? 0.25 + flicker.value * 0.22 : 0.12,
+    transform: [{ scale: 1 + flicker.value * 0.12 }],
   }));
 
   const subtitle = loggedToday
@@ -74,16 +93,22 @@ export function StreakPill({
         },
       ]}
     >
-      <Animated.View style={flameStyle}>
-        <LinearGradient
-          colors={theme.gradients.flame}
-          end={{ x: 1, y: 1 }}
-          start={{ x: 0, y: 0 }}
-          style={styles.flame}
-        >
-          <Flame color="#FFFFFF" fill="rgba(255,255,255,0.25)" size={19} strokeWidth={2.4} />
-        </LinearGradient>
-      </Animated.View>
+      <View style={styles.flameStage}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.flameGlow, { backgroundColor: theme.colors.amber }, glowStyle]}
+        />
+        <Animated.View style={flameStyle}>
+          <LinearGradient
+            colors={theme.gradients.flame}
+            end={{ x: 1, y: 1 }}
+            start={{ x: 0, y: 0 }}
+            style={styles.flame}
+          >
+            <Flame color="#FFFFFF" fill="rgba(255,255,255,0.25)" size={19} strokeWidth={2.4} />
+          </LinearGradient>
+        </Animated.View>
+      </View>
 
       <View style={styles.copy}>
         <View style={styles.countRow}>
@@ -174,6 +199,18 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     height: 36,
     justifyContent: 'center',
+    width: 36,
+  },
+  flameStage: {
+    alignItems: 'center',
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  flameGlow: {
+    borderRadius: 18,
+    height: 36,
+    position: 'absolute',
     width: 36,
   },
   copy: {

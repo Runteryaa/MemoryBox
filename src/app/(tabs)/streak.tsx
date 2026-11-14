@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { MemoryInspectionModal } from '@/components/MemoryInspectionModal';
+import { CountUp } from '@/components/ui/CountUp';
 import { Screen } from '@/components/ui/Screen';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { MILESTONE_DEFINITIONS, type MilestoneId } from '@/constants';
@@ -52,21 +53,37 @@ export default function StreakScreen() {
   );
 
   const flamePulse = useSharedValue(1);
+  const flameFlicker = useSharedValue(0);
   useEffect(() => {
     flamePulse.value = withRepeat(
       withTiming(1.05, { duration: 1400, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
-  }, [flamePulse]);
+    flameFlicker.value = withRepeat(
+      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [flameFlicker, flamePulse]);
 
   const flameStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: flamePulse.value }],
+    transform: [
+      { scale: flamePulse.value },
+      { scaleY: 1 + flameFlicker.value * 0.07 },
+      { scaleX: 1 - flameFlicker.value * 0.035 },
+    ],
+  }));
+
+  const flameHaloStyle = useAnimatedStyle(() => ({
+    opacity: 0.16 + flameFlicker.value * 0.2,
+    transform: [{ scale: 0.92 + flameFlicker.value * 0.16 }],
   }));
 
   const cells = useMemo(() => getMonthGrid(month), [month]);
   const todayKey = toDateKey();
   const logged = useMemo(() => new Set(streak.loggedDates), [streak.loggedDates]);
+  const monthKey = `${month.getFullYear()}-${month.getMonth()}`;
 
   const calendarWidth = Math.min(width, 560) - 36;
   const cellSize = (calendarWidth - 24 - 6 * 4) / 7;
@@ -112,19 +129,25 @@ export default function StreakScreen() {
             start={{ x: 0, y: 0 }}
             style={[styles.hero, { borderColor: theme.colors.border, shadowColor: theme.colors.shadow }]}
           >
-            <Animated.View style={flameStyle}>
-              <LinearGradient
-                colors={theme.gradients.flame}
-                end={{ x: 1, y: 1 }}
-                start={{ x: 0, y: 0 }}
-                style={styles.heroFlame}
-              >
-                <Flame color="#FFFFFF" fill="rgba(255,255,255,0.28)" size={40} strokeWidth={2} />
-              </LinearGradient>
-            </Animated.View>
+            <View style={styles.heroFlameStage}>
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.heroFlameHalo, { backgroundColor: theme.colors.amber }, flameHaloStyle]}
+              />
+              <Animated.View style={flameStyle}>
+                <LinearGradient
+                  colors={theme.gradients.flame}
+                  end={{ x: 1, y: 1 }}
+                  start={{ x: 0, y: 0 }}
+                  style={styles.heroFlame}
+                >
+                  <Flame color="#FFFFFF" fill="rgba(255,255,255,0.28)" size={40} strokeWidth={2} />
+                </LinearGradient>
+              </Animated.View>
+            </View>
 
             <View style={styles.heroCountRow}>
-              <Text style={[styles.heroCount, { color: theme.colors.ink }]}>{streak.currentStreak}</Text>
+              <CountUp style={[styles.heroCount, { color: theme.colors.ink }]} value={streak.currentStreak} />
               <Text style={[styles.heroUnit, { color: theme.colors.inkSoft }]}>
                 {streak.currentStreak === 1 ? 'day' : 'days'}
               </Text>
@@ -134,11 +157,11 @@ export default function StreakScreen() {
             <View style={styles.heroMeta}>
               <View style={[styles.heroChip, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                 <Text style={[styles.heroChipLabel, { color: theme.colors.muted }]}>days remembered</Text>
-                <Text style={[styles.heroChipValue, { color: theme.colors.rose }]}>{streak.loggedDates.length}</Text>
+                <CountUp style={[styles.heroChipValue, { color: theme.colors.rose }]} value={streak.loggedDates.length} />
               </View>
               <View style={[styles.heroChip, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                 <Text style={[styles.heroChipLabel, { color: theme.colors.muted }]}>longest run</Text>
-                <Text style={[styles.heroChipValue, { color: theme.colors.sage }]}>{streak.longestStreak}</Text>
+                <CountUp style={[styles.heroChipValue, { color: theme.colors.sage }]} value={streak.longestStreak} />
               </View>
             </View>
           </LinearGradient>
@@ -185,81 +208,88 @@ export default function StreakScreen() {
               </View>
             </View>
 
-            <View style={[styles.dayLabels, { gap: 4 }]}>
-              {DAY_LABELS.map((label, index) => (
-                <View key={`${label}-${index}`} style={{ width: cellSize }}>
-                  <Text style={[styles.dayLabel, { color: theme.colors.faint }]}>{label}</Text>
-                </View>
-              ))}
-            </View>
+            <Animated.View
+              entering={FadeInDown.duration(280)}
+              key={`month-${monthKey}`}
+              style={styles.calendarBody}
+            >
+              <View style={[styles.dayLabels, { gap: 4 }]}>
+                {DAY_LABELS.map((label, index) => (
+                  <View key={`${label}-${index}`} style={{ width: cellSize }}>
+                    <Text style={[styles.dayLabel, { color: theme.colors.faint }]}>{label}</Text>
+                  </View>
+                ))}
+              </View>
 
-            <View style={[styles.calendarGrid, { gap: 4 }]}>
-              {cells.map((date, index) => {
-                if (!date) {
-                  return <View key={`blank-${index}`} style={{ height: cellSize, width: cellSize }} />;
-                }
-                const key = toDateKey(date);
-                const isToday = key === todayKey;
-                const isLogged = logged.has(key);
-                const dayMemories = byDate.get(key);
-                const first = dayMemories?.[0] ?? null;
-                const future = date.getTime() > new Date().setHours(23, 59, 59, 999);
-                return (
-                  <PressableScale
-                    accessibilityLabel={`${key}${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
-                    disabled={!first}
-                    haptic={first ? 'tap' : 'none'}
-                    key={key}
-                    onPress={() => openFirstOfDay(key)}
-                    scaleTo={0.9}
-                    style={[
-                      styles.dayCell,
-                      {
-                        width: cellSize,
-                        height: cellSize,
-                        backgroundColor: isToday
-                          ? theme.colors.roseSoft
-                          : isLogged
-                            ? theme.colors.amberSoft
-                            : theme.colors.surfaceRaised,
-                        borderColor: isToday
-                          ? theme.colors.rose
-                          : isLogged
-                            ? theme.colors.amber
-                            : theme.colors.border,
-                        opacity: future ? 0.4 : 1,
-                      },
-                    ]}
-                  >
-                    {first ? (
-                      <>
-                        <Image
-                          contentFit="cover"
-                          source={{ uri: first.imageUri }}
-                          style={StyleSheet.absoluteFill}
-                          transition={160}
-                        />
-                        <View style={styles.dayShade} />
-                        <Text style={[styles.dayNumberOnPhoto, { color: '#FFFFFF' }]}>{date.getDate()}</Text>
-                      </>
-                    ) : (
-                      <Text
-                        style={[
-                          styles.dayNumber,
-                          {
-                            color: isToday ? theme.colors.rose : theme.colors.muted,
-                            fontFamily: isToday ? fonts.sansBold : fonts.sansSemiBold,
-                          },
-                        ]}
-                      >
-                        {date.getDate()}
-                      </Text>
-                    )}
-                    {isLogged ? <View style={[styles.dayDot, { backgroundColor: theme.colors.amber }]} /> : null}
-                  </PressableScale>
-                );
-              })}
-            </View>
+              <View style={[styles.calendarGrid, { gap: 4 }]}>
+                {cells.map((date, index) => {
+                  if (!date) {
+                    return <View key={`blank-${index}`} style={{ height: cellSize, width: cellSize }} />;
+                  }
+                  const key = toDateKey(date);
+                  const isToday = key === todayKey;
+                  const isLogged = logged.has(key);
+                  const dayMemories = byDate.get(key);
+                  const first = dayMemories?.[0] ?? null;
+                  const future = date.getTime() > new Date().setHours(23, 59, 59, 999);
+                  return (
+                    <PressableScale
+                      accessibilityLabel={`${key}${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
+                      disabled={!first}
+                      haptic={first ? 'tap' : 'none'}
+                      key={key}
+                      onPress={() => openFirstOfDay(key)}
+                      scaleTo={0.9}
+                      style={[
+                        styles.dayCell,
+                        {
+                          width: cellSize,
+                          height: cellSize,
+                          backgroundColor: isToday
+                            ? theme.colors.roseSoft
+                            : isLogged
+                              ? theme.colors.amberSoft
+                              : theme.colors.surfaceRaised,
+                          borderColor: isToday
+                            ? theme.colors.rose
+                            : isLogged
+                              ? theme.colors.amber
+                              : theme.colors.border,
+                          opacity: future ? 0.4 : 1,
+                        },
+                      ]}
+                    >
+                      {first ? (
+                        <>
+                          <Image
+                            contentFit="cover"
+                            source={{ uri: first.imageUri }}
+                            style={StyleSheet.absoluteFill}
+                            transition={160}
+                          />
+                          <View style={styles.dayShade} />
+                          <Text style={[styles.dayNumberOnPhoto, { color: '#FFFFFF' }]}>{date.getDate()}</Text>
+                        </>
+                      ) : (
+                        <Text
+                          style={[
+                            styles.dayNumber,
+                            {
+                              color: isToday ? theme.colors.rose : theme.colors.muted,
+                              fontFamily: isToday ? fonts.sansBold : fonts.sansSemiBold,
+                            },
+                          ]}
+                        >
+                          {date.getDate()}
+                        </Text>
+                      )}
+                      {isLogged ? <View style={[styles.dayDot, { backgroundColor: theme.colors.amber }]} /> : null}
+                      {isToday ? <TodayRing color={theme.colors.rose} size={cellSize} /> : null}
+                    </PressableScale>
+                  );
+                })}
+              </View>
+            </Animated.View>
 
             <Text style={[styles.calendarFoot, { color: theme.colors.muted }]}>
               little thumbnails mark the days you remembered
@@ -305,6 +335,36 @@ export default function StreakScreen() {
   );
 }
 
+/** Soft breathing ring so today's square is easy to find at a glance. */
+function TodayRing({ color, size }: { color: string; size: number }) {
+  const pulse = useSharedValue(0);
+
+  useEffect(() => {
+    pulse.value = withRepeat(withTiming(1, { duration: 1900, easing: Easing.out(Easing.quad) }), -1, false);
+  }, [pulse]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(pulse.value, [0, 1], [0.6, 0]),
+    // Kept inside the cell: the square clips its photo corners.
+    transform: [{ scale: interpolate(pulse.value, [0, 1], [0.72, 0.98]) }],
+  }));
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.todayRing,
+        {
+          borderColor: color,
+          height: size,
+          width: size,
+        },
+        style,
+      ]}
+    />
+  );
+}
+
 function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   const theme = useTheme();
   return (
@@ -345,24 +405,17 @@ function MilestoneBadge({
 
   useEffect(() => {
     flip.value = withTiming(flipped ? 1 : 0, {
-      duration: 480,
+      duration: 520,
       easing: Easing.inOut(Easing.cubic),
     });
   }, [flip, flipped]);
 
-  const frontStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(flip.value, [0, 0.49, 0.5, 1], [1, 1, 0, 0]),
+  // One hinge for the whole stamp: the back face simply starts rotated 180°.
+  const flipperStyle = useAnimatedStyle(() => ({
     transform: [
-      { perspective: 800 },
+      { perspective: 900 },
       { rotateY: `${interpolate(flip.value, [0, 1], [0, 180])}deg` },
-    ],
-  }));
-
-  const backStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(flip.value, [0, 0.49, 0.5, 1], [0, 0, 1, 1]),
-    transform: [
-      { perspective: 800 },
-      { rotateY: `${interpolate(flip.value, [0, 1], [180, 360])}deg` },
+      { scale: interpolate(flip.value, [0, 0.5, 1], [1, 0.95, 1]) },
     ],
   }));
 
@@ -376,63 +429,61 @@ function MilestoneBadge({
         style={styles.badgePress}
       >
         <View style={styles.badgeStage}>
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.badgeFace,
-              {
-                backgroundColor: unlocked ? theme.colors.amberSoft : theme.colors.surface,
-                borderColor: unlocked ? theme.colors.amber : theme.colors.border,
-              },
-              frontStyle,
-            ]}
-          >
-            <Text style={[styles.badgeEmoji, !unlocked && styles.badgeLockedEmoji]}>{emoji}</Text>
-            <Text
-              numberOfLines={2}
+          <Animated.View style={[styles.badgeFlipper, flipperStyle]}>
+            <View
               style={[
-                styles.badgeTitle,
-                { color: unlocked ? theme.colors.ink : theme.colors.muted },
+                styles.badgeFace,
+                {
+                  backgroundColor: unlocked ? theme.colors.amberSoft : theme.colors.surface,
+                  borderColor: unlocked ? theme.colors.amber : theme.colors.border,
+                },
               ]}
             >
-              {title}
-            </Text>
-            {unlocked ? (
-              <View style={[styles.badgeTag, { backgroundColor: theme.colors.amber }]}>
-                <Text style={[styles.badgeTagText, { color: contrastInk(theme.colors.amber) }]}>
-                  stamped
-                </Text>
-              </View>
-            ) : (
-              <View style={[styles.badgeTag, { backgroundColor: theme.colors.lockedSoft }]}>
-                <Lock color={theme.colors.locked} size={9} strokeWidth={2.6} />
-                <Text style={[styles.badgeTagText, { color: theme.colors.locked }]}>{target}</Text>
-              </View>
-            )}
-          </Animated.View>
+              <Text style={[styles.badgeEmoji, !unlocked && styles.badgeLockedEmoji]}>{emoji}</Text>
+              <Text
+                numberOfLines={2}
+                style={[
+                  styles.badgeTitle,
+                  { color: unlocked ? theme.colors.ink : theme.colors.muted },
+                ]}
+              >
+                {title}
+              </Text>
+              {unlocked ? (
+                <View style={[styles.badgeTag, { backgroundColor: theme.colors.amber }]}>
+                  <Text style={[styles.badgeTagText, { color: contrastInk(theme.colors.amber) }]}>
+                    stamped
+                  </Text>
+                </View>
+              ) : (
+                <View style={[styles.badgeTag, { backgroundColor: theme.colors.lockedSoft }]}>
+                  <Lock color={theme.colors.locked} size={9} strokeWidth={2.6} />
+                  <Text style={[styles.badgeTagText, { color: theme.colors.locked }]}>{target}</Text>
+                </View>
+              )}
+            </View>
 
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.badgeFace,
-              styles.badgeBack,
-              {
-                backgroundColor: theme.colors.paper,
-                borderColor: theme.colors.borderStrong,
-              },
-              backStyle,
-            ]}
-          >
-            <Text style={[styles.badgeBackTitle, { color: theme.colors.rose }]}>
-              {unlocked ? 'you did it' : 'still waiting'}
-            </Text>
-            <Text
-              numberOfLines={4}
-              style={[styles.badgeDescription, { color: theme.colors.inkSoft }]}
+            <View
+              style={[
+                styles.badgeFace,
+                styles.badgeBack,
+                {
+                  backgroundColor: theme.colors.paper,
+                  borderColor: theme.colors.borderStrong,
+                },
+              ]}
             >
-              {description}
-            </Text>
-            <Text style={[styles.badgeTarget, { color: theme.colors.muted }]}>{target}</Text>
+              <Text style={[styles.badgeBackTitle, { color: theme.colors.rose }]}>
+                {unlocked ? 'you did it' : 'still waiting'}
+              </Text>
+              <Text
+                numberOfLines={4}
+                style={[styles.badgeDescription, { color: theme.colors.inkSoft }]}
+              >
+                {description}
+              </Text>
+              <Text style={[styles.badgeTarget, { color: theme.colors.muted }]}>{target}</Text>
+            </View>
           </Animated.View>
         </View>
       </PressableScale>
@@ -497,6 +548,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     height: 78,
     justifyContent: 'center',
+    width: 78,
+  },
+  heroFlameStage: {
+    alignItems: 'center',
+    height: 78,
+    justifyContent: 'center',
+    width: 78,
+  },
+  heroFlameHalo: {
+    borderRadius: 999,
+    height: 78,
+    position: 'absolute',
     width: 78,
   },
   heroCountRow: {
@@ -586,6 +649,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 0,
   },
+  calendarBody: {
+    width: '100%',
+  },
   dayLabel: {
     fontFamily: fonts.sansBold,
     fontSize: 8.5,
@@ -629,6 +695,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 2,
     width: 3,
+  },
+  todayRing: {
+    borderRadius: 9,
+    borderWidth: 1.5,
+    left: 0,
+    position: 'absolute',
+    top: 0,
   },
   calendarFoot: {
     fontFamily: fonts.hand,
@@ -700,6 +773,10 @@ const styles = StyleSheet.create({
     height: 132,
     width: '100%',
   },
+  badgeFlipper: {
+    height: '100%',
+    width: '100%',
+  },
   badgeFace: {
     alignItems: 'center',
     backfaceVisibility: 'hidden',
@@ -717,6 +794,7 @@ const styles = StyleSheet.create({
   badgeBack: {
     alignItems: 'flex-start',
     justifyContent: 'center',
+    transform: [{ rotateY: '180deg' }],
   },
   badgeEmoji: {
     fontSize: 26,

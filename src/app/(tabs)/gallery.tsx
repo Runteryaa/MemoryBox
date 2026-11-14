@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -12,11 +12,17 @@ import { router } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Grid2x2, Layers, Search, Sparkles, X } from 'lucide-react-native';
 import Animated, {
+  Easing,
+  FadeInDown,
+  interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
+  withSequence,
   withSpring,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 
 import { FlippablePolaroidCard } from '@/components/FlippablePolaroidCard';
@@ -42,6 +48,7 @@ export default function GalleryScreen() {
 
   const [mode, setMode] = useState<ViewMode>('pile');
   const [query, setQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [mood, setMood] = useState<MoodTag | 'all'>('all');
   const [city, setCity] = useState<string | 'all'>('all');
   const [pileIndex, setPileIndex] = useState(0);
@@ -103,16 +110,22 @@ export default function GalleryScreen() {
           styles.searchBar,
           {
             backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
+            borderColor: searchFocused ? theme.colors.rose : theme.colors.border,
           },
         ]}
       >
-        <Search color={theme.colors.faint} size={17} strokeWidth={2.3} />
+        <Search
+          color={searchFocused ? theme.colors.rose : theme.colors.faint}
+          size={17}
+          strokeWidth={2.3}
+        />
         <TextInput
+          onBlur={() => setSearchFocused(false)}
           onChangeText={(text) => {
             setQuery(text);
             setPileIndex(0);
           }}
+          onFocus={() => setSearchFocused(true)}
           placeholder="Search titles, stories, places…"
           placeholderTextColor={theme.colors.faint}
           style={[styles.searchInput, { color: theme.colors.ink }]}
@@ -276,88 +289,71 @@ function PileView({
   const theme = useTheme();
   const translateX = useSharedValue(0);
   const rotate = useSharedValue(0);
+  const pull = useSharedValue(0);
+  const enter = useSharedValue(1);
+  const currentIndex = pileIndex % memories.length;
+
+  // A fresh card rises from the middle of the deck instead of popping into place.
+  useEffect(() => {
+    enter.value = 0;
+    enter.value = withSpring(1, { damping: 15, stiffness: 180 });
+  }, [currentIndex, enter]);
 
   const pan = Gesture.Pan()
     .activeOffsetX([-12, 12])
     .onUpdate((event) => {
       translateX.value = event.translationX;
       rotate.value = event.translationX / 18;
+      pull.value = Math.min(1, Math.abs(event.translationX) / 150);
     })
     .onEnd((event) => {
       const shouldAdvance = Math.abs(event.translationX) > 70 || Math.abs(event.velocityX) > 650;
       if (shouldAdvance) {
         const direction = event.translationX > 0 ? -1 : 1;
-        translateX.value = withTiming(direction * 430, { duration: 170 }, (finished) => {
+        translateX.value = withTiming(direction * 430, { duration: 180 }, (finished) => {
           if (!finished) return;
           runOnJS(cyclePile)(direction);
           translateX.value = 0;
           rotate.value = 0;
+          pull.value = 0;
         });
-        rotate.value = withTiming(direction * 18, { duration: 170 });
+        rotate.value = withTiming(direction * 18, { duration: 180 });
       } else {
         translateX.value = withSpring(0, { damping: 16, stiffness: 220 });
         rotate.value = withSpring(0, { damping: 16, stiffness: 220 });
+        pull.value = withSpring(0, { damping: 18, stiffness: 200 });
       }
     });
 
   const dragStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(enter.value, [0, 1], [0, 1]),
     transform: [
       { translateX: translateX.value },
+      { translateY: interpolate(enter.value, [0, 1], [18, 0]) },
+      { scale: interpolate(enter.value, [0, 1], [0.965, 1]) },
       { rotate: `${rotate.value + (topMemory?.rotationAngle ?? 0) * 0.4}deg` },
     ],
   }));
 
-  const behind = memories.filter((_, index) => index !== pileIndex % memories.length).slice(0, 2);
+  // The deck behind leans forward and evens out as the front card is pulled away.
+  const behind: Memory[] = [1, 2]
+    .map((step) => memories[(currentIndex + step) % memories.length])
+    .filter((memory): memory is Memory => memory != null && memory.id !== topMemory?.id);
 
   if (!topMemory) return null;
 
   return (
     <View style={styles.pileStage}>
       <View style={styles.pileStack}>
-        {behind.map((memory, index) => {
-          const offset = (index + 1) * 9;
-          return (
-            <View
-              key={memory.id}
-              style={[
-                styles.pileCard,
-                {
-                  opacity: 0.55 - index * 0.12,
-                  transform: [
-                    { translateY: offset },
-                    { translateX: index % 2 === 0 ? offset : -offset },
-                    { rotate: `${(index % 2 === 0 ? 1 : -1) * (3 + offset / 4)}deg` },
-                  ],
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.pileCardPlaceholder,
-                  {
-                    width: cardWidth,
-                    height: cardWidth * 1.28,
-                    backgroundColor: theme.colors.white,
-                    borderColor: theme.colors.paperEdge,
-                  },
-                ]}
-              >
-                <Image
-                  contentFit="cover"
-                  source={{ uri: memory.imageUri }}
-                  style={styles.pilePlaceholderImage}
-                  transition={120}
-                />
-                <Text
-                  numberOfLines={2}
-                  style={[styles.pilePlaceholderText, { color: theme.colors.ink }]}
-                >
-                  {memory.shortTitle}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
+        {behind.map((memory, index) => (
+          <PileBackCard
+            cardWidth={cardWidth}
+            depth={index + 1}
+            key={`${memory.id}-${currentIndex}`}
+            memory={memory}
+            pull={pull}
+          />
+        ))}
 
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.pileCard, dragStyle]}>
@@ -404,6 +400,67 @@ function PileView({
   );
 }
 
+function PileBackCard({
+  memory,
+  cardWidth,
+  depth,
+  pull,
+}: {
+  memory: Memory;
+  cardWidth: number;
+  depth: number;
+  pull: SharedValue<number>;
+}) {
+  const theme = useTheme();
+  const baseOffset = depth * 9;
+
+  const style = useAnimatedStyle(() => {
+    const forward = depth === 1 ? pull.value * 0.85 : pull.value * 0.45;
+    return {
+      opacity: (0.55 - (depth - 1) * 0.12) + forward * 0.32,
+      transform: [
+        { translateY: baseOffset * (1 - forward) },
+        {
+          translateX: (depth % 2 === 0 ? baseOffset : -baseOffset) * (1 - forward),
+        },
+        { scale: 1 + forward * 0.018 },
+        {
+          rotate: `${(depth % 2 === 0 ? 1 : -1) * (3 + baseOffset / 4) * (1 - forward * 0.7)}deg`,
+        },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.pileCard, style]}>
+      <View
+        style={[
+          styles.pileCardPlaceholder,
+          {
+            width: cardWidth,
+            height: cardWidth * 1.28,
+            backgroundColor: theme.colors.white,
+            borderColor: theme.colors.paperEdge,
+          },
+        ]}
+      >
+        <Image
+          contentFit="cover"
+          source={{ uri: memory.imageUri }}
+          style={styles.pilePlaceholderImage}
+          transition={120}
+        />
+        <Text
+          numberOfLines={2}
+          style={[styles.pilePlaceholderText, { color: theme.colors.ink }]}
+        >
+          {memory.shortTitle}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
 function GridView({
   memories,
   width,
@@ -415,7 +472,6 @@ function GridView({
   onOpen: (memory: Memory) => void;
   onToggleFavorite: (id: string) => void;
 }) {
-  const theme = useTheme();
   const gap = 12;
   const horizontalPadding = 18;
   const columnWidth = (Math.min(width, 560) - horizontalPadding * 2 - gap) / 2;
@@ -434,60 +490,14 @@ function GridView({
                 const tall = (memory.id.charCodeAt(0) + index) % 3 === 0;
                 const imageHeight = columnWidth * (tall ? 1.18 : 0.92);
                 return (
-                  <PressableScale
-                    accessibilityLabel={`Open memory ${memory.shortTitle}`}
+                  <GridCard
+                    imageHeight={imageHeight}
+                    index={index}
                     key={memory.id}
-                    onPress={() => {
-                      haptics.paperRustle();
-                      onOpen(memory);
-                    }}
-                    scaleTo={0.96}
-                    style={[
-                      styles.gridCard,
-                      {
-                        backgroundColor: theme.colors.white,
-                        borderColor: theme.colors.paperEdge,
-                        transform: [{ rotate: `${memory.rotationAngle * 0.35}deg` }],
-                      },
-                      shadows.soft,
-                    ]}
-                  >
-                    <View style={{ height: imageHeight }}>
-                      <Image
-                        contentFit="cover"
-                        source={{ uri: memory.imageUri }}
-                        style={StyleSheet.absoluteFill}
-                        transition={180}
-                      />
-                      <View style={[styles.gridTape, { backgroundColor: theme.colors.roseSoft }]} />
-                      <PressableScale
-                        accessibilityLabel={memory.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
-                        haptic="tap"
-                        onPress={() => onToggleFavorite(memory.id)}
-                        style={[
-                          styles.gridHeart,
-                          {
-                            backgroundColor: theme.isDark
-                              ? 'rgba(28,25,23,0.7)'
-                              : 'rgba(255,255,255,0.85)',
-                          },
-                        ]}
-                      >
-                        <Text style={styles.gridHeartIcon}>{memory.isFavorite ? '♥' : '♡'}</Text>
-                      </PressableScale>
-                    </View>
-                    <View style={styles.gridCaption}>
-                      <Text
-                        numberOfLines={2}
-                        style={[styles.gridTitle, { color: theme.colors.ink }]}
-                      >
-                        {memory.shortTitle}
-                      </Text>
-                      <Text style={[styles.gridDate, { color: theme.colors.muted }]}>
-                        {formatMediumDate(memory.dateCreated)}
-                      </Text>
-                    </View>
-                  </PressableScale>
+                    memory={memory}
+                    onOpen={onOpen}
+                    onToggleFavorite={onToggleFavorite}
+                  />
                 );
               })}
           </View>
@@ -497,13 +507,119 @@ function GridView({
   );
 }
 
+function GridCard({
+  memory,
+  index,
+  imageHeight,
+  onOpen,
+  onToggleFavorite,
+}: {
+  memory: Memory;
+  index: number;
+  imageHeight: number;
+  onOpen: (memory: Memory) => void;
+  onToggleFavorite: (id: string) => void;
+}) {
+  const theme = useTheme();
+  const heart = useSharedValue(1);
+
+  const pop = () => {
+    heart.value = withSequence(
+      withTiming(1.32, { duration: 110 }),
+      withSpring(1, { damping: 9, stiffness: 240 })
+    );
+    onToggleFavorite(memory.id);
+  };
+
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(300).delay(Math.min(index, 9) * 34)}
+    >
+      <PressableScale
+        accessibilityLabel={`Open memory ${memory.shortTitle}`}
+        onPress={() => {
+          haptics.paperRustle();
+          onOpen(memory);
+        }}
+        scaleTo={0.96}
+        style={[
+          styles.gridCard,
+          {
+            backgroundColor: theme.colors.white,
+            borderColor: theme.colors.paperEdge,
+            transform: [{ rotate: `${memory.rotationAngle * 0.35}deg` }],
+          },
+          shadows.soft,
+        ]}
+      >
+        <View style={{ height: imageHeight }}>
+          <Image
+            contentFit="cover"
+            source={{ uri: memory.imageUri }}
+            style={StyleSheet.absoluteFill}
+            transition={180}
+          />
+          <View style={[styles.gridTape, { backgroundColor: theme.colors.roseSoft }]} />
+          <PressableScale
+            accessibilityLabel={memory.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
+            haptic="tap"
+            onPress={pop}
+            style={[
+              styles.gridHeart,
+              {
+                backgroundColor: theme.isDark
+                  ? 'rgba(28,25,23,0.7)'
+                  : 'rgba(255,255,255,0.85)',
+              },
+            ]}
+          >
+            <Animated.Text style={[styles.gridHeartIcon, { transform: [{ scale: heart }] }]}>
+              {memory.isFavorite ? '♥' : '♡'}
+            </Animated.Text>
+          </PressableScale>
+        </View>
+        <View style={styles.gridCaption}>
+          <Text
+            numberOfLines={2}
+            style={[styles.gridTitle, { color: theme.colors.ink }]}
+          >
+            {memory.shortTitle}
+          </Text>
+          <Text style={[styles.gridDate, { color: theme.colors.muted }]}>
+            {formatMediumDate(memory.dateCreated)}
+          </Text>
+        </View>
+      </PressableScale>
+    </Animated.View>
+  );
+}
+
 function EmptyState({ hasMemories }: { hasMemories: boolean }) {
   const theme = useTheme();
+  const drift = useSharedValue(0);
+
+  useEffect(() => {
+    drift.value = withRepeat(
+      withTiming(1, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [drift]);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: -drift.value * 6 },
+      { rotate: `${-5 + drift.value * 10}deg` },
+    ],
+  }));
+
   return (
     <View style={styles.empty}>
-      <View style={[styles.emptyIcon, { backgroundColor: theme.colors.roseSoft }]}>
+      <Animated.View
+        style={[styles.emptyIcon, { backgroundColor: theme.colors.roseSoft }, iconStyle]}
+      >
         <Sparkles color={theme.colors.rose} size={26} strokeWidth={2} />
-      </View>
+      </Animated.View>
       <Text style={[styles.emptyTitle, { color: theme.colors.ink }]}>
         {hasMemories ? 'Nothing matches that rummage' : 'No memories in the box yet'}
       </Text>

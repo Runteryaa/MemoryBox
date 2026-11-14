@@ -122,6 +122,8 @@ export function FlippablePolaroidCard({
   const flipStyle = useAnimatedStyle(() => ({
     transform: [
       { perspective: 1200 },
+      // The card lifts a little as it turns, like a photo held between two fingers.
+      { translateY: interpolate(flip.value, [0, 0.5, 1], [0, -7, 0]) },
       { rotateY: `${interpolate(flip.value, [0, 1], [0, 180])}deg` },
       { scale: interpolate(flip.value, [0, 0.5, 1], [1, 0.965, 1]) },
     ],
@@ -223,6 +225,14 @@ export function FlippablePolaroidCard({
                 { backgroundColor: '#B45309' },
                 sepiaStyle,
               ]}
+            />
+            <LinearGradient
+              colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)', 'rgba(60,40,25,0.1)']}
+              end={{ x: 0.75, y: 1 }}
+              locations={[0, 0.45, 1]}
+              pointerEvents="none"
+              start={{ x: 0.2, y: 0 }}
+              style={StyleSheet.absoluteFill}
             />
             <LinearGradient
               colors={['rgba(30,18,10,0)', 'rgba(30,18,10,0.22)']}
@@ -336,6 +346,7 @@ export function FlippablePolaroidCard({
             onPress={handleFrontPress}
             style={[StyleSheet.absoluteFill, styles.frontTapTarget]}
           />
+          <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.paperGloss]} />
         </Animated.View>
 
         {/* BACK */}
@@ -581,6 +592,11 @@ const styles = StyleSheet.create({
   },
   frontTapTarget: {
     zIndex: 1,
+  },
+  paperGloss: {
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 6,
+    borderWidth: 1,
   },
   photoFrame: {
     borderRadius: 2,

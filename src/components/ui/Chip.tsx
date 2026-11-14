@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { PressableScale } from '@/components/ui/PressableScale';
 import { contrastInk, fonts, useTheme } from '@/theme';
@@ -54,7 +55,9 @@ export function Chip({
           {label}
         </Text>
         {selected && onPress ? (
-          <Check color={selectedInk} size={13} strokeWidth={3} />
+          <Animated.View entering={ZoomIn.springify().damping(12).stiffness(220)}>
+            <Check color={selectedInk} size={13} strokeWidth={3} />
+          </Animated.View>
         ) : null}
       </View>
     </PressableScale>

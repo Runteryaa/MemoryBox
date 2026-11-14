@@ -12,12 +12,14 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, LocateFixed, MapPin, Sparkles, X } from 'lucide-react-native';
 import Animated, {
+  Easing,
   FadeIn,
   FadeOut,
   SlideInDown,
   SlideOutDown,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withSequence,
   withSpring,
   withTiming,
@@ -62,7 +64,29 @@ export function LocationStampPicker({
 
   const stampScale = useSharedValue(1);
   const stampRotate = useSharedValue(-1.5);
+  const detectSpin = useSharedValue(0);
   const autoTried = useRef(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
+  // The little compass keeps turning while the GPS fix is in flight.
+  useEffect(() => {
+    if (detecting) {
+      detectSpin.value = 0;
+      detectSpin.value = withRepeat(
+        withTiming(1, { duration: 1300, easing: Easing.linear }),
+        -1,
+        false
+      );
+      return;
+    }
+    detectSpin.value = withTiming(0, { duration: 260 });
+  }, [detectSpin, detecting]);
 
   const reset = useCallback(() => {
     setPlaceName(value?.placeName ?? '');
@@ -125,12 +149,26 @@ export function LocationStampPicker({
     transform: [{ scale: stampScale.value }, { rotate: `${stampRotate.value}deg` }],
   }));
 
+  const detectIconStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${detectSpin.value * 360}deg` }],
+  }));
+
+  // Press the postmark down, then let the sheet leave like a stamped letter.
+  const slamAndClose = () => {
+    stampScale.value = withSequence(
+      withTiming(1.2, { duration: 90 }),
+      withSpring(1, { damping: 10, stiffness: 260 })
+    );
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(onClose, 150);
+  };
+
   const handleSave = () => {
     const trimmedPlace = placeName.trim();
     if (!trimmedPlace && coords.latitude == null) {
       onSave(null);
       haptics.tap();
-      onClose();
+      slamAndClose();
       return;
     }
     onSave({
@@ -141,7 +179,7 @@ export function LocationStampPicker({
       country: country.trim() || null,
     });
     haptics.success();
-    onClose();
+    slamAndClose();
   };
 
   const previewLocation: MemoryLocation = {
@@ -250,7 +288,9 @@ export function LocationStampPicker({
                   colors={[theme.colors.sage, theme.colors.sage]}
                   style={styles.detectIcon}
                 >
-                  <LocateFixed color={contrastInk(theme.colors.sage)} size={15} strokeWidth={2.6} />
+                  <Animated.View style={detectIconStyle}>
+                    <LocateFixed color={contrastInk(theme.colors.sage)} size={15} strokeWidth={2.6} />
+                  </Animated.View>
                 </LinearGradient>
                 <View style={styles.detectCopy}>
                   <Text style={[styles.detectTitle, { color: theme.colors.sage }]}>

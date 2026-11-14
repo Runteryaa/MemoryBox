@@ -12,7 +12,16 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Check, Heart, MapPin, Pencil, Trash2, X } from 'lucide-react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FlippablePolaroidCard } from '@/components/FlippablePolaroidCard';
@@ -54,6 +63,18 @@ export function MemoryInspectionModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+
+  const heart = useSharedValue(1);
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heart.value }],
+  }));
+
+  const popHeart = () => {
+    heart.value = withSequence(
+      withTiming(1.3, { duration: 110 }),
+      withSpring(1, { damping: 9, stiffness: 240 })
+    );
+  };
 
   const cardWidth = Math.min(320, width - 64);
   const landscape = height < 640;
@@ -134,18 +155,21 @@ export function MemoryInspectionModal({
               onPress={onClose}
             />
             <View style={styles.topActions}>
-              <IconButton
-                accessibilityLabel={memory?.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
-                backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
-                borderColor="transparent"
-                color={memory?.isFavorite ? theme.colors.rose : theme.colors.white}
-                icon={Heart}
-                onPress={() => {
-                  if (!memory) return;
-                  haptics.tap();
-                  toggleFavorite(memory.id);
-                }}
-              />
+              <Animated.View style={heartStyle}>
+                <IconButton
+                  accessibilityLabel={memory?.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
+                  backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
+                  borderColor="transparent"
+                  color={memory?.isFavorite ? theme.colors.rose : theme.colors.white}
+                  icon={Heart}
+                  onPress={() => {
+                    if (!memory) return;
+                    haptics.tap();
+                    popHeart();
+                    toggleFavorite(memory.id);
+                  }}
+                />
+              </Animated.View>
               <IconButton
                 accessibilityLabel={editing ? 'Save changes' : 'Edit this memory'}
                 backgroundColor={
@@ -188,7 +212,7 @@ export function MemoryInspectionModal({
           >
             {liveMemory ? (
               <Animated.View
-                entering={FadeIn.duration(260).delay(60)}
+                entering={FadeInDown.springify().damping(17).stiffness(130)}
                 style={[styles.cardWrap, shadows.card]}
               >
                 <FlippablePolaroidCard
@@ -277,7 +301,7 @@ export function MemoryInspectionModal({
               </Animated.View>
             ) : (
               <Text style={[styles.hint, { color: 'rgba(255,255,255,0.78)' }]}>
-                tap the photo to flip it over
+                tap the card to flip it over
               </Text>
             )}
           </ScrollView>

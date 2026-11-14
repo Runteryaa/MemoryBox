@@ -4,7 +4,14 @@ import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import { Flame, Home, LibraryBig } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { haptics } from '@/lib/haptics';
@@ -116,13 +123,22 @@ function TabIcon({
 }) {
   const theme = useTheme();
   const scale = useSharedValue(focused ? 1.06 : 1);
+  const lift = useSharedValue(0);
 
   useEffect(() => {
-    scale.value = withSpring(focused ? 1.06 : 1, { damping: 14, stiffness: 220 });
-  }, [focused, scale]);
+    scale.value = withSpring(focused ? 1.07 : 1, { damping: 14, stiffness: 220 });
+    // A tiny hop when the tab becomes active, like a stamp pressing down.
+    lift.value = focused
+      ? withSequence(
+          withTiming(2.4, { duration: 90 }),
+          withSpring(-2.2, { damping: 8, stiffness: 260 }),
+          withSpring(0, { damping: 12, stiffness: 200 })
+        )
+      : withSpring(0, { damping: 14, stiffness: 220 });
+  }, [focused, lift, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ translateY: lift.value }, { scale: scale.value }],
   }));
 
   return (

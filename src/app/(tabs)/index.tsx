@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedMemoryBox } from '@/components/AnimatedMemoryBox';
 import { MemoryInspectionModal } from '@/components/MemoryInspectionModal';
 import { StreakPill } from '@/components/StreakPill';
+import { CountUp } from '@/components/ui/CountUp';
 import { Screen } from '@/components/ui/Screen';
 import { IconButton } from '@/components/ui/IconButton';
 import { PressableScale } from '@/components/ui/PressableScale';
@@ -182,7 +183,7 @@ export default function HomeScreen() {
 
         <Animated.View entering={FadeInDown.duration(500).delay(190)} style={styles.counterBlock}>
           <View style={styles.counterRow}>
-            <Text style={[styles.counter, { color: theme.colors.ink }]}>{memories.length}</Text>
+            <CountUp style={[styles.counter, { color: theme.colors.ink }]} value={memories.length} />
             <View style={styles.counterCopy}>
               <Text style={[styles.counterLabel, { color: theme.colors.inkSoft }]}>
                 {memories.length === 1 ? 'keepsake tucked away' : 'keepsakes tucked away'}
@@ -274,7 +275,7 @@ function MiniStat({
         },
       ]}
     >
-      <Text style={[styles.statValue, { color: theme.isDark ? theme.colors.ink : tone }]}>{value}</Text>
+      <CountUp style={[styles.statValue, { color: theme.isDark ? theme.colors.ink : tone }]} value={value} />
       <Text style={[styles.statLabel, { color: theme.colors.muted }]}>{label}</Text>
     </View>
   );
