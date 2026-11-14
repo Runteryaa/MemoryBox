@@ -545,6 +545,7 @@ export function FlippablePolaroidCard({
                 placeholder="Write down everything you never want to forget… how the light looked, what it smelled like, how you felt."
                 placeholderTextColor={theme.colors.faint}
                 scrollEnabled={false}
+                selectionColor={theme.colors.rose}
                 style={[
                   styles.storyInput,
                   {

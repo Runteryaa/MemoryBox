@@ -186,6 +186,7 @@ export default function GalleryScreen() {
           placeholder="Search titles, stories, places, dates…"
           placeholderTextColor={theme.colors.faint}
           returnKeyType="search"
+          selectionColor={theme.colors.rose}
           style={[styles.searchInput, { color: theme.colors.ink }]}
           value={query}
         />

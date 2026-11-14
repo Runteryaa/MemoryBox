@@ -743,6 +743,8 @@ export default function CaptureScreen() {
                 onChangeText={setTitle}
                 placeholder="Name this moment…"
                 placeholderTextColor={theme.colors.faint}
+                returnKeyType="done"
+                selectionColor={theme.colors.rose}
                 style={[
                   styles.titleInput,
                   { color: theme.colors.ink, borderColor: theme.colors.borderStrong },

@@ -306,6 +306,8 @@ export function MemoryInspectionModal({
                   onChangeText={setTitle}
                   placeholder="Give this moment a name"
                   placeholderTextColor={theme.colors.faint}
+                  returnKeyType="done"
+                  selectionColor={theme.colors.rose}
                   style={[
                     styles.titleInput,
                     {

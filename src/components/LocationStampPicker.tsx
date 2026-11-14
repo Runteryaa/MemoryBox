@@ -436,6 +436,8 @@ function Field({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.faint}
+        returnKeyType="done"
+        selectionColor={theme.colors.rose}
         style={[
           styles.fieldInput,
           {
