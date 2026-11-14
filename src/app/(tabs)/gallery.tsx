@@ -262,7 +262,15 @@ export default function GalleryScreen() {
       ) : null}
 
       {filtered.length === 0 ? (
-        <EmptyState hasMemories={memories.length > 0} />
+        <EmptyState
+          hasMemories={memories.length > 0}
+          onReset={() => {
+            setQuery('');
+            setMood('all');
+            setCity('all');
+            setPileIndex(0);
+          }}
+        />
       ) : mode === 'pile' ? (
         <PileView
           cardWidth={Math.min(268, width - 104)}
@@ -693,7 +701,13 @@ function GridCard({
   );
 }
 
-function EmptyState({ hasMemories }: { hasMemories: boolean }) {
+function EmptyState({
+  hasMemories,
+  onReset,
+}: {
+  hasMemories: boolean;
+  onReset?: () => void;
+}) {
   const theme = useTheme();
   const drift = useSharedValue(0);
   const halo = useSharedValue(0);
@@ -754,6 +768,24 @@ function EmptyState({ hasMemories }: { hasMemories: boolean }) {
         >
           <Text style={[styles.emptyButtonText, { color: contrastInk(theme.colors.rose) }]}>
             Capture a memory
+          </Text>
+        </PressableScale>
+      ) : onReset ? (
+        <PressableScale
+          accessibilityLabel="Clear filters and searches"
+          haptic="tap"
+          onPress={onReset}
+          style={[
+            styles.emptyButton,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Text style={[styles.emptyButtonText, { color: theme.colors.inkSoft }]}>
+            Clear the rummage
           </Text>
         </PressableScale>
       ) : null}
