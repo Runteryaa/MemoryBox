@@ -272,6 +272,7 @@ export default function CaptureScreen() {
       );
       haptics.success();
     } catch {
+      setCameraError('That photo could not be opened. Try another one.');
       haptics.error();
     } finally {
       setBusy(false);
@@ -570,7 +571,9 @@ export default function CaptureScreen() {
 
           {cameraError ? (
             <Animated.View entering={FadeIn} style={styles.cameraError}>
-              <Text style={styles.cameraErrorText}>{cameraError}</Text>
+              <Text accessibilityLiveRegion="assertive" style={styles.cameraErrorText}>
+                {cameraError}
+              </Text>
             </Animated.View>
           ) : null}
 
