@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Accelerometer } from 'expo-sensors';
 import { Camera, Moon, Sun } from 'lucide-react-native';
@@ -21,10 +22,11 @@ import { CountUp } from '@/components/ui/CountUp';
 import { Screen } from '@/components/ui/Screen';
 import { IconButton } from '@/components/ui/IconButton';
 import { PressableScale } from '@/components/ui/PressableScale';
+import { MOOD_MAP } from '@/constants';
 import { formatLongDate, greetingForHour } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
 import { pickRandom } from '@/lib/random';
-import { getStats } from '@/lib/stats';
+import { getStats, getOnThisDay } from '@/lib/stats';
 import { getMemoryStreakStatus, useMemoryStore } from '@/store/useMemoryStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { fonts, radii, shadows, useTheme } from '@/theme';
@@ -41,6 +43,7 @@ export default function HomeScreen() {
 
   const status = getMemoryStreakStatus(streak);
   const stats = getStats(memories);
+  const onThisDay = useMemo(() => getOnThisDay(memories), [memories]);
 
   const [inspectOpen, setInspectOpen] = useState(false);
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
@@ -217,6 +220,28 @@ export default function HomeScreen() {
           <MiniStat label="places" value={stats.distinctPlaces} tone={theme.colors.sage} soft={theme.colors.sageSoft} />
           <MiniStat label="loved" value={stats.favorites} tone={theme.colors.amber} soft={theme.colors.amberSoft} />
         </Animated.View>
+
+        {onThisDay.length > 0 ? (
+          <Animated.View entering={FadeInDown.duration(540).delay(310)} style={styles.onThisDayWrap}>
+            <Text style={[styles.onThisDayKicker, { color: theme.colors.rose }]}>
+              on this day
+            </Text>
+            <Text style={[styles.onThisDayHint, { color: theme.colors.muted }]}>
+              {onThisDay.length === 1
+                ? 'one memory from a year gone by'
+                : `${onThisDay.length} memories from years gone by`}
+            </Text>
+            <View style={styles.onThisDayList}>
+              {onThisDay.slice(0, 2).map((memory) => (
+                <OnThisDayCard
+                  key={memory.id}
+                  memory={memory}
+                  onPress={() => openMemory(memory)}
+                />
+              ))}
+            </View>
+          </Animated.View>
+        ) : null}
       </ScrollView>
 
       <Animated.View
@@ -282,6 +307,47 @@ function MiniStat({
       <CountUp style={[styles.statValue, { color: theme.isDark ? theme.colors.ink : tone }]} value={value} />
       <Text style={[styles.statLabel, { color: theme.colors.muted }]}>{label}</Text>
     </View>
+  );
+}
+
+/** A little window back in time — the same day, one or more years ago. */
+function OnThisDayCard({ memory, onPress }: { memory: Memory; onPress: () => void }) {
+  const theme = useTheme();
+  const mood = MOOD_MAP[memory.moodTag] ?? MOOD_MAP.cozy;
+  const years = Math.max(1, new Date().getFullYear() - new Date(memory.dateCreated).getFullYear());
+  const yearsAgo = years === 1 ? 'a year ago' : `${years} years ago`;
+
+  return (
+    <PressableScale
+      accessibilityLabel={`Memory from ${yearsAgo}: ${memory.shortTitle}`}
+      haptic="paperRustle"
+      onPress={onPress}
+      scaleTo={0.97}
+      style={[
+        styles.onThisDayCard,
+        {
+          backgroundColor: theme.colors.white,
+          borderColor: theme.colors.paperEdge,
+        },
+        shadows.soft,
+      ]}
+    >
+      <Image
+        contentFit="cover"
+        source={{ uri: memory.imageUri }}
+        style={styles.onThisDayImage}
+        transition={160}
+      />
+      <View style={styles.onThisDayCopy}>
+        <Text numberOfLines={2} style={[styles.onThisDayTitle, { color: theme.colors.ink }]}>
+          {memory.shortTitle}
+        </Text>
+        <View style={styles.onThisDayMeta}>
+          <Text style={styles.onThisDayMood}>{mood.emoji}</Text>
+          <Text style={[styles.onThisDayAge, { color: theme.colors.muted }]}>{yearsAgo}</Text>
+        </View>
+      </View>
+    </PressableScale>
   );
 }
 
@@ -392,6 +458,60 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     letterSpacing: 0.7,
     marginTop: -1,
+    textTransform: 'uppercase',
+  },
+  onThisDayWrap: {
+    marginTop: 6,
+  },
+  onThisDayKicker: {
+    fontFamily: fonts.handBold,
+    fontSize: 20,
+    lineHeight: 22,
+  },
+  onThisDayHint: {
+    fontFamily: fonts.sansSemiBold,
+    fontSize: 10.5,
+    letterSpacing: 0.2,
+    marginTop: -1,
+  },
+  onThisDayList: {
+    gap: 10,
+    marginTop: 9,
+  },
+  onThisDayCard: {
+    alignItems: 'center',
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 11,
+    padding: 8,
+  },
+  onThisDayImage: {
+    borderRadius: radii.sm,
+    height: 60,
+    width: 60,
+  },
+  onThisDayCopy: {
+    flex: 1,
+  },
+  onThisDayTitle: {
+    fontFamily: fonts.handBold,
+    fontSize: 19,
+    lineHeight: 20,
+  },
+  onThisDayMeta: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 2,
+  },
+  onThisDayMood: {
+    fontSize: 11,
+  },
+  onThisDayAge: {
+    fontFamily: fonts.sansBold,
+    fontSize: 9,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   fabWrap: {

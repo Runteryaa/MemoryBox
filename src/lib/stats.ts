@@ -95,3 +95,21 @@ export function getMilestoneProgress(memories: Memory[], longestStreak: number) 
     'mood-keeper': { current: moodCount, goal: MOODS.length },
   } satisfies Record<MilestoneId, { current: number; goal: number }>;
 }
+
+/**
+ * Memories from this same calendar day in earlier years. The heart of a memory
+ * box is looking back, so the app should resurface them without being asked.
+ */
+export function getOnThisDay(memories: Memory[], now = new Date()): Memory[] {
+  const month = now.getMonth();
+  const day = now.getDate();
+  const year = now.getFullYear();
+  return memories
+    .filter((memory) => {
+      const date = new Date(memory.dateCreated);
+      return (
+        date.getMonth() === month && date.getDate() === day && date.getFullYear() < year
+      );
+    })
+    .sort((a, b) => b.dateCreated.localeCompare(a.dateCreated));
+}
