@@ -261,6 +261,9 @@ function searchableDate(iso: string): string {
 
 export function filterMemories(memories: Memory[], filters: MemoryFilters): Memory[] {
   const query = filters.query.trim().toLowerCase();
+  // Every word counts, so "paris rain" finds a rainy day in Paris even when
+  // those two facts live in different fields.
+  const tokens = query ? query.split(/\s+/).filter(Boolean) : [];
   const matched = memories.filter((memory) => {
     if (filters.onlyLoved && !memory.isFavorite) return false;
     if (filters.mood !== 'all' && memory.moodTag !== filters.mood) return false;
@@ -270,7 +273,7 @@ export function filterMemories(memories: Memory[], filters: MemoryFilters): Memo
       }`.toLowerCase();
       if (!locationText.includes(filters.city.toLowerCase())) return false;
     }
-    if (!query) return true;
+    if (tokens.length === 0) return true;
     const mood = MOOD_MAP[memory.moodTag];
     const haystack = [
       memory.shortTitle,
@@ -285,7 +288,7 @@ export function filterMemories(memories: Memory[], filters: MemoryFilters): Memo
     ]
       .join(' ')
       .toLowerCase();
-    return haystack.includes(query);
+    return tokens.every((token) => haystack.includes(token));
   });
 
   return sortMemories(matched, filters.sort ?? 'newest');
