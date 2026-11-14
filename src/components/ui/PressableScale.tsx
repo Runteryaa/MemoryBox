@@ -52,11 +52,14 @@ export function PressableScale({
     transform: [{ scale: scale.value }],
   }));
 
+  const state =
+    selected === undefined && !disabled ? undefined : { selected, disabled };
+
   return (
     <AnimatedPressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}
-      accessibilityState={selected === undefined ? undefined : { selected }}
+      accessibilityState={state}
       disabled={disabled}
       onLongPress={onLongPress}
       onPress={() => {
