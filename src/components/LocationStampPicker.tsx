@@ -271,6 +271,7 @@ export function LocationStampPicker({
               <PressableScale
                 accessibilityLabel="Close location picker"
                 haptic="none"
+                hitSlop={5}
                 onPress={onClose}
                 style={[styles.closeButton, { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border }]}
               >
@@ -396,18 +397,20 @@ export function LocationStampPicker({
                 <Text style={[styles.saveText, { color: contrastInk(theme.colors.rose) }]}>Stamp it</Text>
               </PressableScale>
 
-              <PressableScale
-                accessibilityLabel="Remove location"
-                haptic="none"
-                onPress={() => {
-                  haptics.tap();
-                  onSave(null);
-                  onClose();
-                }}
-                style={[styles.clearButton, { borderColor: theme.colors.borderStrong }]}
-              >
-                <Text style={[styles.clearText, { color: theme.colors.muted }]}>No place</Text>
-              </PressableScale>
+              {value || canStamp ? (
+                <PressableScale
+                  accessibilityLabel="Remove location"
+                  haptic="none"
+                  onPress={() => {
+                    haptics.tap();
+                    onSave(null);
+                    onClose();
+                  }}
+                  style={[styles.clearButton, { borderColor: theme.colors.borderStrong }]}
+                >
+                  <Text style={[styles.clearText, { color: theme.colors.muted }]}>No place</Text>
+                </PressableScale>
+              ) : null}
             </View>
           </Animated.View>
         </GestureDetector>
