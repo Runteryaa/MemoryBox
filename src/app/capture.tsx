@@ -300,11 +300,9 @@ export default function CaptureScreen() {
         } else {
           router.replace('/');
         }
-        timersRef.current.push(
-          setTimeout(() => {
-            addMemory(input);
-          }, 220)
-        );
+        // The memory must land before this screen tears down; a deferred timer
+        // would be cancelled by the unmount cleanup and silently lose it.
+        addMemory(input);
       }, 260)
     );
   }, [addMemory, description, location, mood, photo, title]);
