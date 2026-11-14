@@ -110,6 +110,8 @@ export const useMemoryStore = create<MemoryStore>()(
           moodTag: input.moodTag,
           rotationAngle: randomRotation(-6, 6),
           isFavorite: input.isFavorite ?? false,
+          imageWidth: input.imageWidth ?? null,
+          imageHeight: input.imageHeight ?? null,
         };
 
         const today = toDateKey();

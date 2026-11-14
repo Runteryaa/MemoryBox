@@ -749,8 +749,13 @@ function GridCard({
 
   useEffect(() => {
     setImageFailed(false);
-    setRatio(null);
-  }, [memory.imageUri]);
+    // Prefer the shape recorded at capture time so the card never jumps.
+    setRatio(
+      memory.imageWidth && memory.imageHeight
+        ? memory.imageHeight / memory.imageWidth
+        : null
+    );
+  }, [memory.imageHeight, memory.imageUri, memory.imageWidth]);
 
   const imageHeight = (() => {
     const fallback = columnWidth * (fallbackTall ? 1.18 : 0.92);

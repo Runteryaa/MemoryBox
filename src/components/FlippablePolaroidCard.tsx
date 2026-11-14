@@ -84,8 +84,14 @@ export function FlippablePolaroidCard({
   // A new memory means a new photo; clear any previous failure and shape.
   useEffect(() => {
     setImageFailed(false);
-    setPhotoRatio(null);
-  }, [memory.imageUri]);
+    // The shape recorded at capture time is known immediately, so the card is
+    // framed correctly from the first frame instead of jumping on decode.
+    const stored =
+      memory.imageWidth && memory.imageHeight
+        ? memory.imageHeight / memory.imageWidth
+        : null;
+    setPhotoRatio(stored);
+  }, [memory.imageHeight, memory.imageUri, memory.imageWidth]);
 
   const heartStyle = useAnimatedStyle(() => ({
     transform: [{ scale: heart.value }],

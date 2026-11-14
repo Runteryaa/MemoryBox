@@ -31,6 +31,8 @@ export async function handlePendingImagePickerResult(): Promise<void> {
       location: null,
       moodTag: 'nostalgic',
       dateCreated: extractExifDate(asset.exif as Record<string, unknown> | null) ?? undefined,
+      imageWidth: asset.width ?? null,
+      imageHeight: asset.height ?? null,
     });
   } catch {
     // Recovery is best-effort; never block app start.

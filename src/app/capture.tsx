@@ -71,6 +71,9 @@ type Step = 'camera' | 'arrange';
 interface CapturedPhoto {
   uri: string;
   dateCreated: string;
+  /** Pixel size, known the moment the photo arrives, so the card never jumps. */
+  width?: number | null;
+  height?: number | null;
 }
 
 export default function CaptureScreen() {
@@ -168,14 +171,24 @@ export default function CaptureScreen() {
   }, []);
 
   const adoptPhoto = useCallback(
-    async (sourceUri: string, exif: Record<string, unknown> | null, fromCamera: boolean) => {
+    async (
+      sourceUri: string,
+      exif: Record<string, unknown> | null,
+      fromCamera: boolean,
+      size?: { width?: number | null; height?: number | null }
+    ) => {
       const storedUri = await persistMemoryImage(sourceUri);
       const previousDraft = draftUriRef.current;
       draftUriRef.current = storedUri;
       if (previousDraft && previousDraft !== storedUri) {
         void deleteMemoryImage(previousDraft);
       }
-      setPhoto({ uri: storedUri, dateCreated: extractExifDate(exif) ?? new Date().toISOString() });
+      setPhoto({
+        uri: storedUri,
+        dateCreated: extractExifDate(exif) ?? new Date().toISOString(),
+        width: size?.width ?? null,
+        height: size?.height ?? null,
+      });
       setTitle('');
       setDescription('');
       setMood('cozy');
@@ -222,7 +235,8 @@ export default function CaptureScreen() {
       await adoptPhoto(
         picture.uri,
         (picture.exif as Record<string, unknown> | null) ?? null,
-        true
+        true,
+        { width: picture.width, height: picture.height }
       );
       haptics.success();
     } catch {
@@ -246,7 +260,12 @@ export default function CaptureScreen() {
       if (result.canceled) return;
       const asset = result.assets[0];
       if (!asset) return;
-      await adoptPhoto(asset.uri, (asset.exif as Record<string, unknown> | null) ?? null, false);
+      await adoptPhoto(
+        asset.uri,
+        (asset.exif as Record<string, unknown> | null) ?? null,
+        false,
+        { width: asset.width, height: asset.height }
+      );
       haptics.success();
     } catch {
       haptics.error();
@@ -269,6 +288,8 @@ export default function CaptureScreen() {
       location,
       dateCreated: photo.dateCreated,
       moodTag: mood,
+      imageWidth: photo.width ?? null,
+      imageHeight: photo.height ?? null,
     };
 
     timersRef.current.push(
@@ -688,6 +709,8 @@ export default function CaptureScreen() {
                         moodTag: mood,
                         rotationAngle: 0,
                         isFavorite: false,
+                        imageWidth: photo.width ?? null,
+                        imageHeight: photo.height ?? null,
                       }}
                       onDescriptionChange={setDescription}
                       onEditLocation={() => {

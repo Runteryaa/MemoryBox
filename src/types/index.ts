@@ -24,6 +24,9 @@ export interface Memory {
   moodTag: MoodTag;
   rotationAngle: number;
   isFavorite: boolean;
+  /** Pixel size recorded at capture time so a card can frame the photo before it decodes. */
+  imageWidth?: number | null;
+  imageHeight?: number | null;
 }
 
 export interface NewMemoryInput {
@@ -35,6 +38,8 @@ export interface NewMemoryInput {
   dateCreated?: string;
   moodTag: MoodTag;
   isFavorite?: boolean;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
 }
 
 export interface StreakState {
