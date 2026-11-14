@@ -681,10 +681,14 @@ export default function CaptureScreen() {
             style={[styles.cardStage, keyboardVisible && styles.cardStageTyping]}
           >
             <Animated.View entering={FadeInDown.duration(340)}>
-              <Text style={[styles.hint, { color: theme.colors.muted }]}>
+              <Animated.Text
+                entering={FadeIn.duration(200)}
+                key={cardFlipped ? 'back' : 'front'}
+                style={[styles.hint, { color: theme.colors.muted }]}
+              >
                 {photo ? formatMediumDate(photo.dateCreated) : ''}
                 {cardFlipped ? ' · writing on the back' : ' · tap the card to flip it'}
-              </Text>
+              </Animated.Text>
             </Animated.View>
 
             {photo ? (
