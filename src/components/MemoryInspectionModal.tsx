@@ -14,6 +14,7 @@ import {
 import { Check, Heart, MapPin, Pencil, Trash2, X } from 'lucide-react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   FadeIn,
   FadeInDown,
   FadeOut,
@@ -82,9 +83,16 @@ export function MemoryInspectionModal({
       pull.value = Math.max(0, event.translationY * 0.9);
     })
     .onEnd((event) => {
-      if (pull.value > 120 || event.velocityY > 950) {
-        pull.value = 0;
-        runOnJS(onClose)();
+      const flung = event.velocityY > 950;
+      const dragged = pull.value > 120;
+      if (flung || dragged) {
+        // Let the sheet finish travelling off-screen before it actually closes,
+        // otherwise it snaps back to centre for a frame on the way out.
+        pull.value = withTiming(height, { duration: 200, easing: Easing.in(Easing.quad) }, (finished) => {
+          if (!finished) return;
+          runOnJS(onClose)();
+          pull.value = 0;
+        });
         return;
       }
       pull.value = withSpring(0, { damping: 16, stiffness: 210 });
