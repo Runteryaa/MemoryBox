@@ -222,6 +222,7 @@ export function MemoryInspectionModal({
                         popHeart();
                         toggleFavorite(memory.id);
                       }}
+                      selected={memory?.isFavorite}
                     />
                   </Animated.View>
                   <IconButton

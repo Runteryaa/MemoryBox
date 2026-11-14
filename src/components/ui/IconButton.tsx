@@ -16,6 +16,8 @@ interface IconButtonProps {
   accessibilityLabel: string;
   disabled?: boolean;
   haptic?: 'tap' | 'soft' | 'medium' | 'heavy' | 'selection' | 'none';
+  /** Lets a toggle icon announce whether it is on. */
+  selected?: boolean;
 }
 
 export function IconButton({
@@ -30,6 +32,7 @@ export function IconButton({
   accessibilityLabel,
   disabled,
   haptic = 'tap',
+  selected,
 }: IconButtonProps) {
   const theme = useTheme();
   return (
@@ -38,6 +41,7 @@ export function IconButton({
       disabled={disabled}
       haptic={haptic}
       onPress={onPress}
+      selected={selected}
       style={[
         styles.button,
         {
