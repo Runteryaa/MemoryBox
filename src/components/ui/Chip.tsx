@@ -1,7 +1,14 @@
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import Animated, {
+  ZoomIn,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { PressableScale } from '@/components/ui/PressableScale';
 import { contrastInk, fonts, useTheme } from '@/theme';
@@ -29,19 +36,32 @@ export function Chip({
   const accent = selectedColor ?? color ?? theme.colors.rose;
   const selectedInk = contrastInk(accent);
 
+  // Chips glide between their resting and selected colours rather than snapping.
+  const progress = useSharedValue(selected ? 1 : 0);
+  useEffect(() => {
+    progress.value = withTiming(selected ? 1 : 0, { duration: 190 });
+  }, [progress, selected]);
+
+  const surfaceStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [theme.colors.surface, accent]
+    ),
+    borderColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      [theme.colors.border, accent]
+    ),
+  }));
+
   return (
     <PressableScale
       accessibilityLabel={label}
       onPress={onPress}
-      style={[
-        styles.chip,
-        size === 'sm' && styles.chipSmall,
-        {
-          backgroundColor: selected ? accent : theme.colors.surface,
-          borderColor: selected ? accent : theme.colors.border,
-        },
-      ]}
+      style={[styles.chip, size === 'sm' && styles.chipSmall]}
     >
+      <Animated.View pointerEvents="none" style={[styles.fill, surfaceStyle]} />
       <View style={styles.inner}>
         {icon}
         <Text
@@ -70,10 +90,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 8,
+    overflow: 'hidden',
   },
   chipSmall: {
     paddingHorizontal: 11,
     paddingVertical: 6,
+  },
+  fill: {
+    borderRadius: 999,
+    bottom: -1,
+    left: -1,
+    position: 'absolute',
+    right: -1,
+    top: -1,
   },
   inner: {
     alignItems: 'center',
