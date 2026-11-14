@@ -41,6 +41,8 @@ import type { Memory, MoodTag } from '@/types';
 
 type ViewMode = 'pile' | 'grid';
 
+const GRID_PAGE_SIZE = 20;
+
 const SORT_OPTIONS: { id: MemorySort; label: string }[] = [
   { id: 'newest', label: 'newest' },
   { id: 'oldest', label: 'oldest' },
@@ -604,19 +606,40 @@ function GridView({
   onOpen: (memory: Memory) => void;
   onToggleFavorite: (id: string) => void;
 }) {
+  const theme = useTheme();
   const gap = 12;
   const horizontalPadding = 18;
   const columnWidth = (Math.min(width, 560) - horizontalPadding * 2 - gap) / 2;
 
+  // Only the first page of photos is mounted up front; the rest trickle in as
+  // you scroll, so a big box stays smooth instead of decoding every image.
+  const [visibleCount, setVisibleCount] = useState(GRID_PAGE_SIZE);
+  const shown = memories.slice(0, visibleCount);
+  const hasMore = visibleCount < memories.length;
+
+  useEffect(() => {
+    setVisibleCount(GRID_PAGE_SIZE);
+  }, [memories]);
+
   return (
     <ScrollView
       contentContainerStyle={styles.gridContent}
+      onScroll={({ nativeEvent }) => {
+        if (!hasMore) return;
+        const distanceFromBottom =
+          nativeEvent.contentSize.height -
+          (nativeEvent.contentOffset.y + nativeEvent.layoutMeasurement.height);
+        if (distanceFromBottom < 480) {
+          setVisibleCount((current) => Math.min(current + GRID_PAGE_SIZE, memories.length));
+        }
+      }}
+      scrollEventThrottle={160}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.gridRow}>
         {[0, 1].map((column) => (
           <View key={column} style={styles.gridColumn}>
-            {memories
+            {shown
               .filter((_, index) => index % 2 === column)
               .map((memory, index) => {
                 const tall = (memory.id.charCodeAt(0) + index) % 3 === 0;
@@ -635,6 +658,11 @@ function GridView({
           </View>
         ))}
       </View>
+      {hasMore ? (
+        <Text style={[styles.gridMore, { color: theme.colors.faint }]}>
+          {memories.length - visibleCount} more tucked below…
+        </Text>
+      ) : null}
     </ScrollView>
   );
 }
@@ -1050,6 +1078,13 @@ const styles = StyleSheet.create({
   gridRow: {
     flexDirection: 'row',
     gap: 12,
+  },
+  gridMore: {
+    fontFamily: fonts.sansSemiBold,
+    fontSize: 10,
+    letterSpacing: 0.4,
+    paddingTop: 16,
+    textAlign: 'center',
   },
   gridColumn: {
     flex: 1,
