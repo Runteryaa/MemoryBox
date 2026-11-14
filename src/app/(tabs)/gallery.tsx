@@ -861,16 +861,21 @@ function GridCard({
         </View>
         <View style={styles.gridCaption}>
           <Text
+            maxFontSizeMultiplier={1.2}
             numberOfLines={2}
             style={[styles.gridTitle, { color: theme.colors.ink }]}
           >
             {memory.shortTitle}
           </Text>
           <View style={styles.gridMetaRow}>
-            <Text style={[styles.gridMoodEmoji]}>
+            <Text maxFontSizeMultiplier={1.2} style={[styles.gridMoodEmoji]}>
               {(MOOD_MAP[memory.moodTag] ?? MOOD_MAP.cozy).emoji}
             </Text>
-            <Text style={[styles.gridDate, { color: theme.colors.muted }]}>
+            <Text
+              maxFontSizeMultiplier={1.3}
+              numberOfLines={1}
+              style={[styles.gridDate, { color: theme.colors.muted }]}
+            >
               {formatMediumDate(memory.dateCreated)}
             </Text>
           </View>
@@ -1255,22 +1260,23 @@ const styles = StyleSheet.create({
   gridTitle: {
     fontFamily: fonts.handBold,
     fontSize: 17,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   gridDate: {
+    flexShrink: 1,
     fontFamily: fonts.sansSemiBold,
-    fontSize: 7.5,
-    letterSpacing: 0.5,
+    fontSize: 9.5,
+    letterSpacing: 0.4,
     marginTop: 2,
     textTransform: 'uppercase',
   },
   gridMetaRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 3,
+    gap: 4,
   },
   gridMoodEmoji: {
-    fontSize: 7.5,
+    fontSize: 9.5,
     marginTop: 2,
   },
   empty: {
