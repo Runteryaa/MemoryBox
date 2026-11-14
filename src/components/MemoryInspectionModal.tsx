@@ -300,6 +300,8 @@ export function MemoryInspectionModal({
                   Front caption · {title.length}/{MAX_TITLE_LENGTH}
                 </Text>
                 <TextInput
+                  accessibilityLabel="Rename this memory"
+                  maxFontSizeMultiplier={1.3}
                   maxLength={MAX_TITLE_LENGTH}
                   onChangeText={setTitle}
                   placeholder="Give this moment a name"

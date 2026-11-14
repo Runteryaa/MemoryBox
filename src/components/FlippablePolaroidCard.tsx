@@ -546,6 +546,8 @@ export function FlippablePolaroidCard({
               style={styles.storyScroll}
             >
               <TextInput
+                accessibilityLabel="The story on the back of this memory"
+                maxFontSizeMultiplier={1.25}
                 maxLength={1500}
                 multiline
                 ref={storyInputRef}
