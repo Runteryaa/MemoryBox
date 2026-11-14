@@ -610,6 +610,7 @@ function MilestoneBadge({
   return (
     <Animated.View entering={FadeIn.duration(300).delay(index * 45)} style={styles.badgeWrap}>
       <PressableScale
+        accessibilityHint="Tap to turn it over"
         accessibilityLabel={`${title}. ${unlocked ? 'Unlocked' : `Locked, ${progress.current} of ${progress.goal} so far`}. ${description}`}
         haptic="paperRustle"
         onPress={() => setFlipped((current) => !current)}
