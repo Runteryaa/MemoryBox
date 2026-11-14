@@ -141,9 +141,17 @@ export default function StreakScreen() {
     transform: [{ translateX: swipeX.value }],
   }));
 
+  // Tapping the same day again turns to its next memory, so a day that holds
+  // several keepsakes can be rummaged through without leaving the calendar.
+  const dayCursor = useRef<{ key: string; index: number }>({ key: '', index: 0 });
+
   const openFirstOfDay = (key: string) => {
     const list = byDate.get(key);
-    const memory = list?.[0] ?? null;
+    if (!list || list.length === 0) return;
+    const next =
+      dayCursor.current.key === key ? (dayCursor.current.index + 1) % list.length : 0;
+    dayCursor.current = { key, index: next };
+    const memory = list[next] ?? null;
     if (!memory) return;
     haptics.paperRustle();
     setActiveMemory(memory);
