@@ -3,7 +3,6 @@ import type { ErrorBoundaryProps } from 'expo-router';
 import { AlertTriangle } from 'lucide-react-native';
 
 import { PressableScale } from '@/components/ui/PressableScale';
-import { haptics } from '@/lib/haptics';
 import { contrastInk, fonts, radii, useTheme } from '@/theme';
 
 /**
@@ -24,7 +23,9 @@ export function AppErrorFallback({ error, retry }: ErrorBoundaryProps) {
         <View style={[styles.badge, { backgroundColor: theme.colors.amberSoft }]}>
           <AlertTriangle color={theme.colors.amber} size={26} strokeWidth={2.2} />
         </View>
-        <Text style={[styles.title, { color: theme.colors.ink }]}>Something slipped</Text>
+        <Text accessibilityLiveRegion="assertive" style={[styles.title, { color: theme.colors.ink }]}>
+          Something slipped
+        </Text>
         <Text style={[styles.body, { color: theme.colors.muted }]}>
           A page in your memory box stumbled. Your keepsakes are safe — try opening it again.
         </Text>
@@ -35,7 +36,6 @@ export function AppErrorFallback({ error, retry }: ErrorBoundaryProps) {
           accessibilityLabel="Try opening this page again"
           haptic="medium"
           onPress={() => {
-            haptics.soft();
             retry();
           }}
           style={[styles.button, { backgroundColor: theme.colors.rose }]}
