@@ -435,6 +435,9 @@ function PileView({
   const enter = useSharedValue(1);
   const armed = useSharedValue(0);
   const currentIndex = pileIndex % memories.length;
+  // Back cards must match the front card's real shape, which now depends on the
+  // photo. Until it is measured, fall back to the classic polaroid height.
+  const [frontHeight, setFrontHeight] = useState<number | null>(null);
 
   // A fresh card rises from the middle of the deck instead of popping into place.
   useEffect(() => {
@@ -507,6 +510,7 @@ function PileView({
         {behind.map((memory, index) => (
           <PileBackCard
             cardWidth={cardWidth}
+            cardHeight={frontHeight ?? cardWidth * 1.28}
             depth={index + 1}
             key={`${memory.id}-${currentIndex}`}
             memory={memory}
@@ -516,7 +520,12 @@ function PileView({
 
         <GestureDetector gesture={pan}>
           <Animated.View style={[styles.pileCard, dragStyle]}>
-            <View>
+            <View
+              onLayout={(event) => {
+                const next = event.nativeEvent.layout.height;
+                setFrontHeight((current) => (current === next ? current : next));
+              }}
+            >
               <FlippablePolaroidCard
                 memory={topMemory}
                 onPressFront={() => {
@@ -583,11 +592,13 @@ function PileView({
 function PileBackCard({
   memory,
   cardWidth,
+  cardHeight,
   depth,
   pull,
 }: {
   memory: Memory;
   cardWidth: number;
+  cardHeight: number;
   depth: number;
   pull: SharedValue<number>;
 }) {
@@ -618,7 +629,7 @@ function PileBackCard({
           styles.pileCardPlaceholder,
           {
             width: cardWidth,
-            height: cardWidth * 1.28,
+            height: cardHeight,
             backgroundColor: theme.colors.white,
             borderColor: theme.colors.paperEdge,
           },
