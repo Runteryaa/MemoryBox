@@ -40,6 +40,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.colors.faint,
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true,
+        // The bar has a fixed height, so its tiny caps labels keep their size;
+        // the icons and the spoken labels carry the meaning for large type.
+        tabBarAllowFontScaling: false,
         tabBarLabelStyle: {
           fontFamily: fonts.sansBold,
           fontSize: 9.5,
