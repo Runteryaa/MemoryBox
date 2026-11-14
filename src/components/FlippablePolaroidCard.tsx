@@ -293,6 +293,8 @@ export function FlippablePolaroidCard({
                 accessibilityLabel={
                   memory.isFavorite ? 'Remove from favorites' : 'Add to favorites'
                 }
+                accessibilityRole="button"
+                accessibilityState={{ selected: memory.isFavorite }}
                 hitSlop={8}
                 onPress={() => {
                   haptics.tap();
