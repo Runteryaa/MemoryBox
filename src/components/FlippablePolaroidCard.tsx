@@ -243,14 +243,19 @@ export function FlippablePolaroidCard({
                 </Text>
               </Animated.View>
             ) : null}
-            <Animated.View style={[StyleSheet.absoluteFill, blurOverlayStyle]}>
-              <Image
-                blurRadius={26}
-                contentFit="cover"
-                source={{ uri: memory.imageUri }}
-                style={StyleSheet.absoluteFill}
-              />
-            </Animated.View>
+            {/* The blurred duplicate is only needed while the photo is still
+                developing — keeping it mounted forever doubles the decode cost
+                of every card in the gallery. */}
+            {developing ? (
+              <Animated.View style={[StyleSheet.absoluteFill, blurOverlayStyle]}>
+                <Image
+                  blurRadius={26}
+                  contentFit="cover"
+                  source={{ uri: memory.imageUri }}
+                  style={StyleSheet.absoluteFill}
+                />
+              </Animated.View>
+            ) : null}
             <Animated.View
               pointerEvents="none"
               style={[
