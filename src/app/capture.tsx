@@ -102,6 +102,7 @@ export default function CaptureScreen() {
   const draftUriRef = useRef<string | null>(null);
   const stageLayout = useRef({ top: 0, height: 0 });
   const boxLayout = useRef({ top: 0 });
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [stageHeight, setStageHeight] = useState(0);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const dragY = useSharedValue(0);
@@ -136,9 +137,12 @@ export default function CaptureScreen() {
     )
   );
 
-  // Abandoned drafts should not leave orphaned photos in the document folder.
+  // Abandoned drafts should not leave orphaned photos in the document folder,
+  // and no stray timer should fire into a screen that has already left.
   useEffect(
     () => () => {
+      timersRef.current.forEach((timer) => clearTimeout(timer));
+      timersRef.current = [];
       if (savedRef.current) return;
       const draft = draftUriRef.current;
       if (draft) void deleteMemoryImage(draft);
@@ -177,7 +181,7 @@ export default function CaptureScreen() {
       setStep('arrange');
       setDeveloping(fromCamera);
       if (fromCamera) {
-        setTimeout(() => setDeveloping(false), 1750);
+        timersRef.current.push(setTimeout(() => setDeveloping(false), 1750));
       }
 
       const exifCoords = extractExifLocation(exif);
@@ -261,16 +265,20 @@ export default function CaptureScreen() {
       moodTag: mood,
     };
 
-    setTimeout(() => {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace('/');
-      }
+    timersRef.current.push(
       setTimeout(() => {
-        addMemory(input);
-      }, 220);
-    }, 260);
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace('/');
+        }
+        timersRef.current.push(
+          setTimeout(() => {
+            addMemory(input);
+          }, 220)
+        );
+      }, 260)
+    );
   }, [addMemory, description, location, mood, photo, title]);
 
   const dropIntoBox = useCallback(() => {
@@ -291,16 +299,18 @@ export default function CaptureScreen() {
       withTiming(1, { duration: 250 }),
       withTiming(0, { duration: 190 })
     );
-    setTimeout(finishCapture, 410);
+    timersRef.current.push(setTimeout(finishCapture, 410));
     // The keepsake lands: a sparkle burst plus a soft bounce of the box itself.
-    setTimeout(() => {
-      setBurstKey((key) => key + 1);
-      haptics.soft();
-      boxBounce.value = withSequence(
-        withTiming(1.05, { duration: 120 }),
-        withSpring(1, { damping: 9, stiffness: 200 })
-      );
-    }, 320);
+    timersRef.current.push(
+      setTimeout(() => {
+        setBurstKey((key) => key + 1);
+        haptics.soft();
+        boxBounce.value = withSequence(
+          withTiming(1.05, { duration: 120 }),
+          withSpring(1, { damping: 9, stiffness: 200 })
+        );
+      }, 320)
+    );
   }, [boxBounce, dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen]);
 
   const dragGesture = Gesture.Pan()

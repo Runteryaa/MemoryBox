@@ -51,6 +51,7 @@ export default function HomeScreen() {
 
   const breathe = useSharedValue(1);
   const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lidTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     breathe.value = withRepeat(
@@ -83,7 +84,8 @@ export default function HomeScreen() {
     setShakeKey((key) => key + 1);
     setBurstKey((key) => key + 1);
     setLidOpen(true);
-    setTimeout(() => {
+    if (lidTimer.current) clearTimeout(lidTimer.current);
+    lidTimer.current = setTimeout(() => {
       setLidOpen(false);
       if (memory) openMemory(memory);
     }, 720);
@@ -116,6 +118,7 @@ export default function HomeScreen() {
   useEffect(() => {
     return () => {
       if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+      if (lidTimer.current) clearTimeout(lidTimer.current);
     };
   }, []);
 
@@ -174,7 +177,8 @@ export default function HomeScreen() {
               setLidOpen(true);
               setBurstKey((key) => key + 1);
               haptics.paperRustle();
-              setTimeout(() => setLidOpen(false), 700);
+              if (lidTimer.current) clearTimeout(lidTimer.current);
+              lidTimer.current = setTimeout(() => setLidOpen(false), 700);
             }}
             shakeKey={shakeKey}
             width={boxWidth}
