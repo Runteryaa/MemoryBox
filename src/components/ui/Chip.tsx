@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Check } from 'lucide-react-native';
 import Animated, {
   ZoomIn,
@@ -55,6 +55,15 @@ export function Chip({
     ),
   }));
 
+  // The ink rides along with the fill so the label never pops ahead of it.
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      progress.value,
+      [0, 1],
+      [theme.colors.inkSoft, selectedInk]
+    ),
+  }));
+
   return (
     <PressableScale
       accessibilityLabel={label}
@@ -64,16 +73,12 @@ export function Chip({
       <Animated.View pointerEvents="none" style={[styles.fill, surfaceStyle]} />
       <View style={styles.inner}>
         {icon}
-        <Text
+        <Animated.Text
           numberOfLines={1}
-          style={[
-            styles.label,
-            size === 'sm' && styles.labelSmall,
-            { color: selected ? selectedInk : theme.colors.inkSoft },
-          ]}
+          style={[styles.label, size === 'sm' && styles.labelSmall, labelStyle]}
         >
           {label}
-        </Text>
+        </Animated.Text>
         {selected && onPress ? (
           <Animated.View entering={ZoomIn.springify().damping(12).stiffness(220)}>
             <Check color={selectedInk} size={13} strokeWidth={3} />
