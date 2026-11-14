@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,6 +13,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -415,7 +417,23 @@ function MilestoneBadge({
   const [flipped, setFlipped] = useState(false);
   const flip = useSharedValue(0);
   const fill = useSharedValue(0);
+  const stamp = useSharedValue(1);
+  const wasUnlocked = useRef(unlocked);
   const ratio = progress.goal > 0 ? Math.min(1, progress.current / progress.goal) : 0;
+
+  // A badge that just unlocked lands like a rubber stamp hitting paper.
+  useEffect(() => {
+    if (wasUnlocked.current || !unlocked) {
+      wasUnlocked.current = unlocked;
+      return;
+    }
+    wasUnlocked.current = true;
+    stamp.value = 1.55;
+    stamp.value = withSequence(
+      withTiming(0.94, { duration: 120, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 9, stiffness: 240 })
+    );
+  }, [stamp, unlocked]);
 
   useEffect(() => {
     flip.value = withTiming(flipped ? 1 : 0, {
@@ -429,11 +447,15 @@ function MilestoneBadge({
   }, [fill, ratio]);
 
   // One hinge for the whole stamp: the back face simply starts rotated 180°.
+  // The press-in scale is folded into the same transform so neither wins.
   const flipperStyle = useAnimatedStyle(() => ({
     transform: [
       { perspective: 900 },
       { rotateY: `${interpolate(flip.value, [0, 1], [0, 180])}deg` },
-      { scale: interpolate(flip.value, [0, 0.5, 1], [1, 0.95, 1]) },
+      {
+        scale:
+          interpolate(flip.value, [0, 0.5, 1], [1, 0.95, 1]) * stamp.value,
+      },
     ],
   }));
 
