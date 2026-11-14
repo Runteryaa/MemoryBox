@@ -520,6 +520,8 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
 
   return (
     <View
+      accessibilityLabel={`${value} ${label}`}
+      accessible
       style={[
         styles.statCard,
         {
