@@ -926,6 +926,7 @@ function MoodChip({
       accessibilityLabel={`${label} mood`}
       haptic="selection"
       onPress={onPress}
+      selected={active}
       style={[
         styles.moodChip,
         {

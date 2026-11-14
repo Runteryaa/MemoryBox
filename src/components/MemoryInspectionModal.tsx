@@ -327,6 +327,7 @@ export function MemoryInspectionModal({
                         onPress={() => {
                           setMood(option.id);
                         }}
+                        selected={active}
                         style={[
                           styles.moodChip,
                           {
