@@ -529,7 +529,7 @@ export default function CaptureScreen() {
           </Animated.View>
 
           <View style={styles.cameraCenter}>
-            {!permission?.granted ? (
+            {permission && !permission.granted ? (
               <View style={styles.permissionCard}>
                 <Text style={styles.permissionEmoji}>📷</Text>
                 <Text style={styles.permissionTitle}>

@@ -141,7 +141,9 @@ export default function GalleryScreen() {
       <View style={styles.header}>
         <View style={styles.headerCopy}>
           <Text style={[styles.kicker, { color: theme.colors.rose }]}>all your little moments</Text>
-          <Text style={[styles.title, { color: theme.colors.ink }]}>Gallery</Text>
+          <Text accessibilityRole="header" style={[styles.title, { color: theme.colors.ink }]}>
+            Gallery
+          </Text>
         </View>
         <View
           style={[

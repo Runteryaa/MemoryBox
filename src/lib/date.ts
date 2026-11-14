@@ -83,6 +83,7 @@ export function formatSpokenDate(date: Date): string {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
+    year: 'numeric',
   });
 }
 

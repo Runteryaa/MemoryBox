@@ -196,7 +196,9 @@ export default function StreakScreen() {
       <View style={styles.header}>
         <View>
           <Text style={[styles.kicker, { color: theme.colors.rose }]}>a gentle daily ritual</Text>
-          <Text style={[styles.title, { color: theme.colors.ink }]}>Your Streak</Text>
+          <Text accessibilityRole="header" style={[styles.title, { color: theme.colors.ink }]}>
+            Your Streak
+          </Text>
         </View>
         <View style={[styles.longestPill, { backgroundColor: theme.colors.amberSoft, borderColor: theme.colors.amber }]}>
           <Sparkles color={theme.colors.amber} size={12} strokeWidth={2.4} />

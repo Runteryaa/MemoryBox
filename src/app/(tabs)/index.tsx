@@ -155,7 +155,10 @@ export default function HomeScreen() {
     <Screen edges={['top']}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.greeting, { color: theme.colors.ink }]}>
+          <Text
+            accessibilityRole="header"
+            style={[styles.greeting, { color: theme.colors.ink }]}
+          >
             {greetingForHour()}
           </Text>
           <View style={styles.dateRow}>
