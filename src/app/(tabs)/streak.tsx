@@ -51,6 +51,16 @@ export default function StreakScreen() {
   const [monthDir, setMonthDir] = useState(1);
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
+  // Day thumbnails whose photo is gone fall back to a plain number.
+  const [lostPhotos, setLostPhotos] = useState<Set<string>>(() => new Set());
+  const markPhotoLost = (uri: string) => {
+    setLostPhotos((current) => {
+      if (current.has(uri)) return current;
+      const next = new Set(current);
+      next.add(uri);
+      return next;
+    });
+  };
 
   const stats = useMemo(() => getStats(memories), [memories]);
   const byDate = useMemo(() => getMemoriesByDate(memories), [memories]);
@@ -328,10 +338,11 @@ export default function StreakScreen() {
                         },
                       ]}
                     >
-                      {first ? (
+                      {first && !lostPhotos.has(first.imageUri) ? (
                         <>
                           <Image
                             contentFit="cover"
+                            onError={() => markPhotoLost(first.imageUri)}
                             source={{ uri: first.imageUri }}
                             style={StyleSheet.absoluteFill}
                             transition={160}
