@@ -265,7 +265,10 @@ export default function GalleryScreen() {
       </View>
 
       <View style={styles.resultRow}>
-        <Text style={[styles.resultText, { color: theme.colors.muted }]}>
+        <Text
+          accessibilityLiveRegion="polite"
+          style={[styles.resultText, { color: theme.colors.muted }]}
+        >
           {filtered.length} {filtered.length === 1 ? 'memory' : 'memories'}
           {mood !== 'all' || city !== 'all' || onlyLoved || query.trim() ? ' found' : ' in your box'}
         </Text>
@@ -574,13 +577,11 @@ function PileView({
         </PressableScale>
         <View style={styles.pileHintWrap}>
           <Text style={[styles.pileHint, { color: theme.colors.muted }]}>
-            {memories.length < 2
-              ? 'the only one in this pile'
-              : `${currentIndex + 1} of ${memories.length}`}
+            {memories.length < 2 ? 'the only one in this pile' : 'swipe the photo to rummage'}
           </Text>
           <View style={[styles.pileHintLine, { backgroundColor: theme.colors.borderStrong }]} />
           <Text style={[styles.pileHintSub, { color: theme.colors.faint }]}>
-            {memories.length < 2 ? 'tap it to open the story' : 'swipe to rummage · tap to open'}
+            tap it to open the story
           </Text>
         </View>
         <PressableScale

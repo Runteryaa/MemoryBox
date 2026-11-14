@@ -342,6 +342,8 @@ function MiniStat({
 
   return (
     <Animated.View
+      accessibilityLabel={`${value} ${label}`}
+      accessible
       style={[
         styles.statCard,
         {
