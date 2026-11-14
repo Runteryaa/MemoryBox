@@ -531,14 +531,22 @@ function PileView({
       <View style={styles.pileActions}>
         <PressableScale
           accessibilityLabel="Previous memory"
+          disabled={memories.length < 2}
           onPress={() => cyclePile(-1)}
-          style={[styles.pileNav, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          style={[
+            styles.pileNav,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              opacity: memories.length < 2 ? 0.35 : 1,
+            },
+          ]}
         >
           <ChevronLeft color={theme.colors.inkSoft} size={16} strokeWidth={2.6} />
         </PressableScale>
         <View style={styles.pileHintWrap}>
           <Text style={[styles.pileHint, { color: theme.colors.muted }]}>
-            swipe the photo to rummage
+            {memories.length < 2 ? 'the only one in this pile' : 'swipe the photo to rummage'}
           </Text>
           <View style={[styles.pileHintLine, { backgroundColor: theme.colors.borderStrong }]} />
           <Text style={[styles.pileHintSub, { color: theme.colors.faint }]}>
@@ -547,8 +555,16 @@ function PileView({
         </View>
         <PressableScale
           accessibilityLabel="Next memory"
+          disabled={memories.length < 2}
           onPress={() => cyclePile(1)}
-          style={[styles.pileNav, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          style={[
+            styles.pileNav,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              opacity: memories.length < 2 ? 0.35 : 1,
+            },
+          ]}
         >
           <ChevronRight color={theme.colors.inkSoft} size={16} strokeWidth={2.6} />
         </PressableScale>
