@@ -313,8 +313,11 @@ function ModeButton({
   const activeInk = contrastInk(theme.colors.rose);
   const iconScale = useSharedValue(1);
   const iconTurn = useSharedValue(0);
+  const fill = useSharedValue(active ? 1 : 0);
 
   useEffect(() => {
+    // The pill fills with rose instead of jumping between two colours.
+    fill.value = withTiming(active ? 1 : 0, { duration: 180 });
     if (!active) {
       iconScale.value = withSpring(1, { damping: 14, stiffness: 220 });
       return;
@@ -327,10 +330,14 @@ function ModeButton({
       withTiming(-12, { duration: 110 }),
       withSpring(0, { damping: 10, stiffness: 240 })
     );
-  }, [active, iconScale, iconTurn]);
+  }, [active, fill, iconScale, iconTurn]);
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [{ scale: iconScale.value }, { rotate: `${iconTurn.value}deg` }],
+  }));
+
+  const fillStyle = useAnimatedStyle(() => ({
+    opacity: fill.value,
   }));
 
   return (
@@ -338,11 +345,12 @@ function ModeButton({
       accessibilityLabel={`${label} view`}
       haptic="selection"
       onPress={onPress}
-      style={[
-        styles.modeButton,
-        { backgroundColor: active ? theme.colors.rose : 'transparent' },
-      ]}
+      style={styles.modeButton}
     >
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.modeFill, { backgroundColor: theme.colors.rose }, fillStyle]}
+      />
       <Animated.View style={iconStyle}>
         <Icon
           color={active ? activeInk : theme.colors.muted}
@@ -828,8 +836,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     flexDirection: 'row',
     gap: 4,
+    overflow: 'hidden',
     paddingHorizontal: 10,
     paddingVertical: 7,
+  },
+  modeFill: {
+    borderRadius: 999,
   },
   modeLabel: {
     fontFamily: fonts.sansBold,
