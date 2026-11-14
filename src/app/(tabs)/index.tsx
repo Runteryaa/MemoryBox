@@ -244,6 +244,11 @@ export default function HomeScreen() {
                   onPress={() => openMemory(memory)}
                 />
               ))}
+              {onThisDay.length > 2 ? (
+                <Text style={[styles.onThisDayMore, { color: theme.colors.faint }]}>
+                  {onThisDay.length - 2} more waiting in the gallery
+                </Text>
+              ) : null}
             </View>
           </Animated.View>
         ) : null}
@@ -513,6 +518,13 @@ const styles = StyleSheet.create({
   onThisDayList: {
     gap: 10,
     marginTop: 9,
+  },
+  onThisDayMore: {
+    fontFamily: fonts.sansSemiBold,
+    fontSize: 10,
+    letterSpacing: 0.2,
+    marginLeft: 2,
+    marginTop: 1,
   },
   onThisDayCard: {
     alignItems: 'center',
