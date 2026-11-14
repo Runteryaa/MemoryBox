@@ -35,6 +35,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { MOODS, MOOD_MAP } from '@/constants';
 import { formatMediumDate } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
+import { cachedImageRatio, rememberImageRatio } from '@/lib/imageRatio';
 import { getDistinctCities } from '@/lib/stats';
 import { filterMemories, useMemoryStore, type MemorySort } from '@/store/useMemoryStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -754,7 +755,12 @@ function GridCard({
   const [imageFailed, setImageFailed] = useState(false);
   // The card frames the photo by its own shape once it has loaded, so a tall
   // portrait and a wide landscape both feel kept rather than cropped to fit.
-  const [ratio, setRatio] = useState<number | null>(null);
+  const [ratio, setRatio] = useState<number | null>(() => {
+    if (memory.imageWidth && memory.imageHeight) {
+      return memory.imageHeight / memory.imageWidth;
+    }
+    return cachedImageRatio(memory.imageUri);
+  });
 
   useEffect(() => {
     setImageFailed(false);
@@ -762,7 +768,7 @@ function GridCard({
     setRatio(
       memory.imageWidth && memory.imageHeight
         ? memory.imageHeight / memory.imageWidth
-        : null
+        : cachedImageRatio(memory.imageUri)
     );
   }, [memory.imageHeight, memory.imageUri, memory.imageWidth]);
 
@@ -809,6 +815,7 @@ function GridCard({
               const { width: photoWidth, height: photoHeight } = event.source;
               if (!photoWidth || !photoHeight) return;
               const next = photoHeight / photoWidth;
+              rememberImageRatio(memory.imageUri, next);
               setRatio((current) => (current != null && Math.abs(current - next) < 0.01 ? current : next));
             }}
             source={{ uri: memory.imageUri }}

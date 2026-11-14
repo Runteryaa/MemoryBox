@@ -25,6 +25,7 @@ import Animated, {
 import { MOOD_MAP } from '@/constants';
 import { formatCoordinates, formatLongDate, formatMediumDate, formatTime } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
+import { cachedImageRatio, rememberImageRatio } from '@/lib/imageRatio';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
 import type { Memory } from '@/types';
 
@@ -79,7 +80,14 @@ export function FlippablePolaroidCard({
   const heart = useSharedValue(1);
   const storyInputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [imageFailed, setImageFailed] = useState(false);
-  const [photoRatio, setPhotoRatio] = useState<number | null>(null);
+  const [photoRatio, setPhotoRatio] = useState<number | null>(() => {
+    if (memory.imageWidth && memory.imageHeight) {
+      return memory.imageHeight / memory.imageWidth;
+    }
+    // Older keepsakes have no recorded size, but if this photo has already been
+    // decoded this session its shape is known.
+    return cachedImageRatio(memory.imageUri);
+  });
 
   // A new memory means a new photo; clear any previous failure and shape.
   useEffect(() => {
@@ -89,7 +97,7 @@ export function FlippablePolaroidCard({
     const stored =
       memory.imageWidth && memory.imageHeight
         ? memory.imageHeight / memory.imageWidth
-        : null;
+        : cachedImageRatio(memory.imageUri);
     setPhotoRatio(stored);
   }, [memory.imageHeight, memory.imageUri, memory.imageWidth]);
 
@@ -253,6 +261,7 @@ export function FlippablePolaroidCard({
                 const { width: photoPixelWidth, height: photoPixelHeight } = event.source;
                 if (!photoPixelWidth || !photoPixelHeight) return;
                 const next = photoPixelHeight / photoPixelWidth;
+                rememberImageRatio(memory.imageUri, next);
                 setPhotoRatio((current) =>
                   current != null && Math.abs(current - next) < 0.01 ? current : next
                 );
