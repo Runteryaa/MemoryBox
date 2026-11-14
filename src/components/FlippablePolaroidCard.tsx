@@ -76,10 +76,12 @@ export function FlippablePolaroidCard({
   const heart = useSharedValue(1);
   const storyInputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const [imageFailed, setImageFailed] = useState(false);
+  const [photoRatio, setPhotoRatio] = useState<number | null>(null);
 
-  // A new memory means a new photo; clear any previous failure.
+  // A new memory means a new photo; clear any previous failure and shape.
   useEffect(() => {
     setImageFailed(false);
+    setPhotoRatio(null);
   }, [memory.imageUri]);
 
   const heartStyle = useAnimatedStyle(() => ({
@@ -101,7 +103,12 @@ export function FlippablePolaroidCard({
 
   const scale = Math.max(0.65, width / 300);
   const padding = 11 * scale;
-  const photoHeight = (width - padding * 2) * 1.02;
+  const photoWidth = width - padding * 2;
+  // The frame follows the photo's own shape once it has loaded, so a wide
+  // landscape and a tall portrait both feel kept rather than force-cropped.
+  // The clamp keeps the card from ever towering off-screen.
+  const ratio = photoRatio == null ? 1.02 : Math.min(1.3, Math.max(0.76, photoRatio));
+  const photoHeight = photoWidth * ratio;
   const bottomMargin = width < 260 ? 54 : 68;
   const cardHeight = photoHeight + padding * 2 + bottomMargin;
   const mood = MOOD_MAP[memory.moodTag] ?? MOOD_MAP.cozy;
@@ -228,6 +235,14 @@ export function FlippablePolaroidCard({
             <Image
               contentFit="cover"
               onError={() => setImageFailed(true)}
+              onLoad={(event) => {
+                const { width: photoPixelWidth, height: photoPixelHeight } = event.source;
+                if (!photoPixelWidth || !photoPixelHeight) return;
+                const next = photoPixelHeight / photoPixelWidth;
+                setPhotoRatio((current) =>
+                  current != null && Math.abs(current - next) < 0.01 ? current : next
+                );
+              }}
               source={{ uri: memory.imageUri }}
               style={StyleSheet.absoluteFill}
               transition={220}
