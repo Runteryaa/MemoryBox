@@ -48,6 +48,8 @@ interface FlippablePolaroidCardProps {
   initialFlipped?: boolean;
   style?: StyleProp<ViewStyle>;
   showHint?: boolean;
+  /** Hard ceiling for the whole card; the photo frame shrinks to respect it. */
+  maxHeight?: number;
 }
 
 export function FlippablePolaroidCard({
@@ -68,6 +70,7 @@ export function FlippablePolaroidCard({
   initialFlipped = false,
   style,
   showHint = true,
+  maxHeight,
 }: FlippablePolaroidCardProps) {
   const theme = useTheme();
   const [flipped, setFlipped] = useState(initialFlipped);
@@ -107,9 +110,14 @@ export function FlippablePolaroidCard({
   // The frame follows the photo's own shape once it has loaded, so a wide
   // landscape and a tall portrait both feel kept rather than force-cropped.
   // The clamp keeps the card from ever towering off-screen.
-  const ratio = photoRatio == null ? 1.02 : Math.min(1.3, Math.max(0.76, photoRatio));
-  const photoHeight = photoWidth * ratio;
   const bottomMargin = width < 260 ? 54 : 68;
+  const tallestPhoto = maxHeight == null ? Infinity : Math.max(90, maxHeight - padding * 2 - bottomMargin);
+  const ratioCeiling = Math.min(1.3, tallestPhoto / Math.max(photoWidth, 1));
+  const ratioFloor = Math.min(0.76, ratioCeiling);
+  const ratio = photoRatio == null
+    ? Math.min(1.02, ratioCeiling)
+    : Math.min(ratioCeiling, Math.max(ratioFloor, photoRatio));
+  const photoHeight = Math.min(tallestPhoto, photoWidth * ratio);
   const cardHeight = photoHeight + padding * 2 + bottomMargin;
   const mood = MOOD_MAP[memory.moodTag] ?? MOOD_MAP.cozy;
 

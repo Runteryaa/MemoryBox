@@ -139,6 +139,9 @@ export default function CaptureScreen() {
       !keyboardVisible && stageHeight > 0 ? (stageHeight - 118) / 1.02 : 300
     )
   );
+  // A tall portrait frame could still outgrow the stage, so the card is told
+  // the ceiling it has to respect and shrinks its photo frame to fit.
+  const cardMaxHeight = !keyboardVisible && stageHeight > 0 ? stageHeight - 58 : undefined;
 
   // Abandoned drafts should not leave orphaned photos in the document folder,
   // and no stray timer should fire into a screen that has already left.
@@ -695,6 +698,7 @@ export default function CaptureScreen() {
                         setCardFlipped(flipped);
                         if (!flipped) Keyboard.dismiss();
                       }}
+                      maxHeight={cardMaxHeight}
                       width={cardWidth}
                     />
                   </Animated.View>
