@@ -98,9 +98,15 @@ export default function StreakScreen() {
   }));
 
   const flameHaloStyle = useAnimatedStyle(() => ({
-    opacity: 0.16 + flameFlicker.value * 0.2,
+    opacity:
+      streak.currentStreak === 0 ? 0.08 : 0.16 + flameFlicker.value * 0.2,
     transform: [{ scale: 0.92 + flameFlicker.value * 0.16 }],
   }));
+
+  // A box that has never been remembered keeps an unlit, waiting flame.
+  const restingFlame: [string, string, string] = theme.isDark
+    ? ['#4C443D', '#3A332D', '#2A2420']
+    : ['#EFE6DB', '#D9C8B7', '#B9A692'];
 
   const cells = useMemo(() => getMonthGrid(month), [month]);
   const todayKey = toDateKey();
@@ -206,9 +212,9 @@ export default function StreakScreen() {
                 pointerEvents="none"
                 style={[styles.heroFlameHalo, { backgroundColor: theme.colors.amber }, flameHaloStyle]}
               />
-              <Animated.View style={flameStyle}>
+              <Animated.View style={[flameStyle, streak.currentStreak === 0 && styles.flameResting]}>
                 <LinearGradient
-                  colors={theme.gradients.flame}
+                  colors={streak.currentStreak === 0 ? restingFlame : theme.gradients.flame}
                   end={{ x: 1, y: 1 }}
                   start={{ x: 0, y: 0 }}
                   style={styles.heroFlame}
@@ -732,6 +738,9 @@ const styles = StyleSheet.create({
     height: 78,
     justifyContent: 'center',
     width: 78,
+  },
+  flameResting: {
+    opacity: 0.7,
   },
   heroFlameHalo: {
     borderRadius: 999,
