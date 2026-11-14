@@ -439,7 +439,6 @@ export default function CaptureScreen() {
   };
 
   const resetToCamera = () => {
-    haptics.tap();
     discardDraft();
     if (photo) {
       setPhoto(null);
@@ -450,7 +449,6 @@ export default function CaptureScreen() {
   };
 
   const close = () => {
-    haptics.tap();
     discardDraft();
     if (router.canGoBack()) {
       router.back();
@@ -581,7 +579,7 @@ export default function CaptureScreen() {
             <View style={styles.cameraBottomSide}>
               <PressableScale
                 accessibilityLabel="Pick a photo from your library"
-                haptic="soft"
+                haptic="none"
                 onPress={() => {
                   void pickFromLibrary();
                 }}

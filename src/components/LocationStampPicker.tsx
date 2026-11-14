@@ -112,7 +112,6 @@ export function LocationStampPicker({
     if (detecting) return;
     setDetecting(true);
     setError(null);
-    haptics.soft();
     try {
       const location = await detectCurrentPlace();
       setPlaceName(location.placeName);
