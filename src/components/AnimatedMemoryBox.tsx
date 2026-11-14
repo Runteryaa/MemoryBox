@@ -134,6 +134,25 @@ export function AnimatedMemoryBox({
     opacity: interpolate(open.value, [0, 1], [0, 0.75]),
   }));
 
+  // The little sparkles drift on their own clock, so the box never looks frozen.
+  const sparkleOneStyle = useAnimatedStyle(() => ({
+    opacity: 0.45 + float.value * 0.4,
+    transform: [
+      { translateY: -float.value * 7 },
+      { rotate: `${float.value * 18 - 9}deg` },
+      { scale: 0.9 + float.value * 0.18 },
+    ],
+  }));
+
+  const sparkleTwoStyle = useAnimatedStyle(() => ({
+    opacity: 0.35 + (1 - float.value) * 0.4,
+    transform: [
+      { translateY: -(1 - float.value) * 5 },
+      { rotate: `${9 - float.value * 22}deg` },
+      { scale: 0.86 + (1 - float.value) * 0.2 },
+    ],
+  }));
+
   // A warm shaft of light escapes the open lid.
   const lightShaftStyle = useAnimatedStyle(() => ({
     opacity: interpolate(open.value, [0, 0.55, 1], [0, 0.35, 0.55], 'clamp'),
@@ -314,12 +333,12 @@ export function AnimatedMemoryBox({
             </Animated.View>
           </Animated.View>
 
-          <View style={styles.sparkleFloat}>
+          <Animated.View style={[styles.sparkleFloat, sparkleOneStyle]}>
             <Sparkles color={theme.colors.amber} size={16} strokeWidth={2} />
-          </View>
-          <View style={[styles.sparkleFloat, styles.sparkleFloatTwo]}>
+          </Animated.View>
+          <Animated.View style={[styles.sparkleFloat, styles.sparkleFloatTwo, sparkleTwoStyle]}>
             <Sparkles color={theme.colors.pink} size={11} strokeWidth={2} />
-          </View>
+          </Animated.View>
         </PressableScale>
       </Animated.View>
 

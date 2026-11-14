@@ -33,10 +33,12 @@ import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
+  cancelAnimation,
   interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withSequence,
   withSpring,
   withTiming,
@@ -109,6 +111,7 @@ export default function CaptureScreen() {
   const lidOpen = useSharedValue(0);
   const boxBounce = useSharedValue(1);
   const shutter = useSharedValue(0);
+  const shutterBreath = useSharedValue(0);
   const [burstKey, setBurstKey] = useState(0);
 
   // While the keyboard is up the stage shrinks; keep the card the same size so
@@ -357,6 +360,24 @@ export default function CaptureScreen() {
     opacity: shutter.value,
   }));
 
+  // The shutter ring breathes gently, inviting the tap.
+  useEffect(() => {
+    if (step !== 'camera') return;
+    shutterBreath.value = withRepeat(
+      withTiming(1, { duration: 1900, easing: Easing.out(Easing.quad) }),
+      -1,
+      false
+    );
+    return () => {
+      cancelAnimation(shutterBreath);
+    };
+  }, [shutterBreath, step]);
+
+  const shutterRingStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(shutterBreath.value, [0, 1], [0.55, 0]),
+    transform: [{ scale: interpolate(shutterBreath.value, [0, 1], [1, 1.28]) }],
+  }));
+
   const discardDraft = () => {
     if (savedRef.current) return;
     const draft = draftUriRef.current;
@@ -513,6 +534,10 @@ export default function CaptureScreen() {
               scaleTo={0.9}
               style={styles.shutterOuter}
             >
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.shutterRing, { borderColor: 'rgba(255,255,255,0.5)' }, shutterRingStyle]}
+              />
               <View style={styles.shutterInner}>
                 {taking ? (
                   <ActivityIndicator color={theme.colors.rose} size="small" />
@@ -695,34 +720,17 @@ export default function CaptureScreen() {
               <View style={[styles.composerDivider, { backgroundColor: theme.colors.borderStrong }]} />
 
               <Text style={[styles.moodLabel, { color: theme.colors.faint }]}>felt</Text>
-              {MOODS.map((option) => {
-                const active = mood === option.id;
-                return (
-                  <PressableScale
-                    accessibilityLabel={`${option.label} mood`}
-                    haptic="selection"
-                    key={option.id}
-                    onPress={() => setMood(option.id)}
-                    style={[
-                      styles.moodChip,
-                      {
-                        backgroundColor: active ? option.soft : theme.colors.surface,
-                        borderColor: active ? option.color : theme.colors.border,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.moodEmoji}>{option.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.moodText,
-                        { color: active ? option.color : theme.colors.muted },
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </PressableScale>
-                );
-              })}
+              {MOODS.map((option) => (
+                <MoodChip
+                  active={mood === option.id}
+                  color={option.color}
+                  emoji={option.emoji}
+                  key={option.id}
+                  label={option.label}
+                  onPress={() => setMood(option.id)}
+                  soft={option.soft}
+                />
+              ))}
             </ScrollView>
 
             <PressableScale
@@ -844,6 +852,63 @@ export default function CaptureScreen() {
         </KeyboardAvoidingView>
       )}
     </View>
+  );
+}
+
+/** Mood chips pop into place when chosen, like pressing a wax seal. */
+function MoodChip({
+  label,
+  emoji,
+  color,
+  soft,
+  active,
+  onPress,
+}: {
+  label: string;
+  emoji: string;
+  color: string;
+  soft: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const theme = useTheme();
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (!active) return;
+    scale.value = withSequence(
+      withTiming(1.12, { duration: 90 }),
+      withSpring(1, { damping: 10, stiffness: 260 })
+    );
+  }, [active, scale]);
+
+  const emojiStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <PressableScale
+      accessibilityLabel={`${label} mood`}
+      haptic="selection"
+      onPress={onPress}
+      style={[
+        styles.moodChip,
+        {
+          backgroundColor: active ? soft : theme.colors.surface,
+          borderColor: active ? color : theme.colors.border,
+        },
+      ]}
+    >
+      <Animated.Text style={[styles.moodEmoji, emojiStyle]}>{emoji}</Animated.Text>
+      <Text
+        style={[
+          styles.moodText,
+          { color: active ? color : theme.colors.muted },
+        ]}
+      >
+        {label}
+      </Text>
+    </PressableScale>
   );
 }
 
@@ -994,6 +1059,15 @@ const styles = StyleSheet.create({
     height: 62,
     justifyContent: 'center',
     width: 62,
+  },
+  shutterRing: {
+    borderRadius: 999,
+    borderWidth: 2,
+    bottom: -4,
+    left: -4,
+    position: 'absolute',
+    right: -4,
+    top: -4,
   },
   arrangeRoot: {
     flex: 1,

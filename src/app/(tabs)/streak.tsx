@@ -7,6 +7,8 @@ import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
+  FadeInLeft,
+  FadeInRight,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
@@ -42,6 +44,7 @@ export default function StreakScreen() {
   const status = getMemoryStreakStatus(streak);
 
   const [month, setMonth] = useState(() => new Date());
+  const [monthDir, setMonthDir] = useState(1);
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
 
@@ -192,6 +195,7 @@ export default function StreakScreen() {
                   haptic="tap"
                   onPress={() => {
                     haptics.tap();
+                    setMonthDir(-1);
                     setMonth((current) => addMonths(current, -1));
                   }}
                   style={[styles.navButton, { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border }]}
@@ -203,6 +207,7 @@ export default function StreakScreen() {
                   haptic="tap"
                   onPress={() => {
                     haptics.tap();
+                    setMonthDir(1);
                     setMonth((current) => addMonths(current, 1));
                   }}
                   style={[styles.navButton, { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border }]}
@@ -213,7 +218,7 @@ export default function StreakScreen() {
             </View>
 
             <Animated.View
-              entering={FadeInDown.duration(280)}
+              entering={(monthDir > 0 ? FadeInRight : FadeInLeft).duration(260)}
               key={`month-${monthKey}`}
               style={styles.calendarBody}
             >

@@ -4,7 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Flame, Sparkles } from 'lucide-react-native';
 import Animated, {
   Easing,
-  FadeIn,
   FadeInDown,
   ZoomIn,
   interpolate,
@@ -36,6 +35,34 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
   const theme = useTheme();
   const visible = streak != null && streak > 0;
   const [display, setDisplay] = useState(0);
+  const drift = useSharedValue(0);
+
+  useEffect(() => {
+    if (!visible) return;
+    drift.value = withRepeat(
+      withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [drift, visible]);
+
+  const sparkleTopStyle = useAnimatedStyle(() => ({
+    opacity: 0.55 + drift.value * 0.45,
+    transform: [
+      { translateY: -drift.value * 8 },
+      { rotate: `${drift.value * 24 - 12}deg` },
+      { scale: 0.9 + drift.value * 0.2 },
+    ],
+  }));
+
+  const sparkleBottomStyle = useAnimatedStyle(() => ({
+    opacity: 0.5 + (1 - drift.value) * 0.5,
+    transform: [
+      { translateY: -(1 - drift.value) * 6 },
+      { rotate: `${12 - drift.value * 26}deg` },
+      { scale: 0.88 + (1 - drift.value) * 0.22 },
+    ],
+  }));
 
   useEffect(() => {
     if (!visible) {
@@ -80,10 +107,10 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
             style={StyleSheet.absoluteFill}
           />
 
-          <Animated.View entering={FadeIn.delay(180)} style={styles.sparkleTop}>
+          <Animated.View style={[styles.sparkleTop, sparkleTopStyle]}>
             <Sparkles color={theme.colors.gold} size={22} strokeWidth={2} />
           </Animated.View>
-          <Animated.View entering={FadeIn.delay(300)} style={styles.sparkleBottom}>
+          <Animated.View style={[styles.sparkleBottom, sparkleBottomStyle]}>
             <Sparkles color={theme.colors.pink} size={15} strokeWidth={2} />
           </Animated.View>
 

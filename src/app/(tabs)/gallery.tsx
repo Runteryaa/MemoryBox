@@ -244,6 +244,28 @@ function ModeButton({
 }) {
   const theme = useTheme();
   const activeInk = contrastInk(theme.colors.rose);
+  const iconScale = useSharedValue(1);
+  const iconTurn = useSharedValue(0);
+
+  useEffect(() => {
+    if (!active) {
+      iconScale.value = withSpring(1, { damping: 14, stiffness: 220 });
+      return;
+    }
+    iconScale.value = withSequence(
+      withTiming(1.22, { duration: 110 }),
+      withSpring(1, { damping: 9, stiffness: 260 })
+    );
+    iconTurn.value = withSequence(
+      withTiming(-12, { duration: 110 }),
+      withSpring(0, { damping: 10, stiffness: 240 })
+    );
+  }, [active, iconScale, iconTurn]);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: iconScale.value }, { rotate: `${iconTurn.value}deg` }],
+  }));
+
   return (
     <PressableScale
       accessibilityLabel={`${label} view`}
@@ -254,11 +276,13 @@ function ModeButton({
         { backgroundColor: active ? theme.colors.rose : 'transparent' },
       ]}
     >
-      <Icon
-        color={active ? activeInk : theme.colors.muted}
-        size={14}
-        strokeWidth={2.5}
-      />
+      <Animated.View style={iconStyle}>
+        <Icon
+          color={active ? activeInk : theme.colors.muted}
+          size={14}
+          strokeWidth={2.5}
+        />
+      </Animated.View>
       <Text
         style={[
           styles.modeLabel,

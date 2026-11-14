@@ -17,6 +17,8 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -71,7 +73,19 @@ export function FlippablePolaroidCard({
   const [flipped, setFlipped] = useState(initialFlipped);
   const flip = useSharedValue(initialFlipped ? 1 : 0);
   const develop = useSharedValue(developing ? 0 : 1);
+  const heart = useSharedValue(1);
   const storyInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heart.value }],
+  }));
+
+  const popHeart = () => {
+    heart.value = withSequence(
+      withTiming(1.32, { duration: 105 }),
+      withSpring(1, { damping: 9, stiffness: 250 })
+    );
+  };
 
   // Let the parent request a flip (e.g. tapping the "write the story" hint).
   useEffect(() => {
@@ -250,6 +264,7 @@ export function FlippablePolaroidCard({
                 hitSlop={8}
                 onPress={() => {
                   haptics.tap();
+                  popHeart();
                   onToggleFavorite?.();
                 }}
                 style={[
@@ -257,12 +272,14 @@ export function FlippablePolaroidCard({
                   { backgroundColor: theme.isDark ? 'rgba(28,25,23,0.7)' : 'rgba(255,255,255,0.88)' },
                 ]}
               >
-                <Heart
-                  color={memory.isFavorite ? theme.colors.rose : theme.colors.inkSoft}
-                  fill={memory.isFavorite ? theme.colors.rose : 'transparent'}
-                  size={16 * scale}
-                  strokeWidth={2.2}
-                />
+                <Animated.View style={heartStyle}>
+                  <Heart
+                    color={memory.isFavorite ? theme.colors.rose : theme.colors.inkSoft}
+                    fill={memory.isFavorite ? theme.colors.rose : 'transparent'}
+                    size={16 * scale}
+                    strokeWidth={2.2}
+                  />
+                </Animated.View>
               </Pressable>
             ) : null}
 
