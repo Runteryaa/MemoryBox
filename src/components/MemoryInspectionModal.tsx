@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -69,6 +69,7 @@ export function MemoryInspectionModal({
   const [description, setDescription] = useState('');
   const [mood, setMood] = useState<MoodTag>('happy');
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const heart = useSharedValue(1);
   const heartStyle = useAnimatedStyle(() => ({
@@ -106,6 +107,7 @@ export function MemoryInspectionModal({
     setDescription(memory?.description ?? '');
     setMood(memory?.moodTag ?? 'happy');
     setLocationPickerOpen(false);
+    setConfirmingDelete(false);
   }, [memory?.id, memory?.shortTitle, memory?.description, memory?.moodTag, visible]);
 
   const liveMemory = useMemo(() => {
@@ -157,29 +159,25 @@ export function MemoryInspectionModal({
 
   const confirmDelete = useCallback(() => {
     if (!memory) return;
-    Alert.alert(
-      'Let this memory go?',
-      'The photo and its story will be lifted out of your box. You get a few seconds to put it back.',
-      [
-        { text: 'Keep it', style: 'cancel' },
-        {
-          text: 'Let it go',
-          style: 'destructive',
-          onPress: () => {
-            haptics.warning();
-            onClose();
-            void deleteMemory(memory.id);
-          },
-        },
-      ]
-    );
+    // A memory deserves a proper pause, in the same paper and ink as the rest.
+    setConfirmingDelete(true);
+  }, [memory]);
+
+  const letGo = useCallback(() => {
+    if (!memory) return;
+    setConfirmingDelete(false);
+    haptics.warning();
+    onClose();
+    void deleteMemory(memory.id);
   }, [deleteMemory, memory, onClose]);
 
   return (
     <Modal
       animationType="fade"
       onRequestClose={() => {
-        if (editing) {
+        if (confirmingDelete) {
+          setConfirmingDelete(false);
+        } else if (editing) {
           saveEdits();
         } else {
           onClose();
@@ -421,6 +419,73 @@ export function MemoryInspectionModal({
           value={memory?.location ?? null}
           visible={locationPickerOpen}
         />
+
+        {confirmingDelete ? (
+          <Animated.View
+            entering={FadeIn.duration(150)}
+            exiting={FadeOut.duration(120)}
+            style={[StyleSheet.absoluteFill, styles.confirmOverlay]}
+          >
+            <Pressable
+              accessibilityLabel="Keep this memory in the box"
+              onPress={() => {
+                setConfirmingDelete(false);
+              }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Animated.View
+              entering={FadeInDown.duration(220)}
+              style={[
+                styles.confirmCard,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  shadowColor: theme.colors.shadow,
+                },
+                shadows.card,
+              ]}
+            >
+              <Text style={[styles.confirmKicker, { color: theme.colors.rose }]}>
+                one last look
+              </Text>
+              <Text style={[styles.confirmTitle, { color: theme.colors.ink }]}>
+                Let this memory go?
+              </Text>
+              <Text style={[styles.confirmBody, { color: theme.colors.muted }]}>
+                The photo and its story will be lifted out of your box. You get a few seconds to
+                put it back.
+              </Text>
+              <View style={styles.confirmActions}>
+                <PressableScale
+                  accessibilityLabel="Keep this memory"
+                  haptic="tap"
+                  onPress={() => {
+                    setConfirmingDelete(false);
+                  }}
+                  style={[
+                    styles.confirmKeep,
+                    {
+                      backgroundColor: theme.colors.surfaceRaised,
+                      borderColor: theme.colors.borderStrong,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.confirmKeepText, { color: theme.colors.inkSoft }]}>
+                    Keep it
+                  </Text>
+                </PressableScale>
+                <PressableScale
+                  accessibilityLabel="Let this memory go"
+                  haptic="none"
+                  onPress={letGo}
+                  style={[styles.confirmDelete, { backgroundColor: theme.colors.danger }]}
+                >
+                  <Text style={styles.confirmDeleteText}>Let it go</Text>
+                </PressableScale>
+              </View>
+            </Animated.View>
+          </Animated.View>
+        ) : null}
       </Animated.View>
     </Modal>
   );
@@ -429,6 +494,63 @@ export function MemoryInspectionModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
+  },
+  confirmOverlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(10,7,5,0.42)',
+    justifyContent: 'center',
+    paddingHorizontal: 26,
+  },
+  confirmCard: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 22,
+    width: '100%',
+  },
+  confirmKicker: {
+    fontFamily: fonts.handBold,
+    fontSize: 18,
+    lineHeight: 20,
+  },
+  confirmTitle: {
+    fontFamily: fonts.serif,
+    fontSize: 23,
+    letterSpacing: -0.5,
+    marginTop: 2,
+  },
+  confirmBody: {
+    fontFamily: fonts.sans,
+    fontSize: 12.5,
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 18,
+  },
+  confirmKeep: {
+    alignItems: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    flex: 1,
+    paddingVertical: 11,
+  },
+  confirmKeepText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 13,
+  },
+  confirmDelete: {
+    alignItems: 'center',
+    borderRadius: 999,
+    flex: 1,
+    paddingVertical: 11,
+  },
+  confirmDeleteText: {
+    color: '#FFFFFF',
+    fontFamily: fonts.sansBold,
+    fontSize: 13,
   },
   keyboard: {
     flex: 1,
