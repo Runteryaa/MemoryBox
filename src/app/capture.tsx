@@ -317,31 +317,41 @@ export default function CaptureScreen() {
     const boxCenter = boxLayout.current.top + 54;
     const distance = Math.max(200, boxCenter - cardCenter);
 
-    dragY.value = withTiming(distance, { duration: 440, easing: Easing.in(Easing.cubic) });
-    dragScale.value = withTiming(0.16, { duration: 440, easing: Easing.in(Easing.cubic) });
-    dragRotate.value = withTiming(8, { duration: 440 });
-    dragOpacity.value = withTiming(0, {
-      duration: 440,
-      easing: Easing.in(Easing.quad),
-    });
-    lidOpen.value = withSequence(
-      withTiming(1, { duration: 180 }),
-      withTiming(1, { duration: 250 }),
-      withTiming(0, { duration: 190 })
-    );
-    timersRef.current.push(setTimeout(finishCapture, 410));
+    const dropDuration = reducedMotion ? 180 : 440;
+    if (reducedMotion) {
+      // A photo sliding across the screen is exactly the motion some readers
+      // asked to skip, so here it simply fades into the box.
+      dragY.value = withTiming(16, { duration: dropDuration });
+      dragOpacity.value = withTiming(0, { duration: dropDuration });
+    } else {
+      dragY.value = withTiming(distance, { duration: dropDuration, easing: Easing.in(Easing.cubic) });
+      dragScale.value = withTiming(0.16, { duration: dropDuration, easing: Easing.in(Easing.cubic) });
+      dragRotate.value = withTiming(8, { duration: dropDuration });
+      dragOpacity.value = withTiming(0, {
+        duration: dropDuration,
+        easing: Easing.in(Easing.quad),
+      });
+      lidOpen.value = withSequence(
+        withTiming(1, { duration: 180 }),
+        withTiming(1, { duration: 250 }),
+        withTiming(0, { duration: 190 })
+      );
+    }
+    timersRef.current.push(setTimeout(finishCapture, reducedMotion ? 170 : 410));
     // The keepsake lands: a sparkle burst plus a soft bounce of the box itself.
     timersRef.current.push(
       setTimeout(() => {
         setBurstKey((key) => key + 1);
         haptics.soft();
-        boxBounce.value = withSequence(
-          withTiming(1.05, { duration: 120 }),
-          withSpring(1, { damping: 9, stiffness: 200 })
-        );
-      }, 320)
+        if (!reducedMotion) {
+          boxBounce.value = withSequence(
+            withTiming(1.05, { duration: 120 }),
+            withSpring(1, { damping: 9, stiffness: 200 })
+          );
+        }
+      }, reducedMotion ? 140 : 320)
     );
-  }, [boxBounce, dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen]);
+  }, [boxBounce, dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen, reducedMotion]);
 
   const dragGesture = Gesture.Pan()
     .enabled(!cardFlipped && !saved)
