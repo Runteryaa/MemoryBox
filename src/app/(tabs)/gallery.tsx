@@ -323,6 +323,7 @@ export default function GalleryScreen() {
       {filtered.length === 0 ? (
         <EmptyState
           hasMemories={memories.length > 0}
+          query={deferredQuery}
           onReset={() => {
             setQuery('');
             setMood('all');
@@ -904,9 +905,11 @@ function GridCard({
 
 function EmptyState({
   hasMemories,
+  query,
   onReset,
 }: {
   hasMemories: boolean;
+  query?: string;
   onReset?: () => void;
 }) {
   const theme = useTheme();
@@ -945,6 +948,9 @@ function EmptyState({
     transform: [{ scale: interpolate(halo.value, [0, 1], [1, 1.75]) }],
   }));
 
+  // Naming the search makes an empty result feel answered rather than blank.
+  const searchTerm = query?.trim() ?? '';
+
   return (
     <Animated.View entering={FadeInDown.duration(320)} style={styles.empty}>
       <View style={styles.emptyIconStage}>
@@ -958,13 +964,19 @@ function EmptyState({
           <Sparkles color={theme.colors.rose} size={26} strokeWidth={2} />
         </Animated.View>
       </View>
-      <Text style={[styles.emptyTitle, { color: theme.colors.ink }]}>
-        {hasMemories ? 'Nothing matches that rummage' : 'No memories in the box yet'}
+      <Text numberOfLines={2} style={[styles.emptyTitle, { color: theme.colors.ink }]}>
+        {!hasMemories
+          ? 'No memories in the box yet'
+          : searchTerm
+            ? `Nothing matches “${searchTerm}”`
+            : 'Nothing matches that rummage'}
       </Text>
       <Text style={[styles.emptyText, { color: theme.colors.muted }]}>
-        {hasMemories
-          ? 'Try another mood, city, or a softer search.'
-          : 'Capture a moment or pick a photo from your library — then tuck it in.'}
+        {!hasMemories
+          ? 'Capture a moment or pick a photo from your library — then tuck it in.'
+          : searchTerm
+            ? 'Try fewer words, another mood, or a city.'
+            : 'Try another mood, city, or a softer search.'}
       </Text>
       {!hasMemories ? (
         <PressableScale
