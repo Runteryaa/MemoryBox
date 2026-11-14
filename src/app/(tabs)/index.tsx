@@ -11,6 +11,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -294,19 +296,37 @@ function MiniStat({
   soft: string;
 }) {
   const theme = useTheme();
+  const pop = useSharedValue(1);
+  const previous = useRef(value);
+
+  // A tucked-in memory makes its counter lean forward for a beat.
+  useEffect(() => {
+    if (previous.current === value) return;
+    previous.current = value;
+    pop.value = withSequence(
+      withTiming(1.08, { duration: 130, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 9, stiffness: 210 })
+    );
+  }, [pop, value]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pop.value }],
+  }));
+
   return (
-    <View
+    <Animated.View
       style={[
         styles.statCard,
         {
           backgroundColor: soft,
           borderColor: tone,
         },
+        cardStyle,
       ]}
     >
       <CountUp style={[styles.statValue, { color: theme.isDark ? theme.colors.ink : tone }]} value={value} />
       <Text style={[styles.statLabel, { color: theme.colors.muted }]}>{label}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
