@@ -10,7 +10,7 @@ import {
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { ChevronLeft, ChevronRight, Grid2x2, Layers, Search, Sparkles, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Grid2x2, Heart, Layers, Search, Sparkles, X } from 'lucide-react-native';
 import Animated, {
   Easing,
   FadeInDown,
@@ -621,9 +621,14 @@ function GridCard({
               },
             ]}
           >
-            <Animated.Text style={[styles.gridHeartIcon, { transform: [{ scale: heart }] }]}>
-              {memory.isFavorite ? '♥' : '♡'}
-            </Animated.Text>
+            <Animated.View style={{ transform: [{ scale: heart }] }}>
+              <Heart
+                color={memory.isFavorite ? theme.colors.rose : theme.colors.inkSoft}
+                fill={memory.isFavorite ? theme.colors.rose : 'transparent'}
+                size={13}
+                strokeWidth={2.4}
+              />
+            </Animated.View>
           </PressableScale>
         </View>
         <View style={styles.gridCaption}>
@@ -945,10 +950,6 @@ const styles = StyleSheet.create({
     right: 6,
     top: 6,
     width: 24,
-  },
-  gridHeartIcon: {
-    color: '#E11D48',
-    fontSize: 13,
   },
   gridCaption: {
     paddingBottom: 8,
