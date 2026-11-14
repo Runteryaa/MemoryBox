@@ -322,6 +322,7 @@ export default function GalleryScreen() {
           memories={filtered}
           onOpen={openMemory}
           onToggleFavorite={toggleFavorite}
+          resetKey={`${query}|${mood}|${city}|${sort}|${onlyLoved}`}
           width={width}
         />
       )}
@@ -620,11 +621,13 @@ function PileBackCard({
 function GridView({
   memories,
   width,
+  resetKey,
   onOpen,
   onToggleFavorite,
 }: {
   memories: Memory[];
   width: number;
+  resetKey: string;
   onOpen: (memory: Memory) => void;
   onToggleFavorite: (id: string) => void;
 }) {
@@ -639,9 +642,11 @@ function GridView({
   const shown = memories.slice(0, visibleCount);
   const hasMore = visibleCount < memories.length;
 
+  // Start a fresh page only when the rummage itself changes. Favouriting a card
+  // also rebuilds the array, and that must not send the grid back to page one.
   useEffect(() => {
     setVisibleCount(GRID_PAGE_SIZE);
-  }, [memories]);
+  }, [resetKey]);
 
   return (
     <ScrollView
