@@ -11,6 +11,11 @@ interface SettingsStore {
   cycleThemeMode: () => void;
   hasSeenIntro: boolean;
   completeIntro: () => void;
+  /** Remembered so the gallery opens the way you left it. */
+  galleryMode: 'pile' | 'grid';
+  gallerySort: string;
+  setGalleryMode: (mode: 'pile' | 'grid') => void;
+  setGallerySort: (sort: string) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -18,7 +23,11 @@ export const useSettingsStore = create<SettingsStore>()(
     themeMode: 'system',
     hasHydrated: false,
     hasSeenIntro: false,
+    galleryMode: 'pile',
+    gallerySort: 'newest',
     setThemeMode: (mode) => set({ themeMode: mode }),
+    setGalleryMode: (mode) => set({ galleryMode: mode }),
+    setGallerySort: (sort) => set({ gallerySort: sort }),
     cycleThemeMode: () => {
       const mode = get().themeMode;
       const next: ThemeMode = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system';
@@ -41,6 +50,13 @@ export async function hydrateSettings() {
       useSettingsStore.setState({
         themeMode: parsed.themeMode === 'light' || parsed.themeMode === 'dark' ? parsed.themeMode : 'system',
         hasSeenIntro: parsed.hasSeenIntro ?? false,
+        galleryMode: parsed.galleryMode === 'grid' ? 'grid' : 'pile',
+        gallerySort:
+          parsed.gallerySort === 'oldest' ||
+          parsed.gallerySort === 'loved' ||
+          parsed.gallerySort === 'title'
+            ? parsed.gallerySort
+            : 'newest',
       });
     }
   } catch {
@@ -56,7 +72,12 @@ useSettingsStore.subscribe((state) => {
   saveTimer = setTimeout(() => {
     void storage.setItem(
       SETTINGS_KEY,
-      JSON.stringify({ themeMode: state.themeMode, hasSeenIntro: state.hasSeenIntro })
+      JSON.stringify({
+        themeMode: state.themeMode,
+        hasSeenIntro: state.hasSeenIntro,
+        galleryMode: state.galleryMode,
+        gallerySort: state.gallerySort,
+      })
     );
   }, 200);
 });

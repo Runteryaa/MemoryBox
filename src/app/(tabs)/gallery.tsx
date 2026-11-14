@@ -36,6 +36,7 @@ import { formatMediumDate } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
 import { getDistinctCities } from '@/lib/stats';
 import { filterMemories, useMemoryStore, type MemorySort } from '@/store/useMemoryStore';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
 import type { Memory, MoodTag } from '@/types';
 
@@ -55,17 +56,38 @@ export default function GalleryScreen() {
   const { width } = useWindowDimensions();
   const memories = useMemoryStore((state) => state.memories);
   const toggleFavorite = useMemoryStore((state) => state.toggleFavorite);
+  const savedMode = useSettingsStore((state) => state.galleryMode);
+  const savedSort = useSettingsStore((state) => state.gallerySort);
+  const setGalleryMode = useSettingsStore((state) => state.setGalleryMode);
+  const setGallerySort = useSettingsStore((state) => state.setGallerySort);
 
-  const [mode, setMode] = useState<ViewMode>('pile');
+  const [mode, setModeState] = useState<ViewMode>(savedMode);
   const [query, setQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [mood, setMood] = useState<MoodTag | 'all'>('all');
   const [city, setCity] = useState<string | 'all'>('all');
-  const [sort, setSort] = useState<MemorySort>('newest');
+  const [sort, setSortState] = useState<MemorySort>(savedSort as MemorySort);
   const [onlyLoved, setOnlyLoved] = useState(false);
   const [pileIndex, setPileIndex] = useState(0);
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
+
+  // Choosing a view or an order is a preference, so it should still be there
+  // the next time the tab is opened.
+  const setMode = useCallback(
+    (next: ViewMode) => {
+      setModeState(next);
+      setGalleryMode(next);
+    },
+    [setGalleryMode]
+  );
+  const setSort = useCallback(
+    (next: MemorySort) => {
+      setSortState(next);
+      setGallerySort(next);
+    },
+    [setGallerySort]
+  );
 
   const cities = useMemo(() => getDistinctCities(memories), [memories]);
   const filtered = useMemo(
