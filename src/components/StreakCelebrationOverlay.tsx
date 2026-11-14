@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentProps } from 'react';
+import { useEffect, type ComponentProps } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Flame, Sparkles } from 'lucide-react-native';
@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { CelebrationConfetti } from '@/components/SkiaParticles';
+import { CountUp } from '@/components/ui/CountUp';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { haptics } from '@/lib/haptics';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
@@ -34,7 +35,6 @@ const MESSAGES = [
 export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationOverlayProps) {
   const theme = useTheme();
   const visible = streak != null && streak > 0;
-  const [display, setDisplay] = useState(0);
   const drift = useSharedValue(0);
 
   useEffect(() => {
@@ -65,22 +65,8 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
   }));
 
   useEffect(() => {
-    if (!visible) {
-      setDisplay(0);
-      return;
-    }
-    haptics.success();
-    const target = streak ?? 0;
-    const duration = 900;
-    const startedAt = Date.now();
-    const timer = setInterval(() => {
-      const progress = Math.min(1, (Date.now() - startedAt) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(target * eased));
-      if (progress >= 1) clearInterval(timer);
-    }, 40);
-    return () => clearInterval(timer);
-  }, [streak, visible]);
+    if (visible) haptics.success();
+  }, [visible]);
 
   const message = MESSAGES[(Math.max(1, streak ?? 1) - 1) % MESSAGES.length] ?? MESSAGES[0];
 
@@ -136,13 +122,18 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
               {streak === 1 ? 'a new little ritual' : 'you showed up again'}
             </Text>
             <View style={styles.countRow}>
-              <Text style={[styles.count, { color: theme.colors.ink }]}>{display}</Text>
+              <CountUp
+                duration={900}
+                startFrom={0}
+                style={[styles.count, { color: theme.colors.ink }]}
+                value={streak ?? 0}
+              />
               <Text style={[styles.countLabel, { color: theme.colors.inkSoft }]}>
-                {display === 1 ? 'day' : 'days'}
+                {streak === 1 ? 'day' : 'days'}
               </Text>
             </View>
             <Text style={[styles.title, { color: theme.colors.ink }]}>
-              {display === 1 ? 'Your first day of remembering' : 'in a row, without missing a day'}
+              {streak === 1 ? 'Your first day of remembering' : 'in a row, without missing a day'}
             </Text>
             <Text style={[styles.message, { color: theme.colors.muted }]}>{message}</Text>
           </Animated.View>

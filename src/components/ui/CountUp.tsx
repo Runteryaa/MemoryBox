@@ -6,15 +6,17 @@ interface CountUpProps {
   value: number;
   style?: StyleProp<TextStyle>;
   duration?: number;
+  /** The number the first roll starts from, e.g. 0 for a fresh count. */
+  startFrom?: number;
 }
 
 /**
  * Numbers roll up from their previous value, so counters feel like they were
  * pencilled in rather than rendered.
  */
-export function CountUp({ value, style, duration = 640 }: CountUpProps) {
-  const [display, setDisplay] = useState(value);
-  const previous = useRef(value);
+export function CountUp({ value, style, duration = 640, startFrom }: CountUpProps) {
+  const [display, setDisplay] = useState(startFrom ?? value);
+  const previous = useRef(startFrom ?? value);
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
