@@ -12,10 +12,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Check, Heart, MapPin, Pencil, Trash2, X } from 'lucide-react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeOut,
+  interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -67,6 +70,33 @@ export function MemoryInspectionModal({
   const heart = useSharedValue(1);
   const heartStyle = useAnimatedStyle(() => ({
     transform: [{ scale: heart.value }],
+  }));
+
+  // Dragging the top bar pulls the whole sheet down; past a threshold it lets go.
+  const pull = useSharedValue(0);
+  const dragGesture = Gesture.Pan()
+    .activeOffsetY([-10, 10])
+    .onUpdate((event) => {
+      pull.value = Math.max(0, event.translationY * 0.9);
+    })
+    .onEnd((event) => {
+      if (pull.value > 120 || event.velocityY > 950) {
+        pull.value = 0;
+        runOnJS(onClose)();
+        return;
+      }
+      pull.value = withSpring(0, { damping: 16, stiffness: 210 });
+    });
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: pull.value },
+      { scale: interpolate(pull.value, [0, 280], [1, 0.94], 'clamp') },
+    ],
+  }));
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(pull.value, [0, 280], [1, 0.35], 'clamp'),
   }));
 
   const popHeart = () => {
@@ -138,71 +168,81 @@ export function MemoryInspectionModal({
       transparent
       visible={visible && memory != null}
     >
-      <View style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}>
+      <Animated.View
+        style={[styles.backdrop, { backgroundColor: theme.colors.overlay }, backdropStyle]}
+      >
         <Animated.View entering={FadeIn.duration(220)} style={StyleSheet.absoluteFill} />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboard}
-        >
-          <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <IconButton
-              accessibilityLabel="Close memory"
-              backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
-              borderColor="transparent"
-              color={theme.colors.white}
-              icon={X}
-              onPress={onClose}
-            />
-            <View style={styles.topActions}>
-              <Animated.View style={heartStyle}>
+        <Animated.View style={[styles.keyboard, sheetStyle]}>
+          <GestureDetector gesture={dragGesture}>
+            <View style={[styles.topBar, { paddingTop: insets.top + 6 }]}>
+              <View style={styles.grabberWrap}>
+                <View style={[styles.grabber, { backgroundColor: 'rgba(255,255,255,0.32)' }]} />
+              </View>
+              <View style={styles.topActions}>
                 <IconButton
-                  accessibilityLabel={memory?.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
+                  accessibilityLabel="Close memory"
                   backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
                   borderColor="transparent"
-                  color={memory?.isFavorite ? theme.colors.rose : theme.colors.white}
-                  icon={Heart}
-                  onPress={() => {
-                    if (!memory) return;
-                    haptics.tap();
-                    popHeart();
-                    toggleFavorite(memory.id);
-                  }}
+                  color={theme.colors.white}
+                  icon={X}
+                  onPress={onClose}
                 />
-              </Animated.View>
-              <IconButton
-                accessibilityLabel={editing ? 'Save changes' : 'Edit this memory'}
-                backgroundColor={
-                  editing
-                    ? theme.colors.rose
-                    : theme.isDark
-                      ? 'rgba(28,25,23,0.65)'
-                      : 'rgba(255,255,255,0.16)'
-                }
-                borderColor="transparent"
-                color={editing ? contrastInk(theme.colors.rose) : theme.colors.white}
-                icon={editing ? Check : Pencil}
-                onPress={() => {
-                  if (editing) {
-                    saveEdits();
-                  } else {
-                    haptics.tap();
-                    setEditing(true);
-                  }
-                }}
-              />
-              <IconButton
-                accessibilityLabel="Delete this memory"
-                backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
-                borderColor="transparent"
-                color={theme.colors.white}
-                icon={Trash2}
-                onPress={confirmDelete}
-              />
+                <View style={styles.topActionsGroup}>
+                  <Animated.View style={heartStyle}>
+                    <IconButton
+                      accessibilityLabel={memory?.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
+                      backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
+                      borderColor="transparent"
+                      color={memory?.isFavorite ? theme.colors.rose : theme.colors.white}
+                      icon={Heart}
+                      onPress={() => {
+                        if (!memory) return;
+                        haptics.tap();
+                        popHeart();
+                        toggleFavorite(memory.id);
+                      }}
+                    />
+                  </Animated.View>
+                  <IconButton
+                    accessibilityLabel={editing ? 'Save changes' : 'Edit this memory'}
+                    backgroundColor={
+                      editing
+                        ? theme.colors.rose
+                        : theme.isDark
+                          ? 'rgba(28,25,23,0.65)'
+                          : 'rgba(255,255,255,0.16)'
+                    }
+                    borderColor="transparent"
+                    color={editing ? contrastInk(theme.colors.rose) : theme.colors.white}
+                    icon={editing ? Check : Pencil}
+                    onPress={() => {
+                      if (editing) {
+                        saveEdits();
+                      } else {
+                        haptics.tap();
+                        setEditing(true);
+                      }
+                    }}
+                  />
+                  <IconButton
+                    accessibilityLabel="Delete this memory"
+                    backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
+                    borderColor="transparent"
+                    color={theme.colors.white}
+                    icon={Trash2}
+                    onPress={confirmDelete}
+                  />
+                </View>
+              </View>
             </View>
-          </View>
+          </GestureDetector>
 
-          <ScrollView
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.keyboard}
+          >
+            <ScrollView
             contentContainerStyle={[
               styles.scrollContent,
               { paddingBottom: insets.bottom + 24, paddingTop: landscape ? 4 : 10 },
@@ -305,7 +345,8 @@ export function MemoryInspectionModal({
               </Text>
             )}
           </ScrollView>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </Animated.View>
 
         <LocationStampPicker
           embedded
@@ -317,7 +358,7 @@ export function MemoryInspectionModal({
           value={memory?.location ?? null}
           visible={locationPickerOpen}
         />
-      </View>
+      </Animated.View>
     </Modal>
   );
 }
@@ -334,8 +375,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 18,
+    paddingBottom: 2,
+  },
+  grabberWrap: {
+    alignItems: 'center',
+    flex: 1,
+    paddingLeft: 26,
+  },
+  grabber: {
+    borderRadius: 999,
+    height: 4,
+    maxWidth: 64,
+    width: '38%',
   },
   topActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  topActionsGroup: {
     flexDirection: 'row',
     gap: 8,
   },
