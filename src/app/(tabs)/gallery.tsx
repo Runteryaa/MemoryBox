@@ -807,6 +807,7 @@ function GridCard({
       style={{ transform: [{ rotate: `${memory.rotationAngle * 0.35}deg` }] }}
     >
       <PressableScale
+        accessibilityHint="Opens this memory's story"
         accessibilityLabel={`Open memory ${memory.shortTitle}`}
         haptic="paperRustle"
         onPress={() => {

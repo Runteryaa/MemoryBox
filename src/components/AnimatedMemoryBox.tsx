@@ -183,7 +183,12 @@ export function AnimatedMemoryBox({
     <View style={[styles.stage, { width, height: 240 * scale }]}>
       <Animated.View style={[styles.floatWrap, { transform: [{ scale }] }, boxStyle]}>
         <PressableScale
-          accessibilityLabel={`Memory box with ${count} memories`}
+          accessibilityHint={
+            count === 0
+              ? 'Opens the camera to add your first memory'
+              : 'Opens the lid. Hold to rummage through a random memory'
+          }
+          accessibilityLabel={`Memory box with ${count} ${count === 1 ? 'memory' : 'memories'}`}
           haptic="none"
           onLongPress={() => {
             longPressed.current = true;

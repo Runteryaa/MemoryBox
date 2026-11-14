@@ -26,6 +26,8 @@ interface PressableScaleProps {
     | 'none';
   accessibilityLabel?: string;
   accessibilityRole?: 'button' | 'link' | 'image' | 'none';
+  /** Tells a screen reader what pressing will do, when the label alone is thin. */
+  accessibilityHint?: string;
   /** Lets toggles such as chips and sort pills announce whether they are on. */
   selected?: boolean;
   /** Grows the touch target without growing the painted shape. */
@@ -44,6 +46,7 @@ export function PressableScale({
   scaleTo = 0.95,
   haptic = 'tap',
   accessibilityLabel,
+  accessibilityHint,
   accessibilityRole = 'button',
   selected,
   hitSlop,
@@ -60,6 +63,7 @@ export function PressableScale({
 
   return (
     <AnimatedPressable
+      accessibilityHint={accessibilityHint}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}
       accessibilityState={state}
