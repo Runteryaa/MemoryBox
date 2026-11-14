@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -172,14 +173,18 @@ export default function GalleryScreen() {
           strokeWidth={2.3}
         />
         <TextInput
+          accessibilityLabel="Search your memories"
+          autoCorrect={false}
           onBlur={() => setSearchFocused(false)}
           onChangeText={(text) => {
             setQuery(text);
             setPileIndex(0);
           }}
           onFocus={() => setSearchFocused(true)}
+          onSubmitEditing={() => Keyboard.dismiss()}
           placeholder="Search titles, stories, places…"
           placeholderTextColor={theme.colors.faint}
+          returnKeyType="search"
           style={[styles.searchInput, { color: theme.colors.ink }]}
           value={query}
         />
@@ -449,6 +454,8 @@ function PileView({
     .activeOffsetX([-12, 12])
     .onBegin(() => {
       armed.value = 0;
+      // Rummaging the deck also puts the search keyboard away.
+      runOnJS(Keyboard.dismiss)();
     })
     .onUpdate((event) => {
       translateX.value = event.translationX;
@@ -685,6 +692,8 @@ function GridView({
   return (
     <ScrollView
       contentContainerStyle={styles.gridContent}
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
       onScroll={({ nativeEvent }) => {
         if (!hasMore) return;
         const distanceFromBottom =
