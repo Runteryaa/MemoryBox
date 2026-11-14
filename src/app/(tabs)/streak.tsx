@@ -100,7 +100,23 @@ export default function StreakScreen() {
   const cellSize = (calendarWidth - 24 - 6 * 4) / 7;
 
   // Swiping the calendar sideways flips through months, like a wall planner.
+  const now = new Date();
+  const atCurrentMonth =
+    month.getFullYear() > now.getFullYear() ||
+    (month.getFullYear() === now.getFullYear() && month.getMonth() >= now.getMonth());
+
   const shiftMonth = (direction: number) => {
+    // There is nothing to remember in the future, so the planner stops at today.
+    if (direction > 0) {
+      const current = new Date();
+      const atCurrent =
+        month.getFullYear() > current.getFullYear() ||
+        (month.getFullYear() === current.getFullYear() && month.getMonth() >= current.getMonth());
+      if (atCurrent) {
+        haptics.soft();
+        return;
+      }
+    }
     haptics.tap();
     setMonthDir(direction);
     setMonth((current) => addMonths(current, direction));
@@ -232,11 +248,19 @@ export default function StreakScreen() {
                 </PressableScale>
                 <PressableScale
                   accessibilityLabel="Next month"
+                  disabled={atCurrentMonth}
                   haptic="tap"
                   onPress={() => {
                     shiftMonth(1);
                   }}
-                  style={[styles.navButton, { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border }]}
+                  style={[
+                    styles.navButton,
+                    {
+                      backgroundColor: theme.colors.surfaceRaised,
+                      borderColor: theme.colors.border,
+                      opacity: atCurrentMonth ? 0.4 : 1,
+                    },
+                  ]}
                 >
                   <ChevronRight color={theme.colors.inkSoft} size={15} strokeWidth={2.5} />
                 </PressableScale>
