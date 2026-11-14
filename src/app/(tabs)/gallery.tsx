@@ -686,20 +686,17 @@ function GridView({
           <View key={column} style={styles.gridColumn}>
             {shown
               .filter((_, index) => index % 2 === column)
-              .map((memory, index) => {
-                const tall = (memory.id.charCodeAt(0) + index) % 3 === 0;
-                const imageHeight = columnWidth * (tall ? 1.18 : 0.92);
-                return (
-                  <GridCard
-                    imageHeight={imageHeight}
-                    index={index}
-                    key={memory.id}
-                    memory={memory}
-                    onOpen={onOpen}
-                    onToggleFavorite={onToggleFavorite}
-                  />
-                );
-              })}
+              .map((memory, index) => (
+                <GridCard
+                  columnWidth={columnWidth}
+                  fallbackTall={(memory.id.charCodeAt(0) + index) % 3 === 0}
+                  index={index}
+                  key={memory.id}
+                  memory={memory}
+                  onOpen={onOpen}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              ))}
           </View>
         ))}
       </View>
@@ -715,23 +712,35 @@ function GridView({
 function GridCard({
   memory,
   index,
-  imageHeight,
+  columnWidth,
+  fallbackTall,
   onOpen,
   onToggleFavorite,
 }: {
   memory: Memory;
   index: number;
-  imageHeight: number;
+  columnWidth: number;
+  fallbackTall: boolean;
   onOpen: (memory: Memory) => void;
   onToggleFavorite: (id: string) => void;
 }) {
   const theme = useTheme();
   const heart = useSharedValue(1);
   const [imageFailed, setImageFailed] = useState(false);
+  // The card frames the photo by its own shape once it has loaded, so a tall
+  // portrait and a wide landscape both feel kept rather than cropped to fit.
+  const [ratio, setRatio] = useState<number | null>(null);
 
   useEffect(() => {
     setImageFailed(false);
+    setRatio(null);
   }, [memory.imageUri]);
+
+  const imageHeight = (() => {
+    const fallback = columnWidth * (fallbackTall ? 1.18 : 0.92);
+    if (ratio == null || ratio <= 0) return fallback;
+    return Math.min(columnWidth * 1.35, Math.max(columnWidth * 0.72, columnWidth * ratio));
+  })();
 
   const pop = () => {
     heart.value = withSequence(
@@ -766,6 +775,12 @@ function GridCard({
           <Image
             contentFit="cover"
             onError={() => setImageFailed(true)}
+            onLoad={(event) => {
+              const { width: photoWidth, height: photoHeight } = event.source;
+              if (!photoWidth || !photoHeight) return;
+              const next = photoHeight / photoWidth;
+              setRatio((current) => (current != null && Math.abs(current - next) < 0.01 ? current : next));
+            }}
             source={{ uri: memory.imageUri }}
             style={StyleSheet.absoluteFill}
             transition={180}
