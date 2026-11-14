@@ -150,7 +150,7 @@ export function MemoryInspectionModal({
     if (!memory) return;
     Alert.alert(
       'Let this memory go?',
-      'The photo and its story will be removed from your box. This cannot be undone.',
+      'The photo and its story will be lifted out of your box. You get a few seconds to put it back.',
       [
         { text: 'Keep it', style: 'cancel' },
         {
