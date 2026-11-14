@@ -287,6 +287,7 @@ export default function GalleryScreen() {
               <PressableScale
                 accessibilityLabel={`Sort by ${option.label}`}
                 haptic="selection"
+                hitSlop={6}
                 key={option.id}
                 onPress={() => {
                   setSort(option.id);
@@ -400,6 +401,7 @@ function ModeButton({
     <PressableScale
       accessibilityLabel={`${label} view`}
       haptic="selection"
+      hitSlop={5}
       onPress={onPress}
       selected={active}
       style={styles.modeButton}
@@ -842,6 +844,7 @@ function GridCard({
           <PressableScale
             accessibilityLabel={memory.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
             haptic="tap"
+            hitSlop={10}
             selected={memory.isFavorite}
             onPress={pop}
             style={[
