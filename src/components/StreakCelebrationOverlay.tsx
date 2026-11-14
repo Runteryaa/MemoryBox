@@ -1,5 +1,5 @@
 import { useEffect, useState, type ComponentProps } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Flame, Sparkles } from 'lucide-react-native';
 import Animated, {
@@ -88,6 +88,16 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
       <View style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}>
         {visible ? <CelebrationConfetti count={40} /> : null}
+
+        {/* Tapping the quiet space around the card lets it drift away. */}
+        <Pressable
+          accessibilityLabel="Dismiss celebration"
+          onPress={() => {
+            haptics.tap();
+            onClose();
+          }}
+          style={StyleSheet.absoluteFill}
+        />
 
         <Animated.View
           entering={ZoomIn.springify().damping(14).stiffness(160)}
