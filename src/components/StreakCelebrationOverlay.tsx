@@ -142,7 +142,7 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
               </Text>
             </View>
             <Text style={[styles.title, { color: theme.colors.ink }]}>
-              {streak === 1 ? 'Your first day of remembering' : 'in a row, without missing a day'}
+              {streak === 1 ? 'One little memory, safely kept' : 'in a row, without missing a day'}
             </Text>
             <Text style={[styles.message, { color: theme.colors.muted }]}>{message}</Text>
           </Animated.View>
