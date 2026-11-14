@@ -1,5 +1,5 @@
 import { useEffect, type ComponentProps } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Flame, Sparkles } from 'lucide-react-native';
 import Animated, {
@@ -69,11 +69,15 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
     ],
   }));
 
-  useEffect(() => {
-    if (visible) haptics.success();
-  }, [visible]);
-
   const message = MESSAGES[(Math.max(1, streak ?? 1) - 1) % MESSAGES.length] ?? MESSAGES[0];
+
+  useEffect(() => {
+    if (!visible) return;
+    haptics.success();
+    AccessibilityInfo.announceForAccessibility(
+      `${streak ?? 0} ${streak === 1 ? 'day' : 'days'} in a row. ${message}.`
+    );
+  }, [message, streak, visible]);
 
   return (
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>

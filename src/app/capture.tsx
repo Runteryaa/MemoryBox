@@ -919,7 +919,12 @@ export default function CaptureScreen() {
           </View>
 
           {saved ? (
-            <Animated.View entering={FadeIn} style={styles.savedOverlay} pointerEvents="none">
+            <Animated.View
+              accessibilityLiveRegion="assertive"
+              entering={FadeIn}
+              pointerEvents="none"
+              style={styles.savedOverlay}
+            >
               <Animated.View
                 entering={FadeInDown.springify().damping(13).stiffness(190).delay(60)}
                 style={[styles.savedPill, { backgroundColor: theme.colors.surface }]}
