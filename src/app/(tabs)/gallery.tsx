@@ -10,7 +10,7 @@ import {
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { Grid2x2, Layers, Search, Sparkles, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Grid2x2, Layers, Search, Sparkles, X } from 'lucide-react-native';
 import Animated, {
   Easing,
   FadeInDown,
@@ -425,7 +425,7 @@ function PileView({
           onPress={() => cyclePile(-1)}
           style={[styles.pileNav, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         >
-          <Text style={[styles.pileNavText, { color: theme.colors.inkSoft }]}>‹</Text>
+          <ChevronLeft color={theme.colors.inkSoft} size={16} strokeWidth={2.6} />
         </PressableScale>
         <View style={styles.pileHintWrap}>
           <Text style={[styles.pileHint, { color: theme.colors.muted }]}>
@@ -441,7 +441,7 @@ function PileView({
           onPress={() => cyclePile(1)}
           style={[styles.pileNav, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         >
-          <Text style={[styles.pileNavText, { color: theme.colors.inkSoft }]}>›</Text>
+          <ChevronRight color={theme.colors.inkSoft} size={16} strokeWidth={2.6} />
         </PressableScale>
       </View>
     </View>
@@ -882,12 +882,6 @@ const styles = StyleSheet.create({
     height: 34,
     justifyContent: 'center',
     width: 34,
-  },
-  pileNavText: {
-    fontFamily: fonts.sansBold,
-    fontSize: 19,
-    lineHeight: 21,
-    marginTop: -2,
   },
   pileHintWrap: {
     alignItems: 'center',
