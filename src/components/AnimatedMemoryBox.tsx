@@ -112,6 +112,7 @@ export function AnimatedMemoryBox({
   }));
 
   // Each keepsake leans out at its own tempo, like a hand rummaging through them.
+  const stackCount = Math.min(Math.max(count, 0), 3);
   const cardOneStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: open.value * -13 },
@@ -197,22 +198,30 @@ export function AnimatedMemoryBox({
             style={[styles.aura, { backgroundColor: theme.colors.roseSoft }, auraStyle]}
           />
 
+          {/* The stack only shows as many keepsakes as the box actually holds,
+              so an empty box reads as genuinely empty. */}
           <Animated.View style={[styles.polaroidStack, stackStyle]}>
-            <Animated.View
-              style={[styles.miniPolaroid, styles.miniOne, { backgroundColor: theme.colors.white }, cardOneStyle]}
-            >
-              <LinearGradient colors={theme.gradients.rose} style={styles.miniPhoto} />
-            </Animated.View>
-            <Animated.View
-              style={[styles.miniPolaroid, styles.miniTwo, { backgroundColor: theme.colors.white }, cardTwoStyle]}
-            >
-              <LinearGradient colors={theme.gradients.warm} style={styles.miniPhoto} />
-            </Animated.View>
-            <Animated.View
-              style={[styles.miniPolaroid, styles.miniThree, { backgroundColor: theme.colors.white }, cardThreeStyle]}
-            >
-              <LinearGradient colors={theme.gradients.flame} style={styles.miniPhoto} />
-            </Animated.View>
+            {stackCount >= 1 ? (
+              <Animated.View
+                style={[styles.miniPolaroid, styles.miniOne, { backgroundColor: theme.colors.white }, cardOneStyle]}
+              >
+                <LinearGradient colors={theme.gradients.rose} style={styles.miniPhoto} />
+              </Animated.View>
+            ) : null}
+            {stackCount >= 2 ? (
+              <Animated.View
+                style={[styles.miniPolaroid, styles.miniTwo, { backgroundColor: theme.colors.white }, cardTwoStyle]}
+              >
+                <LinearGradient colors={theme.gradients.warm} style={styles.miniPhoto} />
+              </Animated.View>
+            ) : null}
+            {stackCount >= 3 ? (
+              <Animated.View
+                style={[styles.miniPolaroid, styles.miniThree, { backgroundColor: theme.colors.white }, cardThreeStyle]}
+              >
+                <LinearGradient colors={theme.gradients.flame} style={styles.miniPhoto} />
+              </Animated.View>
+            ) : null}
           </Animated.View>
 
           <View
