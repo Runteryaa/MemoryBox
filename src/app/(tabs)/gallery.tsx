@@ -864,7 +864,9 @@ function GridCard({
             {memory.shortTitle}
           </Text>
           <View style={styles.gridMetaRow}>
-            <Text style={[styles.gridMoodEmoji]}>{MOOD_MAP[memory.moodTag].emoji}</Text>
+            <Text style={[styles.gridMoodEmoji]}>
+              {(MOOD_MAP[memory.moodTag] ?? MOOD_MAP.cozy).emoji}
+            </Text>
             <Text style={[styles.gridDate, { color: theme.colors.muted }]}>
               {formatMediumDate(memory.dateCreated)}
             </Text>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Text, type StyleProp, type TextStyle } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 
 interface CountUpProps {
   value: number;
@@ -14,11 +15,14 @@ interface CountUpProps {
 export function CountUp({ value, style, duration = 640 }: CountUpProps) {
   const [display, setDisplay] = useState(value);
   const previous = useRef(value);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     const from = previous.current;
     previous.current = value;
-    if (from === value) {
+    // Rolling digits are decoration; when motion is reduced the number simply
+    // arrives at its new value.
+    if (from === value || reducedMotion) {
       setDisplay(value);
       return;
     }
@@ -30,7 +34,7 @@ export function CountUp({ value, style, duration = 640 }: CountUpProps) {
       if (progress >= 1) clearInterval(timer);
     }, 32);
     return () => clearInterval(timer);
-  }, [duration, value]);
+  }, [duration, reducedMotion, value]);
 
   return <Text style={style}>{display}</Text>;
 }
