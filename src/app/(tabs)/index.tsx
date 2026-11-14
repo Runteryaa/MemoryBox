@@ -390,6 +390,7 @@ function OnThisDayCard({ memory, onPress }: { memory: Memory; onPress: () => voi
       ]}
     >
       <Image
+        cachePolicy="memory-disk"
         contentFit="cover"
         onError={() => setImageFailed(true)}
         source={{ uri: memory.imageUri }}

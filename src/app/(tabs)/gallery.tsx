@@ -658,6 +658,7 @@ function PileBackCard({
         ]}
       >
         <Image
+          cachePolicy="memory-disk"
           contentFit="cover"
           source={{ uri: memory.imageUri }}
           style={styles.pilePlaceholderImage}
@@ -823,6 +824,7 @@ function GridCard({
       >
         <View style={{ height: imageHeight }}>
           <Image
+            cachePolicy="memory-disk"
             contentFit="cover"
             onError={() => setImageFailed(true)}
             onLoad={(event) => {
@@ -832,6 +834,9 @@ function GridCard({
               rememberImageRatio(memory.imageUri, next);
               setRatio((current) => (current != null && Math.abs(current - next) < 0.01 ? current : next));
             }}
+            // A photo already on disk should reappear instantly, and keying by
+            // its uri stops a stale frame flashing while the new one decodes.
+            recyclingKey={memory.imageUri}
             source={{ uri: memory.imageUri }}
             style={StyleSheet.absoluteFill}
             transition={180}

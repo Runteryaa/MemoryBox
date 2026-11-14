@@ -270,6 +270,7 @@ export function FlippablePolaroidCard({
             ]}
           >
             <Image
+              cachePolicy="memory-disk"
               contentFit="cover"
               onError={() => setImageFailed(true)}
               pointerEvents="none"
