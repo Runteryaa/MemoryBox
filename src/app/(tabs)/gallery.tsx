@@ -10,7 +10,7 @@ import {
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { ChevronLeft, ChevronRight, Grid2x2, Heart, Layers, Search, Sparkles, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Grid2x2, Heart, Layers, RotateCcw, Search, Sparkles, X } from 'lucide-react-native';
 import Animated, {
   Easing,
   FadeInDown,
@@ -727,6 +727,11 @@ function GridCard({
 }) {
   const theme = useTheme();
   const heart = useSharedValue(1);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [memory.imageUri]);
 
   const pop = () => {
     heart.value = withSequence(
@@ -760,10 +765,19 @@ function GridCard({
         <View style={{ height: imageHeight }}>
           <Image
             contentFit="cover"
+            onError={() => setImageFailed(true)}
             source={{ uri: memory.imageUri }}
             style={StyleSheet.absoluteFill}
             transition={180}
           />
+          {imageFailed ? (
+            <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.gridMissing]}>
+              <RotateCcw color={theme.colors.faint} size={18} strokeWidth={2} />
+              <Text style={[styles.gridMissingText, { color: theme.colors.faint }]}>
+                photo drifted away
+              </Text>
+            </View>
+          ) : null}
           <View style={[styles.gridTape, { backgroundColor: theme.colors.roseSoft }]} />
           <PressableScale
             accessibilityLabel={memory.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
@@ -1154,6 +1168,15 @@ const styles = StyleSheet.create({
     top: -1,
     transform: [{ rotate: '-2deg' }],
     width: '32%',
+  },
+  gridMissing: {
+    alignItems: 'center',
+    gap: 4,
+    justifyContent: 'center',
+  },
+  gridMissingText: {
+    fontFamily: fonts.hand,
+    fontSize: 12,
   },
   gridHeart: {
     alignItems: 'center',
