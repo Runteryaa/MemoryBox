@@ -243,6 +243,13 @@ export function FlippablePolaroidCard({
             frontOpacity,
           ]}
         >
+          {/* Whole card is the flip target. It sits underneath the photo and
+              caption so the favourite heart above it still gets its own taps. */}
+          <Pressable
+            accessibilityLabel="Flip this memory to read the story"
+            onPress={handleFrontPress}
+            style={[StyleSheet.absoluteFill, styles.frontTapTarget]}
+          />
           <View
             style={[
               styles.photoFrame,
@@ -401,6 +408,7 @@ export function FlippablePolaroidCard({
 
           <View style={[styles.captionArea, { paddingHorizontal: padding * 1.1 }]}>
             <Text
+              maxFontSizeMultiplier={1.15}
               numberOfLines={2}
               style={[
                 styles.caption,
@@ -410,13 +418,17 @@ export function FlippablePolaroidCard({
               {memory.shortTitle}
             </Text>
             <View style={styles.captionMeta}>
-              <Text style={[styles.dateText, { color: theme.colors.muted, fontSize: 8.5 * scale }]}>
+              <Text
+                maxFontSizeMultiplier={1.3}
+                style={[styles.dateText, { color: theme.colors.muted, fontSize: 8.5 * scale }]}
+              >
                 {formatMediumDate(memory.dateCreated)}
               </Text>
               {showHint && !onPressFront ? (
                 <View style={styles.flipHint}>
                   <RotateCcw color={theme.colors.faint} size={9 * scale} strokeWidth={2.4} />
                   <Text
+                    maxFontSizeMultiplier={1.3}
                     style={[
                       styles.flipHintText,
                       { color: theme.colors.faint, fontSize: 8 * scale },
@@ -430,11 +442,6 @@ export function FlippablePolaroidCard({
           </View>
 
           {/* Whole card is the flip target, so a stray tap anywhere on the paper works. */}
-          <Pressable
-            accessibilityLabel="Flip this memory to read the story"
-            onPress={handleFrontPress}
-            style={[StyleSheet.absoluteFill, styles.frontTapTarget]}
-          />
           <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.paperGloss]} />
         </Animated.View>
 
