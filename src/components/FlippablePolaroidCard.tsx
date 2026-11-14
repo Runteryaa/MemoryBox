@@ -252,7 +252,7 @@ export function FlippablePolaroidCard({
                 : `Flip ${memory.shortTitle} to read the story`
             }
             onPress={handleFrontPress}
-            style={[StyleSheet.absoluteFill, styles.frontTapTarget]}
+            style={StyleSheet.absoluteFill}
           />
           <View
             pointerEvents="box-none"
@@ -719,9 +719,6 @@ const styles = StyleSheet.create({
   },
   backCard: {
     overflow: 'hidden',
-  },
-  frontTapTarget: {
-    zIndex: 1,
   },
   paperGloss: {
     borderColor: 'rgba(255,255,255,0.3)',
