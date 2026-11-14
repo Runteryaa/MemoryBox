@@ -629,6 +629,7 @@ function GridCard({
 function EmptyState({ hasMemories }: { hasMemories: boolean }) {
   const theme = useTheme();
   const drift = useSharedValue(0);
+  const halo = useSharedValue(0);
 
   useEffect(() => {
     drift.value = withRepeat(
@@ -636,7 +637,13 @@ function EmptyState({ hasMemories }: { hasMemories: boolean }) {
       -1,
       true
     );
-  }, [drift]);
+    // A ring of warmth keeps radiating out of the icon, like a kept promise.
+    halo.value = withRepeat(
+      withTiming(1, { duration: 2400, easing: Easing.out(Easing.quad) }),
+      -1,
+      false
+    );
+  }, [drift, halo]);
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [
@@ -645,13 +652,24 @@ function EmptyState({ hasMemories }: { hasMemories: boolean }) {
     ],
   }));
 
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(halo.value, [0, 1], [0.5, 0]),
+    transform: [{ scale: interpolate(halo.value, [0, 1], [1, 1.75]) }],
+  }));
+
   return (
-    <View style={styles.empty}>
-      <Animated.View
-        style={[styles.emptyIcon, { backgroundColor: theme.colors.roseSoft }, iconStyle]}
-      >
-        <Sparkles color={theme.colors.rose} size={26} strokeWidth={2} />
-      </Animated.View>
+    <Animated.View entering={FadeInDown.duration(320)} style={styles.empty}>
+      <View style={styles.emptyIconStage}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.emptyHalo, { borderColor: theme.colors.rose }, haloStyle]}
+        />
+        <Animated.View
+          style={[styles.emptyIcon, { backgroundColor: theme.colors.roseSoft }, iconStyle]}
+        >
+          <Sparkles color={theme.colors.rose} size={26} strokeWidth={2} />
+        </Animated.View>
+      </View>
       <Text style={[styles.emptyTitle, { color: theme.colors.ink }]}>
         {hasMemories ? 'Nothing matches that rummage' : 'No memories in the box yet'}
       </Text>
@@ -672,7 +690,7 @@ function EmptyState({ hasMemories }: { hasMemories: boolean }) {
           </Text>
         </PressableScale>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -936,6 +954,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingBottom: 100,
     paddingHorizontal: 40,
+  },
+  emptyIconStage: {
+    alignItems: 'center',
+    height: 62,
+    justifyContent: 'center',
+    width: 62,
+  },
+  emptyHalo: {
+    borderRadius: 999,
+    borderWidth: 1.5,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   emptyIcon: {
     alignItems: 'center',
