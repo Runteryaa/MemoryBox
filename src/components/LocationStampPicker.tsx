@@ -383,18 +383,13 @@ export function LocationStampPicker({
 
             <View style={styles.footer}>
               <PressableScale
-                accessibilityLabel="Save this place"
+                accessibilityLabel={
+                  canStamp ? 'Save this place' : 'Type a place before stamping'
+                }
+                disabled={!canStamp}
                 haptic="none"
                 onPress={handleSave}
-                style={[
-                  styles.saveButton,
-                  {
-                    backgroundColor: theme.colors.rose,
-                    // An empty postmark can still clear the place, but it shouldn't
-                    // look like the main thing to do.
-                    opacity: canStamp ? 1 : 0.55,
-                  },
-                ]}
+                style={[styles.saveButton, { backgroundColor: theme.colors.rose }]}
               >
                 <Check color={contrastInk(theme.colors.rose)} size={16} strokeWidth={3} />
                 <Text style={[styles.saveText, { color: contrastInk(theme.colors.rose) }]}>Stamp it</Text>
@@ -452,6 +447,8 @@ function Field({
     <View style={styles.field}>
       <Text style={[styles.fieldLabel, { color: theme.colors.muted }]}>{label}</Text>
       <TextInput
+        accessibilityLabel={label}
+        maxFontSizeMultiplier={1.3}
         maxLength={80}
         onChangeText={onChangeText}
         placeholder={placeholder}

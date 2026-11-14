@@ -177,6 +177,7 @@ export default function GalleryScreen() {
         <TextInput
           accessibilityLabel="Search your memories"
           autoCorrect={false}
+          maxFontSizeMultiplier={1.2}
           onBlur={() => setSearchFocused(false)}
           onChangeText={(text) => {
             setQuery(text);
@@ -195,6 +196,7 @@ export default function GalleryScreen() {
           <PressableScale
             accessibilityLabel="Clear search"
             haptic="none"
+            hitSlop={11}
             onPress={() => {
               setQuery('');
               setPileIndex(0);
@@ -565,13 +567,13 @@ function PileView({
           accessibilityLabel="Previous memory"
           disabled={memories.length < 2}
           haptic="none"
+          hitSlop={5}
           onPress={() => cyclePile(-1)}
           style={[
             styles.pileNav,
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
-              opacity: memories.length < 2 ? 0.35 : 1,
             },
           ]}
         >
@@ -590,13 +592,13 @@ function PileView({
           accessibilityLabel="Next memory"
           disabled={memories.length < 2}
           haptic="none"
+          hitSlop={5}
           onPress={() => cyclePile(1)}
           style={[
             styles.pileNav,
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
-              opacity: memories.length < 2 ? 0.35 : 1,
             },
           ]}
         >
