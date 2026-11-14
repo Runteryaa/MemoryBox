@@ -40,6 +40,8 @@ export function IconButton({
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       haptic={haptic}
+      // Small icon buttons still need a thumb-sized target around them.
+      hitSlop={size < 44 ? Math.ceil((44 - size) / 2) : undefined}
       onPress={onPress}
       selected={selected}
       style={[

@@ -67,6 +67,7 @@ export function Chip({
   return (
     <PressableScale
       accessibilityLabel={label}
+      hitSlop={size === 'sm' ? 6 : undefined}
       onPress={onPress}
       selected={onPress ? selected : undefined}
       style={[styles.chip, size === 'sm' && styles.chipSmall]}

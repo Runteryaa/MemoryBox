@@ -28,6 +28,8 @@ interface PressableScaleProps {
   accessibilityRole?: 'button' | 'link' | 'image' | 'none';
   /** Lets toggles such as chips and sort pills announce whether they are on. */
   selected?: boolean;
+  /** Grows the touch target without growing the painted shape. */
+  hitSlop?: number;
   testID?: string;
 }
 
@@ -44,6 +46,7 @@ export function PressableScale({
   accessibilityLabel,
   accessibilityRole = 'button',
   selected,
+  hitSlop,
   testID,
 }: PressableScaleProps) {
   const scale = useSharedValue(1);
@@ -61,6 +64,7 @@ export function PressableScale({
       accessibilityRole={accessibilityRole}
       accessibilityState={state}
       disabled={disabled}
+      hitSlop={hitSlop}
       onLongPress={onLongPress}
       onPress={() => {
         if (haptic !== 'none') haptics[haptic]();
