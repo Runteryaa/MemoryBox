@@ -431,6 +431,26 @@ function TodayRing({ color, size }: { color: string; size: number }) {
 
 function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   const theme = useTheme();
+  const grow = useSharedValue(0);
+
+  // The accent rule draws itself in, then gives a small nudge whenever the
+  // number behind it changes.
+  useEffect(() => {
+    grow.value = withSpring(1, { damping: 14, stiffness: 170 });
+  }, [grow]);
+
+  useEffect(() => {
+    grow.value = withSequence(
+      withTiming(1.9, { duration: 130 }),
+      withSpring(1, { damping: 10, stiffness: 220 })
+    );
+  }, [grow, value]);
+
+  const barStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: grow.value }],
+    opacity: 0.55 + Math.min(grow.value, 1) * 0.45,
+  }));
+
   return (
     <View
       style={[
@@ -441,7 +461,9 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
         },
       ]}
     >
-      <View style={[styles.statBar, { backgroundColor: tone }]} />
+      <Animated.View
+        style={[styles.statBar, { backgroundColor: tone, transformOrigin: 'left' }, barStyle]}
+      />
       <CountUp style={[styles.statValue, { color: theme.colors.ink }]} value={value} />
       <Text style={[styles.statLabel, { color: theme.colors.muted }]}>{label}</Text>
     </View>
