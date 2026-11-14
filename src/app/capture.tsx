@@ -33,6 +33,7 @@ import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
+  ZoomIn,
   cancelAnimation,
   interpolate,
   runOnJS,
@@ -849,10 +850,15 @@ export default function CaptureScreen() {
 
           {saved ? (
             <Animated.View entering={FadeIn} style={styles.savedOverlay} pointerEvents="none">
-              <View style={[styles.savedPill, { backgroundColor: theme.colors.surface }]}>
-                <Check color={theme.colors.sage} size={16} strokeWidth={3} />
+              <Animated.View
+                entering={FadeInDown.springify().damping(13).stiffness(190).delay(60)}
+                style={[styles.savedPill, { backgroundColor: theme.colors.surface }]}
+              >
+                <Animated.View entering={ZoomIn.delay(180).springify().damping(11)}>
+                  <Check color={theme.colors.sage} size={16} strokeWidth={3} />
+                </Animated.View>
                 <Text style={[styles.savedText, { color: theme.colors.ink }]}>tucked away forever</Text>
-              </View>
+              </Animated.View>
             </Animated.View>
           ) : null}
 
