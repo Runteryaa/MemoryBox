@@ -71,6 +71,25 @@ export function StreakPill({
     transform: [{ scale: 1 + flicker.value * 0.12 }],
   }));
 
+  // Today's empty bubble keeps a slow, quiet heartbeat until it is filled.
+  const breath = useSharedValue(0);
+  useEffect(() => {
+    if (!pendingToday) {
+      breath.value = withTiming(0, { duration: 220 });
+      return;
+    }
+    breath.value = withRepeat(
+      withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [breath, pendingToday]);
+
+  const todayStyle = useAnimatedStyle(() => ({
+    opacity: 0.7 + breath.value * 0.3,
+    transform: [{ scale: 1 + breath.value * 0.16 }],
+  }));
+
   const subtitle = loggedToday
     ? 'Today is tucked in'
     : pendingToday
@@ -159,6 +178,18 @@ export function StreakPill({
                   style={[styles.bubble, { backgroundColor: theme.colors.amber }]}
                 >
                   <View style={[styles.bubbleCore, { backgroundColor: theme.colors.white }]} />
+                </Animated.View>
+              ) : isToday && pendingToday ? (
+                <Animated.View style={todayStyle}>
+                  <View
+                    style={[
+                      styles.bubbleEmpty,
+                      {
+                        borderColor: theme.colors.rose,
+                        backgroundColor: theme.colors.roseSoft,
+                      },
+                    ]}
+                  />
                 </Animated.View>
               ) : (
                 <View
