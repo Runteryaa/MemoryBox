@@ -6,6 +6,7 @@ import Animated, {
   Easing,
   interpolate,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
@@ -37,18 +38,25 @@ export function AnimatedMemoryBox({
   width = 310,
 }: AnimatedMemoryBoxProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const shake = useSharedValue(0);
   const longPressed = useRef(false);
   const open = useSharedValue(lidOpen ? 1 : 0);
   const float = useSharedValue(0);
 
+  // A box that never stops bobbing is charming, not restful — so a reader who
+  // asked for less motion gets a box that simply sits there.
   useEffect(() => {
+    if (reducedMotion) {
+      float.value = 0;
+      return;
+    }
     float.value = withRepeat(
       withTiming(1, { duration: 3400, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
-  }, [float]);
+  }, [float, reducedMotion]);
 
   useEffect(() => {
     open.value = withSpring(lidOpen ? 1 : 0, {
@@ -60,7 +68,7 @@ export function AnimatedMemoryBox({
   }, [lidOpen, open]);
 
   useEffect(() => {
-    if (shakeKey <= 0) return;
+    if (shakeKey <= 0 || reducedMotion) return;
     shake.value = withSequence(
       withTiming(-1, { duration: 60 }),
       withTiming(1, { duration: 70 }),
@@ -68,7 +76,7 @@ export function AnimatedMemoryBox({
       withTiming(0.6, { duration: 60 }),
       withTiming(0, { duration: 60 })
     );
-  }, [shake, shakeKey]);
+  }, [reducedMotion, shake, shakeKey]);
 
   const boxStyle = useAnimatedStyle(() => ({
     transform: [

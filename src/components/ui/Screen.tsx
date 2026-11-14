@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -28,16 +29,22 @@ export function Screen({
   withGradient = true,
 }: ScreenProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const drift = useSharedValue(0);
 
   // Very slow ambience: the warm blobs breathe so the paper never feels static.
+  // With motion reduced they settle into a fixed, still wash of colour.
   useEffect(() => {
+    if (reducedMotion) {
+      drift.value = 0;
+      return;
+    }
     drift.value = withRepeat(
       withTiming(1, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
       -1,
       true
     );
-  }, [drift]);
+  }, [drift, reducedMotion]);
 
   const topBlobStyle = useAnimatedStyle(() => ({
     transform: [
