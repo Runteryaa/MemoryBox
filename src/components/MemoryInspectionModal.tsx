@@ -450,13 +450,22 @@ export function MemoryInspectionModal({
                 shadows.card,
               ]}
             >
-              <Text style={[styles.confirmKicker, { color: theme.colors.rose }]}>
+              <Text
+                maxFontSizeMultiplier={1.2}
+                style={[styles.confirmKicker, { color: theme.colors.rose }]}
+              >
                 one last look
               </Text>
-              <Text style={[styles.confirmTitle, { color: theme.colors.ink }]}>
+              <Text
+                maxFontSizeMultiplier={1.2}
+                style={[styles.confirmTitle, { color: theme.colors.ink }]}
+              >
                 Let this memory go?
               </Text>
-              <Text style={[styles.confirmBody, { color: theme.colors.muted }]}>
+              <Text
+                maxFontSizeMultiplier={1.5}
+                style={[styles.confirmBody, { color: theme.colors.muted }]}
+              >
                 The photo and its story will be lifted out of your box. You get a few seconds to
                 put it back.
               </Text>
