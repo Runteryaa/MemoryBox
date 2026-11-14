@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -507,20 +508,35 @@ export default function CaptureScreen() {
             {!permission?.granted ? (
               <View style={styles.permissionCard}>
                 <Text style={styles.permissionEmoji}>📷</Text>
-                <Text style={styles.permissionTitle}>Let&apos;s open the camera</Text>
+                <Text style={styles.permissionTitle}>
+                  {permission?.canAskAgain === false ? 'The camera is resting' : "Let's open the camera"}
+                </Text>
                 <Text style={styles.permissionText}>
-                  Memory Box needs a peek through your lens to capture the moment. You can also pick a
-                  photo you already love.
+                  {permission?.canAskAgain === false
+                    ? 'Camera access is switched off for Memory Box. You can turn it back on in Settings — or pick a photo you already love.'
+                    : 'Memory Box needs a peek through your lens to capture the moment. You can also pick a photo you already love.'}
                 </Text>
                 <PressableScale
-                  accessibilityLabel="Allow camera access"
+                  accessibilityLabel={
+                    permission?.canAskAgain === false
+                      ? 'Open Settings to allow camera access'
+                      : 'Allow camera access'
+                  }
                   haptic="medium"
                   onPress={() => {
+                    // Once Android stops asking, re-requesting does nothing at
+                    // all, so send the person somewhere that can actually help.
+                    if (permission?.canAskAgain === false) {
+                      void Linking.openSettings();
+                      return;
+                    }
                     void requestPermission();
                   }}
                   style={styles.permissionButton}
                 >
-                  <Text style={styles.permissionButtonText}>Allow camera</Text>
+                  <Text style={styles.permissionButtonText}>
+                    {permission?.canAskAgain === false ? 'Open Settings' : 'Allow camera'}
+                  </Text>
                 </PressableScale>
               </View>
             ) : null}
