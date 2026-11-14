@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -97,13 +98,38 @@ export default function CaptureScreen() {
   const locationTouched = useRef(false);
   const savedRef = useRef(false);
   const draftUriRef = useRef<string | null>(null);
+  const stageLayout = useRef({ top: 0, height: 0 });
+  const boxLayout = useRef({ top: 0 });
+  const [stageHeight, setStageHeight] = useState(0);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const dragY = useSharedValue(0);
   const dragScale = useSharedValue(1);
   const dragRotate = useSharedValue(0);
+  const dragOpacity = useSharedValue(1);
   const lidOpen = useSharedValue(0);
   const [burstKey, setBurstKey] = useState(0);
 
-  const cardWidth = Math.min(300, width - 68);
+  // While the keyboard is up the stage shrinks; keep the card the same size so
+  // writing the story never makes the polaroid jump or resize under the finger.
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  // The card must fit the fixed (non-scrolling) stage so dragging never fights a scroll view.
+  // Card height is roughly width * 1.02 + 90 (photo + paper margins + caption).
+  const cardWidth = Math.max(
+    168,
+    Math.min(
+      300,
+      width - 64,
+      !keyboardVisible && stageHeight > 0 ? (stageHeight - 118) / 1.02 : 300
+    )
+  );
 
   // Abandoned drafts should not leave orphaned photos in the document folder.
   useEffect(
@@ -240,40 +266,50 @@ export default function CaptureScreen() {
 
   const dropIntoBox = useCallback(() => {
     if (savedRef.current) return;
-    dragY.value = withTiming(360, { duration: 430, easing: Easing.in(Easing.cubic) });
-    dragScale.value = withTiming(0.18, { duration: 430, easing: Easing.in(Easing.cubic) });
-    dragRotate.value = withTiming(9, { duration: 430 });
+    const cardCenter = stageLayout.current.top + stageLayout.current.height / 2;
+    const boxCenter = boxLayout.current.top + 54;
+    const distance = Math.max(200, boxCenter - cardCenter);
+
+    dragY.value = withTiming(distance, { duration: 440, easing: Easing.in(Easing.cubic) });
+    dragScale.value = withTiming(0.16, { duration: 440, easing: Easing.in(Easing.cubic) });
+    dragRotate.value = withTiming(8, { duration: 440 });
+    dragOpacity.value = withTiming(0, {
+      duration: 440,
+      easing: Easing.in(Easing.quad),
+    });
     lidOpen.value = withSequence(
-      withTiming(1, { duration: 170 }),
-      withTiming(1, { duration: 260 }),
-      withTiming(0, { duration: 180 })
+      withTiming(1, { duration: 180 }),
+      withTiming(1, { duration: 250 }),
+      withTiming(0, { duration: 190 })
     );
-    setTimeout(finishCapture, 400);
-  }, [dragRotate, dragScale, dragY, finishCapture, lidOpen]);
+    setTimeout(finishCapture, 410);
+  }, [dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen]);
 
   const dragGesture = Gesture.Pan()
     .enabled(!cardFlipped)
-    .activeOffsetY(14)
-    .failOffsetX([-36, 36])
+    .activeOffsetY([-14, 14])
+    .failOffsetX([-40, 40])
     .onUpdate((event) => {
-      if (event.translationY < 0) return;
-      dragY.value = event.translationY;
-      dragScale.value = interpolate(event.translationY, [0, 220], [1, 0.72], 'clamp');
-      dragRotate.value = interpolate(event.translationY, [0, 220], [0, 6], 'clamp');
-      lidOpen.value = interpolate(event.translationY, [70, 170], [0, 1], 'clamp');
+      dragY.value = Math.max(-24, event.translationY);
+      dragScale.value = interpolate(event.translationY, [-24, 260], [1.01, 0.74], 'clamp');
+      dragRotate.value = interpolate(event.translationY, [0, 240], [0, 6], 'clamp');
+      dragOpacity.value = interpolate(event.translationY, [180, 320], [1, 0.9], 'clamp');
+      lidOpen.value = interpolate(event.translationY, [60, 160], [0, 1], 'clamp');
     })
     .onEnd((event) => {
-      if (event.translationY > 110 || event.velocityY > 750) {
+      if (event.translationY > 100 || event.velocityY > 700) {
         runOnJS(dropIntoBox)();
         return;
       }
-      dragY.value = withSpring(0, { damping: 16, stiffness: 200 });
-      dragScale.value = withSpring(1, { damping: 16, stiffness: 200 });
-      dragRotate.value = withSpring(0, { damping: 16, stiffness: 200 });
+      dragY.value = withSpring(0, { damping: 17, stiffness: 210 });
+      dragScale.value = withSpring(1, { damping: 17, stiffness: 210 });
+      dragRotate.value = withSpring(0, { damping: 17, stiffness: 210 });
+      dragOpacity.value = withTiming(1, { duration: 140 });
       lidOpen.value = withTiming(0, { duration: 180 });
     });
 
   const cardDragStyle = useAnimatedStyle(() => ({
+    opacity: dragOpacity.value,
     transform: [
       { translateY: dragY.value },
       { scale: dragScale.value },
@@ -283,9 +319,9 @@ export default function CaptureScreen() {
 
   const lidStyle = useAnimatedStyle(() => ({
     transform: [
-      { perspective: 500 },
-      { translateY: lidOpen.value * -4 },
-      { rotateX: `${-100 * lidOpen.value}deg` },
+      { perspective: 900 },
+      { translateY: lidOpen.value * -7 },
+      { rotateX: `${-72 * lidOpen.value}deg` },
     ],
   }));
 
@@ -508,41 +544,35 @@ export default function CaptureScreen() {
             />
           </View>
 
-          <ScrollView
-            contentContainerStyle={styles.arrangeScroll}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
+          <View
+            onLayout={(event) => {
+              const { y, height: heightValue } = event.nativeEvent.layout;
+              stageLayout.current = { top: y, height: heightValue };
+              // Keyboard-driven height changes must not resize the card.
+              if (keyboardVisible) return;
+              setStageHeight((current) => (current === heightValue ? current : heightValue));
+            }}
+            style={[styles.cardStage, keyboardVisible && styles.cardStageTyping]}
           >
-            <Animated.View entering={FadeInDown.duration(360)}>
+            <Animated.View entering={FadeInDown.duration(340)}>
               <Text style={[styles.hint, { color: theme.colors.muted }]}>
-                {photo ? formatMediumDate(photo.dateCreated) : ''} · tap the photo to flip it
-              </Text>
-            </Animated.View>
-
-            <Animated.View entering={FadeInDown.duration(400).delay(40)} style={styles.titleWrap}>
-              <TextInput
-                maxLength={MAX_TITLE_LENGTH}
-                onChangeText={setTitle}
-                placeholder="Name this moment…"
-                placeholderTextColor={theme.colors.faint}
-                style={[
-                  styles.titleInput,
-                  { color: theme.colors.ink, borderColor: theme.colors.borderStrong },
-                ]}
-                value={title}
-              />
-              <Text style={[styles.titleCount, { color: theme.colors.faint }]}>
-                {title.length}/{MAX_TITLE_LENGTH}
+                {photo ? formatMediumDate(photo.dateCreated) : ''}
+                {cardFlipped ? ' · writing on the back' : ' · tap the card to flip it'}
               </Text>
             </Animated.View>
 
             {photo ? (
-              <Animated.View entering={FadeInDown.duration(440).delay(80)} style={styles.cardStage}>
+              <Animated.View
+                entering={FadeInDown.duration(420).delay(60)}
+                style={styles.cardHolder}
+              >
                 <GestureDetector gesture={dragGesture}>
                   <Animated.View style={cardDragStyle}>
                     <FlippablePolaroidCard
+                      autoFocusStory
                       developing={developing}
                       editable
+                      flipped={cardFlipped}
                       memory={{
                         id: 'draft',
                         imageUri: photo.uri,
@@ -559,15 +589,45 @@ export default function CaptureScreen() {
                         locationTouched.current = true;
                         setLocationPickerOpen(true);
                       }}
-                      onFlipChange={setCardFlipped}
+                      onFlipChange={(flipped) => {
+                        setCardFlipped(flipped);
+                        if (!flipped) Keyboard.dismiss();
+                      }}
                       width={cardWidth}
                     />
                   </Animated.View>
                 </GestureDetector>
               </Animated.View>
             ) : null}
+          </View>
 
-            <Animated.View entering={FadeInDown.duration(460).delay(120)} style={styles.controls}>
+          <Animated.View
+            entering={FadeInDown.duration(440).delay(110)}
+            style={[styles.composer, keyboardVisible && styles.composerHidden]}
+          >
+            <View style={styles.titleWrap}>
+              <TextInput
+                maxLength={MAX_TITLE_LENGTH}
+                onChangeText={setTitle}
+                placeholder="Name this moment…"
+                placeholderTextColor={theme.colors.faint}
+                style={[
+                  styles.titleInput,
+                  { color: theme.colors.ink, borderColor: theme.colors.borderStrong },
+                ]}
+                value={title}
+              />
+              <Text style={[styles.titleCount, { color: theme.colors.faint }]}>
+                {title.length}/{MAX_TITLE_LENGTH}
+              </Text>
+            </View>
+
+            <ScrollView
+              contentContainerStyle={styles.composerRow}
+              horizontal
+              keyboardShouldPersistTaps="handled"
+              showsHorizontalScrollIndicator={false}
+            >
               <PressableScale
                 accessibilityLabel="Change this memory's place"
                 haptic="tap"
@@ -585,7 +645,7 @@ export default function CaptureScreen() {
               >
                 <MapPin
                   color={location ? theme.colors.sage : theme.colors.muted}
-                  size={14}
+                  size={13}
                   strokeWidth={2.5}
                 />
                 <Text
@@ -595,60 +655,76 @@ export default function CaptureScreen() {
                     { color: location ? theme.colors.sage : theme.colors.muted },
                   ]}
                 >
-                  {location ? location.placeName : 'Add the place it happened'}
+                  {location ? location.placeName : 'Add a place'}
                 </Text>
-                <Text style={[styles.locationEdit, { color: theme.colors.faint }]}>edit</Text>
               </PressableScale>
 
-              <Text style={[styles.moodLabel, { color: theme.colors.muted }]}>how did it feel?</Text>
-              <View style={styles.moodRow}>
-                {MOODS.map((option) => {
-                  const active = mood === option.id;
-                  return (
-                    <PressableScale
-                      accessibilityLabel={`${option.label} mood`}
-                      haptic="selection"
-                      key={option.id}
-                      onPress={() => setMood(option.id)}
+              <View style={[styles.composerDivider, { backgroundColor: theme.colors.borderStrong }]} />
+
+              <Text style={[styles.moodLabel, { color: theme.colors.faint }]}>felt</Text>
+              {MOODS.map((option) => {
+                const active = mood === option.id;
+                return (
+                  <PressableScale
+                    accessibilityLabel={`${option.label} mood`}
+                    haptic="selection"
+                    key={option.id}
+                    onPress={() => setMood(option.id)}
+                    style={[
+                      styles.moodChip,
+                      {
+                        backgroundColor: active ? option.soft : theme.colors.surface,
+                        borderColor: active ? option.color : theme.colors.border,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.moodEmoji}>{option.emoji}</Text>
+                    <Text
                       style={[
-                        styles.moodChip,
-                        {
-                          backgroundColor: active ? option.soft : theme.colors.surface,
-                          borderColor: active ? option.color : theme.colors.border,
-                          transform: [{ scale: active ? 1.04 : 1 }],
-                        },
+                        styles.moodText,
+                        { color: active ? option.color : theme.colors.muted },
                       ]}
                     >
-                      <Text style={styles.moodEmoji}>{option.emoji}</Text>
-                      <Text
-                        style={[
-                          styles.moodText,
-                          { color: active ? option.color : theme.colors.muted },
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </PressableScale>
-                  );
-                })}
-              </View>
+                      {option.label}
+                    </Text>
+                  </PressableScale>
+                );
+              })}
+            </ScrollView>
 
-              <View style={styles.storyHintRow}>
-                <Text style={[styles.storyHint, { color: theme.colors.muted }]}>
-                  flipped to the back? write the story there.
-                </Text>
-                <Text style={[styles.storyCount, { color: theme.colors.faint }]}>
-                  {description.length}/{MAX_DESCRIPTION_LENGTH}
-                </Text>
-              </View>
-            </Animated.View>
-          </ScrollView>
+            <PressableScale
+              accessibilityLabel="Flip the card over and write the story"
+              disabled={cardFlipped}
+              haptic="tap"
+              onPress={() => setCardFlipped(true)}
+              scaleTo={0.98}
+              style={styles.storyHintRow}
+            >
+              <Text numberOfLines={1} style={[styles.storyHint, { color: theme.colors.muted }]}>
+                {cardFlipped
+                  ? 'tap “see photo” when the story is done'
+                  : 'tap the card to write the story on its back'}
+              </Text>
+              <Text style={[styles.storyCount, { color: theme.colors.faint }]}>
+                {description.length}/{MAX_DESCRIPTION_LENGTH}
+              </Text>
+            </PressableScale>
+          </Animated.View>
 
-          <View style={[styles.dropZone, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+          <View
+            onLayout={(event) => {
+              boxLayout.current.top = event.nativeEvent.layout.y;
+            }}
+            style={[
+              styles.dropZone,
+              { paddingBottom: Math.max(insets.bottom, 14) },
+              keyboardVisible && styles.dropZoneHidden,
+            ]}
+          >
             <View style={styles.dropHintWrap}>
               <ArrowDown color={theme.colors.faint} size={13} strokeWidth={2.4} />
               <Text style={[styles.dropHint, { color: theme.colors.muted }]}>
-                drag the photo down to tuck it in
+                {cardFlipped ? 'flip back, then drag it down' : 'drag the photo down to tuck it in'}
               </Text>
             </View>
 
@@ -906,12 +982,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginTop: -2,
   },
-  arrangeScroll: {
-    alignItems: 'center',
-    paddingBottom: 20,
-    paddingHorizontal: 18,
-    paddingTop: 10,
-  },
   hint: {
     fontFamily: fonts.sansSemiBold,
     fontSize: 9.5,
@@ -940,47 +1010,57 @@ const styles = StyleSheet.create({
   },
   cardStage: {
     alignItems: 'center',
-    marginTop: 2,
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    paddingTop: 4,
     zIndex: 4,
   },
-  controls: {
-    marginTop: 14,
-    width: '100%',
+  cardStageTyping: {
+    justifyContent: 'flex-start',
+  },
+  cardHolder: {
+    marginTop: 6,
+  },
+  composer: {
+    paddingHorizontal: 18,
+    paddingTop: 8,
+  },
+  composerHidden: {
+    display: 'none',
+  },
+  composerRow: {
+    alignItems: 'center',
+    gap: 6,
+    paddingRight: 4,
+    paddingVertical: 2,
+  },
+  composerDivider: {
+    height: 18,
+    marginHorizontal: 2,
+    opacity: 0.5,
+    width: 1,
   },
   locationPill: {
     alignItems: 'center',
-    alignSelf: 'center',
     borderRadius: 999,
     borderWidth: 1,
     flexDirection: 'row',
-    gap: 6,
-    maxWidth: '100%',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    gap: 5,
+    maxWidth: 190,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   locationText: {
     fontFamily: fonts.sansSemiBold,
-    fontSize: 11.5,
-    maxWidth: 210,
-  },
-  locationEdit: {
-    fontFamily: fonts.sansBold,
-    fontSize: 8,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontSize: 11,
+    maxWidth: 150,
   },
   moodLabel: {
-    fontFamily: fonts.handBold,
-    fontSize: 16,
-    marginBottom: 6,
-    marginTop: 14,
-    textAlign: 'center',
-  },
-  moodRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    justifyContent: 'center',
+    fontFamily: fonts.sansBold,
+    fontSize: 8,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
   },
   moodChip: {
     alignItems: 'center',
@@ -1017,6 +1097,9 @@ const styles = StyleSheet.create({
   dropZone: {
     alignItems: 'center',
     paddingTop: 4,
+  },
+  dropZoneHidden: {
+    display: 'none',
   },
   dropHintWrap: {
     alignItems: 'center',
@@ -1085,6 +1168,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dropLid: {
+    backfaceVisibility: 'hidden',
     borderBottomLeftRadius: 14,
     borderBottomRightRadius: 14,
     borderTopLeftRadius: 18,
@@ -1095,7 +1179,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'absolute',
     width: 202,
-    zIndex: 3,
+    zIndex: 2,
     ...shadows.soft,
   },
   dropLidGradient: {

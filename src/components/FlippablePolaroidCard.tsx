@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -38,6 +38,10 @@ interface FlippablePolaroidCardProps {
   onEditLocation?: () => void;
   onFlipChange?: (flipped: boolean) => void;
   onPressFront?: () => void;
+  /** Focus the story input automatically when the card flips to its back. */
+  autoFocusStory?: boolean;
+  /** Optional external flip state; when it changes the card turns to match. */
+  flipped?: boolean;
   rotation?: number;
   initialFlipped?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -56,6 +60,8 @@ export function FlippablePolaroidCard({
   onEditLocation,
   onFlipChange,
   onPressFront,
+  autoFocusStory = false,
+  flipped: flippedProp,
   rotation = 0,
   initialFlipped = false,
   style,
@@ -65,6 +71,13 @@ export function FlippablePolaroidCard({
   const [flipped, setFlipped] = useState(initialFlipped);
   const flip = useSharedValue(initialFlipped ? 1 : 0);
   const develop = useSharedValue(developing ? 0 : 1);
+  const storyInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+
+  // Let the parent request a flip (e.g. tapping the "write the story" hint).
+  useEffect(() => {
+    if (flippedProp === undefined) return;
+    setFlipped(flippedProp);
+  }, [flippedProp]);
 
   const scale = Math.max(0.65, width / 300);
   const padding = 11 * scale;
@@ -90,7 +103,7 @@ export function FlippablePolaroidCard({
 
   useEffect(() => {
     flip.value = withTiming(flipped ? 1 : 0, {
-      duration: 620,
+      duration: 540,
       easing: Easing.inOut(Easing.cubic),
     });
     onFlipChange?.(flipped);
@@ -98,10 +111,19 @@ export function FlippablePolaroidCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flipped, flip]);
 
+  // Writing is the whole point of flipping to the back during capture, so open
+  // the keyboard once the card has finished turning over.
+  useEffect(() => {
+    if (!autoFocusStory || !editable || !flipped) return;
+    const timer = setTimeout(() => storyInputRef.current?.focus(), 560);
+    return () => clearTimeout(timer);
+  }, [autoFocusStory, editable, flipped]);
+
   const flipStyle = useAnimatedStyle(() => ({
     transform: [
-      { perspective: 1000 },
+      { perspective: 1200 },
       { rotateY: `${interpolate(flip.value, [0, 1], [0, 180])}deg` },
+      { scale: interpolate(flip.value, [0, 0.5, 1], [1, 0.965, 1]) },
     ],
   }));
 
@@ -210,12 +232,6 @@ export function FlippablePolaroidCard({
 
             <View style={[styles.tape, { backgroundColor: theme.colors.roseSoft }]} />
 
-            <Pressable
-              accessibilityLabel="Flip this memory to read the story"
-              onPress={handleFrontPress}
-              style={StyleSheet.absoluteFill}
-            />
-
             {showFavorite ? (
               <Pressable
                 accessibilityLabel={
@@ -313,6 +329,13 @@ export function FlippablePolaroidCard({
               ) : null}
             </View>
           </View>
+
+          {/* Whole card is the flip target, so a stray tap anywhere on the paper works. */}
+          <Pressable
+            accessibilityLabel="Flip this memory to read the story"
+            onPress={handleFrontPress}
+            style={[StyleSheet.absoluteFill, styles.frontTapTarget]}
+          />
         </Animated.View>
 
         {/* BACK */}
@@ -408,13 +431,16 @@ export function FlippablePolaroidCard({
                 styles.storyScrollContent,
                 { paddingHorizontal: 20 * scale },
               ]}
+              keyboardDismissMode="interactive"
               keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
               showsVerticalScrollIndicator={false}
               style={styles.storyScroll}
             >
               <TextInput
                 maxLength={1500}
                 multiline
+                ref={storyInputRef}
                 onChangeText={onDescriptionChange}
                 placeholder="Write down everything you never want to forget… how the light looked, what it smelled like, how you felt."
                 placeholderTextColor={theme.colors.faint}
@@ -552,6 +578,9 @@ const styles = StyleSheet.create({
   },
   backCard: {
     overflow: 'hidden',
+  },
+  frontTapTarget: {
+    zIndex: 1,
   },
   photoFrame: {
     borderRadius: 2,

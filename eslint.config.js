@@ -15,4 +15,18 @@ module.exports = defineConfig([
       'react-hooks/set-state-in-effect': 'off',
     },
   },
+  {
+    // Plain Node scripts run by CI, not part of the React Native bundle.
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        console: 'readonly',
+        module: 'readonly',
+        process: 'readonly',
+        require: 'readonly',
+      },
+    },
+  },
 ]);

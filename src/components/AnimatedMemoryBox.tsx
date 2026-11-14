@@ -51,9 +51,10 @@ export function AnimatedMemoryBox({
 
   useEffect(() => {
     open.value = withSpring(lidOpen ? 1 : 0, {
-      damping: 13,
-      stiffness: 120,
-      mass: 0.9,
+      damping: 16,
+      stiffness: 145,
+      mass: 0.75,
+      overshootClamping: false,
     });
   }, [lidOpen, open]);
 
@@ -77,12 +78,20 @@ export function AnimatedMemoryBox({
   }));
 
   const lidStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(open.value, [0, 0.2, 1], [1, 1, 1]),
-    shadowOpacity: interpolate(open.value, [0, 1], [0.18, 0.05]),
+    opacity: interpolate(open.value, [0, 0.82, 1], [1, 1, 0.97]),
+    shadowOpacity: interpolate(open.value, [0, 1], [0.18, 0.04]),
     transform: [
       { perspective: 900 },
-      { translateY: open.value * -8 },
-      { rotateX: `${-105 * open.value}deg` },
+      { translateY: open.value * -12 },
+      { rotateX: `${-78 * open.value}deg` },
+    ],
+  }));
+
+  const stackStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(open.value, [0, 0.35, 1], [0.92, 1, 1]),
+    transform: [
+      { translateY: open.value * -12 },
+      { scale: 1 + open.value * 0.05 },
     ],
   }));
 
@@ -109,7 +118,7 @@ export function AnimatedMemoryBox({
             style={[styles.aura, { backgroundColor: theme.colors.roseSoft, opacity: 0.4 }]}
           />
 
-          <View style={styles.polaroidStack}>
+          <Animated.View style={[styles.polaroidStack, stackStyle]}>
             <View style={[styles.miniPolaroid, styles.miniOne, { backgroundColor: theme.colors.white }]}>
               <LinearGradient colors={theme.gradients.rose} style={styles.miniPhoto} />
             </View>
@@ -119,7 +128,7 @@ export function AnimatedMemoryBox({
             <View style={[styles.miniPolaroid, styles.miniThree, { backgroundColor: theme.colors.white }]}>
               <LinearGradient colors={theme.gradients.flame} style={styles.miniPhoto} />
             </View>
-          </View>
+          </Animated.View>
 
           <View
             style={[
@@ -331,6 +340,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 2,
     overflow: 'hidden',
+    backfaceVisibility: 'hidden',
     shadowOffset: { width: 0, height: 10 },
     shadowRadius: 18,
     elevation: 9,

@@ -85,7 +85,7 @@ export default function HomeScreen() {
     setTimeout(() => {
       setLidOpen(false);
       if (memory) openMemory(memory);
-    }, 520);
+    }, 720);
   }, [memories, openMemory]);
 
   useEffect(() => {
