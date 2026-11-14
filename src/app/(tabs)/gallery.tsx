@@ -60,14 +60,15 @@ export default function GalleryScreen() {
   const [mood, setMood] = useState<MoodTag | 'all'>('all');
   const [city, setCity] = useState<string | 'all'>('all');
   const [sort, setSort] = useState<MemorySort>('newest');
+  const [onlyLoved, setOnlyLoved] = useState(false);
   const [pileIndex, setPileIndex] = useState(0);
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
 
   const cities = useMemo(() => getDistinctCities(memories), [memories]);
   const filtered = useMemo(
-    () => filterMemories(memories, { query, mood, city, sort }),
-    [city, memories, mood, query, sort]
+    () => filterMemories(memories, { query, mood, city, sort, onlyLoved }),
+    [city, memories, mood, onlyLoved, query, sort]
   );
 
   // The search bar warms up under the finger instead of just changing colour.
@@ -197,6 +198,17 @@ export default function GalleryScreen() {
             />
           ))}
           {cities.length > 0 ? <View style={[styles.chipDivider, { backgroundColor: theme.colors.borderStrong }]} /> : null}
+          <Chip
+            color={theme.colors.rose}
+            icon={<Heart color={theme.colors.rose} size={11} strokeWidth={2.6} />}
+            label="Loved"
+            onPress={() => {
+              setOnlyLoved((current) => !current);
+              setPileIndex(0);
+            }}
+            selected={onlyLoved}
+            size="sm"
+          />
           {cities.map((option) => (
             <Chip
               key={option}
@@ -268,6 +280,7 @@ export default function GalleryScreen() {
             setQuery('');
             setMood('all');
             setCity('all');
+            setOnlyLoved(false);
             setPileIndex(0);
           }}
         />

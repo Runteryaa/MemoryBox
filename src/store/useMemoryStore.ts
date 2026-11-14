@@ -12,6 +12,7 @@ export interface MemoryFilters {
   mood: MoodTag | 'all';
   city: string | 'all';
   sort?: MemorySort;
+  onlyLoved?: boolean;
 }
 
 export type MemorySort = 'newest' | 'oldest' | 'loved' | 'title';
@@ -207,6 +208,7 @@ export const useMemoryStore = create<MemoryStore>()(
 export function filterMemories(memories: Memory[], filters: MemoryFilters): Memory[] {
   const query = filters.query.trim().toLowerCase();
   const matched = memories.filter((memory) => {
+    if (filters.onlyLoved && !memory.isFavorite) return false;
     if (filters.mood !== 'all' && memory.moodTag !== filters.mood) return false;
     if (filters.city !== 'all') {
       const locationText = `${memory.location?.city ?? ''} ${
