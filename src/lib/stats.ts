@@ -21,8 +21,15 @@ export function getStats(memories: Memory[], now = new Date()): MemoryStats {
   let memoriesThisMonth = 0;
 
   for (const memory of memories) {
-    if (memory.location?.placeName) {
-      places.add(memory.location.placeName.trim().toLowerCase());
+    // A city on its own still counts as a place worth remembering.
+    const place = memory.location?.placeName?.trim() || memory.location?.city?.trim();
+    if (place) {
+      places.add(place.toLowerCase());
+    } else if (memory.location?.latitude != null && memory.location?.longitude != null) {
+      // A pin without a name is still a distinct place on the map.
+      places.add(
+        `${memory.location.latitude.toFixed(3)},${memory.location.longitude.toFixed(3)}`
+      );
     }
     if (memory.location?.city) {
       cities.add(memory.location.city.trim().toLowerCase());
