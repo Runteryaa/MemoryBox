@@ -1,4 +1,12 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+} from 'react';
 import {
   Keyboard,
   ScrollView,
@@ -712,6 +720,7 @@ function GridView({
   // Only the first page of photos is mounted up front; the rest trickle in as
   // you scroll, so a big box stays smooth instead of decoding every image.
   const [visibleCount, setVisibleCount] = useState(GRID_PAGE_SIZE);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const shown = memories.slice(0, visibleCount);
   const hasMore = visibleCount < memories.length;
 
@@ -719,6 +728,8 @@ function GridView({
   // also rebuilds the array, and that must not send the grid back to page one.
   useEffect(() => {
     setVisibleCount(GRID_PAGE_SIZE);
+    // A narrower rummage must not leave you stranded at its old bottom edge.
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [resetKey]);
 
   return (
@@ -735,6 +746,7 @@ function GridView({
           setVisibleCount((current) => Math.min(current + GRID_PAGE_SIZE, memories.length));
         }
       }}
+      ref={scrollRef}
       scrollEventThrottle={160}
       showsVerticalScrollIndicator={false}
     >
