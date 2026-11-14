@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Linking,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -893,17 +892,19 @@ export default function CaptureScreen() {
               </Animated.View>
             </Animated.View>
 
-            <Pressable
+            <PressableScale
               accessibilityLabel="Tuck this memory in without dragging"
+              haptic="none"
               onPress={() => {
                 dropIntoBox();
               }}
+              scaleTo={0.94}
               style={styles.dropFallback}
             >
               <Text style={[styles.dropFallbackText, { color: theme.colors.rose }]}>
                 or tap here to tuck it in
               </Text>
-            </Pressable>
+            </PressableScale>
           </View>
 
           {saved ? (
