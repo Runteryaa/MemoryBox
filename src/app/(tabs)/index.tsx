@@ -109,6 +109,9 @@ export default function HomeScreen() {
           const now = Date.now();
           if (force > 2.1 && now - lastShake > 1500) {
             lastShake = now;
+            // Shaking while a memory is open would swap the page underneath the
+            // sheet, so the box only answers when it is the thing on screen.
+            if (inspectOpen) return;
             reminisce();
           }
         });
@@ -118,7 +121,7 @@ export default function HomeScreen() {
     return () => {
       if (subscription) subscription.remove();
     };
-  }, [reminisce]);
+  }, [inspectOpen, reminisce]);
 
   useEffect(() => {
     return () => {
