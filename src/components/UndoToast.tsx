@@ -5,6 +5,7 @@ import Animated, {
   FadeInDown,
   FadeOutDown,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -28,6 +29,7 @@ export function UndoToast() {
   const restoreTrash = useMemoryStore((state) => state.restoreTrash);
   const dismissTrash = useMemoryStore((state) => state.dismissTrash);
   const [visible, setVisible] = useState(false);
+  const reducedMotion = useReducedMotion();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // A thin line drains away, so the undo window is something you can see.
   const drain = useSharedValue(1);
@@ -45,7 +47,11 @@ export function UndoToast() {
       `${trash.shortTitle} was let go. Undo is available for a few seconds.`
     );
     drain.value = 1;
-    drain.value = withTiming(0, { duration: VISIBLE_MS, easing: Easing.linear });
+    // A bar sliding away is exactly the kind of movement some readers ask not
+    // to see, so they get a still line for the same window instead.
+    if (!reducedMotion) {
+      drain.value = withTiming(0, { duration: VISIBLE_MS, easing: Easing.linear });
+    }
     timer.current = setTimeout(() => {
       setVisible(false);
       dismissTrash();
