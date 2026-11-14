@@ -574,6 +574,11 @@ function PileView({
           <Text style={[styles.pileHintSub, { color: theme.colors.faint }]}>
             tap it to open the story
           </Text>
+          {memories.length > 1 ? (
+            <Text style={[styles.pileCounter, { color: theme.colors.faint }]}>
+              {(currentIndex % memories.length) + 1} of {memories.length}
+            </Text>
+          ) : null}
         </View>
         <PressableScale
           accessibilityLabel="Next memory"
@@ -1174,6 +1179,12 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+  pileCounter: {
+    fontFamily: fonts.sansBold,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    marginTop: 3,
   },
   gridContent: {
     paddingBottom: 110,
