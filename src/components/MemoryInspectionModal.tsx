@@ -77,26 +77,6 @@ export function MemoryInspectionModal({
 
   // Dragging the top bar pulls the whole sheet down; past a threshold it lets go.
   const pull = useSharedValue(0);
-  const dragGesture = Gesture.Pan()
-    .activeOffsetY([-10, 10])
-    .onUpdate((event) => {
-      pull.value = Math.max(0, event.translationY * 0.9);
-    })
-    .onEnd((event) => {
-      const flung = event.velocityY > 950;
-      const dragged = pull.value > 120;
-      if (flung || dragged) {
-        // Let the sheet finish travelling off-screen before it actually closes,
-        // otherwise it snaps back to centre for a frame on the way out.
-        pull.value = withTiming(height, { duration: 200, easing: Easing.in(Easing.quad) }, (finished) => {
-          if (!finished) return;
-          runOnJS(onClose)();
-          pull.value = 0;
-        });
-        return;
-      }
-      pull.value = withSpring(0, { damping: 16, stiffness: 210 });
-    });
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [
@@ -146,6 +126,35 @@ export function MemoryInspectionModal({
     setEditing(false);
   }, [description, memory, mood, title, updateMemory]);
 
+  const dismiss = useCallback(() => {
+    // Typing a story and flicking the sheet away should keep the words, not
+    // quietly throw them out with the sheet.
+    if (editing) saveEdits();
+    onClose();
+  }, [editing, onClose, saveEdits]);
+
+  // Dragging the top bar pulls the whole sheet down; past a threshold it lets go.
+  const dragGesture = Gesture.Pan()
+    .activeOffsetY([-10, 10])
+    .onUpdate((event) => {
+      pull.value = Math.max(0, event.translationY * 0.9);
+    })
+    .onEnd((event) => {
+      const flung = event.velocityY > 950;
+      const dragged = pull.value > 120;
+      if (flung || dragged) {
+        // Let the sheet finish travelling off-screen before it actually closes,
+        // otherwise it snaps back to centre for a frame on the way out.
+        pull.value = withTiming(height, { duration: 200, easing: Easing.in(Easing.quad) }, (finished) => {
+          if (!finished) return;
+          runOnJS(dismiss)();
+          pull.value = 0;
+        });
+        return;
+      }
+      pull.value = withSpring(0, { damping: 16, stiffness: 210 });
+    });
+
   const confirmDelete = useCallback(() => {
     if (!memory) return;
     Alert.alert(
@@ -171,7 +180,7 @@ export function MemoryInspectionModal({
       animationType="fade"
       onRequestClose={() => {
         if (editing) {
-          setEditing(false);
+          saveEdits();
         } else {
           onClose();
         }
