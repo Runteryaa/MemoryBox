@@ -184,10 +184,16 @@ export const useMemoryStore = create<MemoryStore>()(
 
       deleteMemory: async (id) => {
         const memory = get().memories.find((item) => item.id === id);
+        const previous = get().trash;
         set((state) => ({
           memories: state.memories.filter((item) => item.id !== id),
           trash: memory ?? null,
         }));
+        // Only one memory can sit in the undo window, so a second delete has to
+        // release the first one's photo right away instead of orphaning it.
+        if (previous && previous.id !== memory?.id) {
+          void deleteMemoryImage(previous.imageUri);
+        }
         // The photo stays on disk until the undo window closes, so a mis-tap is recoverable.
         if (memory) {
           setTimeout(() => {
