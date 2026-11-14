@@ -5,9 +5,11 @@ import { Tabs } from 'expo-router';
 import { Flame, Home, LibraryBig } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import Animated, {
-  FadeIn,
+  Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withSequence,
   withSpring,
   withTiming,
@@ -124,9 +126,25 @@ function TabIcon({
   const theme = useTheme();
   const scale = useSharedValue(focused ? 1.06 : 1);
   const lift = useSharedValue(0);
+  const glow = useSharedValue(focused ? 1 : 0);
+  const breathe = useSharedValue(0);
+
+  useEffect(() => {
+    if (focused) {
+      breathe.value = withRepeat(
+        withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
+        -1,
+        true
+      );
+    } else {
+      cancelAnimation(breathe);
+      breathe.value = withTiming(0, { duration: 200 });
+    }
+  }, [breathe, focused]);
 
   useEffect(() => {
     scale.value = withSpring(focused ? 1.07 : 1, { damping: 14, stiffness: 220 });
+    glow.value = withTiming(focused ? 1 : 0, { duration: focused ? 220 : 160 });
     // A tiny hop when the tab becomes active, like a stamp pressing down.
     lift.value = focused
       ? withSequence(
@@ -135,20 +153,23 @@ function TabIcon({
           withSpring(0, { damping: 12, stiffness: 200 })
         )
       : withSpring(0, { damping: 14, stiffness: 220 });
-  }, [focused, lift, scale]);
+  }, [focused, glow, lift, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: lift.value }, { scale: scale.value }],
   }));
 
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glow.value * (0.72 + breathe.value * 0.28),
+    transform: [{ scale: 0.9 + glow.value * 0.1 + breathe.value * 0.06 }],
+  }));
+
   return (
     <Animated.View style={[styles.iconWrap, animatedStyle]}>
-      {focused ? (
-        <Animated.View
-          entering={FadeIn.duration(160)}
-          style={[StyleSheet.absoluteFill, styles.iconGlow, { backgroundColor: theme.colors.roseSoft }]}
-        />
-      ) : null}
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.iconGlow, { backgroundColor: theme.colors.roseSoft }, glowStyle]}
+      />
       <Icon color={color} size={21} strokeWidth={focused ? 2.5 : 2} />
     </Animated.View>
   );
