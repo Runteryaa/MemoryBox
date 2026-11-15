@@ -33,9 +33,8 @@ export function getStats(memories: Memory[], now = new Date()): MemoryStats {
         `${memory.location.latitude.toFixed(3)},${memory.location.longitude.toFixed(3)}`
       );
     }
-    if (memory.location?.city) {
-      cities.add(memory.location.city.trim().toLowerCase());
-    }
+    const city = getMemoryCity(memory);
+    if (city) cities.add(city.toLowerCase());
     moods.add(memory.moodTag);
     if (memory.isFavorite) favorites += 1;
     if (toDateKey(new Date(memory.dateCreated)).startsWith(monthKey)) {
