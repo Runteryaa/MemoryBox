@@ -274,6 +274,7 @@ export function LocationStampPicker({
                 <Text style={[styles.title, { color: theme.colors.ink }]}>Where was this?</Text>
               </View>
               <PressableScale
+                accessibilityHint="Leaves the place as it was"
                 accessibilityLabel="Close location picker"
                 haptic="none"
                 hitSlop={5}
@@ -324,6 +325,7 @@ export function LocationStampPicker({
               </Animated.View>
 
               <PressableScale
+                accessibilityHint="Fills the postmark from where you are now"
                 accessibilityLabel="Detect my current location"
                 disabled={detecting}
                 haptic="soft"
