@@ -305,7 +305,8 @@ export default function StreakScreen() {
                 </Text>
                 {!atCurrentMonth ? (
                   <PressableScale
-                    accessibilityLabel="Jump back to this month"
+                    accessibilityHint="Jumps back to this month"
+                    accessibilityLabel="Today"
                     haptic="tap"
                     hitSlop={8}
                     onPress={() => {
