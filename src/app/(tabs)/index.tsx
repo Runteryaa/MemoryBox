@@ -224,7 +224,13 @@ export default function HomeScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(500).delay(190)} style={styles.counterBlock}>
-          <View style={styles.counterRow}>
+          <View
+            accessibilityLabel={`${memories.length} ${
+              memories.length === 1 ? 'keepsake' : 'keepsakes'
+            } tucked away`}
+            accessible
+            style={styles.counterRow}
+          >
             <CountUp style={[styles.counter, { color: theme.colors.ink }]} value={memories.length} />
             <View style={styles.counterCopy}>
               <Text style={[styles.counterLabel, { color: theme.colors.inkSoft }]}>
