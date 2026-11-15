@@ -358,92 +358,92 @@ export default function StreakScreen() {
                   key={`month-${monthKey}`}
                   style={styles.calendarBody}
                 >
-              <View style={[styles.dayLabels, { gap: 4 }]}>
-                {DAY_LABELS.map((label, index) => (
-                  <View key={`${label}-${index}`} style={{ width: cellSize }}>
-                    <Text style={[styles.dayLabel, { color: theme.colors.faint }]}>{label}</Text>
+                  <View style={[styles.dayLabels, { gap: 4 }]}>
+                    {DAY_LABELS.map((label, index) => (
+                      <View key={`${label}-${index}`} style={{ width: cellSize }}>
+                        <Text style={[styles.dayLabel, { color: theme.colors.faint }]}>{label}</Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
 
-              <View style={[styles.calendarGrid, { gap: 4 }]}>
-                {cells.map((date, index) => {
-                  if (!date) {
-                    return <View key={`blank-${index}`} style={{ height: cellSize, width: cellSize }} />;
-                  }
-                  const key = toDateKey(date);
-                  const isToday = key === todayKey;
-                  const isLogged = logged.has(key);
-                  const dayMemories = byDate.get(key);
-                  const first = dayMemories?.[0] ?? null;
-                  const future = date.getTime() > new Date().setHours(23, 59, 59, 999);
-                  return (
-                    <PressableScale
-                      accessibilityHint={first ? 'Opens the memory kept that day' : undefined}
-                      accessibilityLabel={`${formatSpokenDate(date)}${
-                        (dayMemories?.length ?? 0) > 1 ? `, ${dayMemories?.length} memories` : ''
-                      }${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
-                      disabled={!first}
-                      haptic="none"
-                      key={key}
-                      onPress={() => openFirstOfDay(key)}
-                      scaleTo={0.9}
-                      style={[
-                        styles.dayCell,
-                        {
-                          width: cellSize,
-                          height: cellSize,
-                          backgroundColor: isToday
-                            ? theme.colors.roseSoft
-                            : isLogged
-                              ? theme.colors.amberSoft
-                              : theme.colors.surfaceRaised,
-                          borderColor: isToday
-                            ? theme.colors.rose
-                            : isLogged
-                              ? theme.colors.amber
-                              : theme.colors.border,
-                          opacity: future ? 0.4 : 1,
-                        },
-                      ]}
-                    >
-                      {first && !lostPhotos.has(first.imageUri) ? (
-                        <>
-                          <Image
-                            cachePolicy="memory-disk"
-                            contentFit="cover"
-                            onError={() => markPhotoLost(first.imageUri)}
-                            source={{ uri: first.imageUri }}
-                            style={StyleSheet.absoluteFill}
-                            transition={160}
-                          />
-                          <View style={styles.dayShade} />
-                          <Text style={[styles.dayNumberOnPhoto, { color: '#FFFFFF' }]}>{date.getDate()}</Text>
-                        </>
-                      ) : (
-                        <Text
+                  <View style={[styles.calendarGrid, { gap: 4 }]}>
+                    {cells.map((date, index) => {
+                      if (!date) {
+                        return <View key={`blank-${index}`} style={{ height: cellSize, width: cellSize }} />;
+                      }
+                      const key = toDateKey(date);
+                      const isToday = key === todayKey;
+                      const isLogged = logged.has(key);
+                      const dayMemories = byDate.get(key);
+                      const first = dayMemories?.[0] ?? null;
+                      const future = date.getTime() > new Date().setHours(23, 59, 59, 999);
+                      return (
+                        <PressableScale
+                          accessibilityHint={first ? 'Opens the memory kept that day' : undefined}
+                          accessibilityLabel={`${formatSpokenDate(date)}${
+                            (dayMemories?.length ?? 0) > 1 ? `, ${dayMemories?.length} memories` : ''
+                          }${isLogged ? ', memory kept' : ''}${isToday ? ', today' : ''}`}
+                          disabled={!first}
+                          haptic="none"
+                          key={key}
+                          onPress={() => openFirstOfDay(key)}
+                          scaleTo={0.9}
                           style={[
-                            styles.dayNumber,
+                            styles.dayCell,
                             {
-                              color: isToday ? theme.colors.rose : theme.colors.muted,
-                              fontFamily: isToday ? fonts.sansBold : fonts.sansSemiBold,
+                              width: cellSize,
+                              height: cellSize,
+                              backgroundColor: isToday
+                                ? theme.colors.roseSoft
+                                : isLogged
+                                  ? theme.colors.amberSoft
+                                  : theme.colors.surfaceRaised,
+                              borderColor: isToday
+                                ? theme.colors.rose
+                                : isLogged
+                                  ? theme.colors.amber
+                                  : theme.colors.border,
+                              opacity: future ? 0.4 : 1,
                             },
                           ]}
                         >
-                          {date.getDate()}
-                        </Text>
-                      )}
-                      {isLogged ? <View style={[styles.dayDot, { backgroundColor: theme.colors.amber }]} /> : null}
-                      {(dayMemories?.length ?? 0) > 1 ? (
-                        <View style={[styles.dayCount, { backgroundColor: theme.colors.rose }]}>
-                          <Text style={styles.dayCountText}>{dayMemories?.length}</Text>
-                        </View>
-                      ) : null}
-                      {isToday ? <TodayRing color={theme.colors.rose} size={cellSize} /> : null}
-                    </PressableScale>
-                  );
-                })}
-              </View>
+                          {first && !lostPhotos.has(first.imageUri) ? (
+                            <>
+                              <Image
+                                cachePolicy="memory-disk"
+                                contentFit="cover"
+                                onError={() => markPhotoLost(first.imageUri)}
+                                source={{ uri: first.imageUri }}
+                                style={StyleSheet.absoluteFill}
+                                transition={160}
+                              />
+                              <View style={styles.dayShade} />
+                              <Text style={[styles.dayNumberOnPhoto, { color: '#FFFFFF' }]}>{date.getDate()}</Text>
+                            </>
+                          ) : (
+                            <Text
+                              style={[
+                                styles.dayNumber,
+                                {
+                                  color: isToday ? theme.colors.rose : theme.colors.muted,
+                                  fontFamily: isToday ? fonts.sansBold : fonts.sansSemiBold,
+                                },
+                              ]}
+                            >
+                              {date.getDate()}
+                            </Text>
+                          )}
+                          {isLogged ? <View style={[styles.dayDot, { backgroundColor: theme.colors.amber }]} /> : null}
+                          {(dayMemories?.length ?? 0) > 1 ? (
+                            <View style={[styles.dayCount, { backgroundColor: theme.colors.rose }]}>
+                              <Text style={styles.dayCountText}>{dayMemories?.length}</Text>
+                            </View>
+                          ) : null}
+                          {isToday ? <TodayRing color={theme.colors.rose} size={cellSize} /> : null}
+                        </PressableScale>
+                      );
+                    })}
+                  </View>
                 </Animated.View>
               </Animated.View>
             </GestureDetector>
