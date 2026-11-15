@@ -151,27 +151,6 @@ export default function CaptureScreen() {
   // the ceiling it has to respect and shrinks its photo frame to fit.
   const cardMaxHeight = !keyboardVisible && stageHeight > 0 ? stageHeight - 58 : undefined;
 
-  // Abandoned drafts should not leave orphaned photos in the document folder,
-  // and no stray timer should fire into a screen that has already left.
-  useEffect(
-    () => () => {
-      timersRef.current.forEach((timer) => clearTimeout(timer));
-      timersRef.current = [];
-      // A card that was already falling into the box keeps its promise, even
-      // if the screen is torn down before the landing animation finishes.
-      const pending = pendingSaveRef.current;
-      if (pending) {
-        addMemory(pending);
-        pendingSaveRef.current = null;
-        return;
-      }
-      if (savedRef.current) return;
-      const draft = draftUriRef.current;
-      if (draft) void deleteMemoryImage(draft);
-    },
-    [addMemory]
-  );
-
   const autoDetect = useCallback(() => {
     if (locationTouched.current) return;
     void detectCurrentPlace()
@@ -307,6 +286,31 @@ export default function CaptureScreen() {
     [description, location, mood, title]
   );
 
+  // Whichever finishes first — the landing timer or the screen unmounting —
+  // puts the keepsake in. Clearing the ref first makes that safe to call twice.
+  const commitSave = useCallback(() => {
+    const pending = pendingSaveRef.current;
+    if (!pending) return;
+    pendingSaveRef.current = null;
+    addMemory(pending);
+  }, [addMemory]);
+
+  // Abandoned drafts should not leave orphaned photos in the document folder,
+  // and no stray timer should fire into a screen that has already left.
+  useEffect(
+    () => () => {
+      timersRef.current.forEach((timer) => clearTimeout(timer));
+      timersRef.current = [];
+      // A card that was already falling into the box keeps its promise, even
+      // if the screen is torn down before the landing animation finishes.
+      commitSave();
+      if (savedRef.current) return;
+      const draft = draftUriRef.current;
+      if (draft) void deleteMemoryImage(draft);
+    },
+    [commitSave]
+  );
+
   const finishCapture = useCallback(() => {
     if (savedRef.current || !photo) return;
     savedRef.current = true;
@@ -314,7 +318,7 @@ export default function CaptureScreen() {
     setBurstKey((key) => key + 1);
     haptics.success();
 
-    const input = buildSaveInput(photo);
+    pendingSaveRef.current = buildSaveInput(photo);
 
     timersRef.current.push(
       setTimeout(() => {
@@ -325,11 +329,10 @@ export default function CaptureScreen() {
         }
         // The memory must land before this screen tears down; a deferred timer
         // would be cancelled by the unmount cleanup and silently lose it.
-        addMemory(input);
-        pendingSaveRef.current = null;
+        commitSave();
       }, 260)
     );
-  }, [addMemory, buildSaveInput, photo]);
+  }, [buildSaveInput, commitSave, photo]);
 
   const dropIntoBox = useCallback(() => {
     if (savedRef.current || droppingRef.current || !photo) return;
