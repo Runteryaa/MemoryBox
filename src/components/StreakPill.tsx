@@ -112,7 +112,13 @@ export function StreakPill({
   return (
     <PressableScale
       accessibilityHint="Opens your streak calendar"
-      accessibilityLabel={`${currentStreak} day streak. ${subtitle}`}
+      accessibilityLabel={`${
+        currentStreak === 0
+          ? 'No streak yet'
+          : currentStreak === 1
+            ? 'One day streak'
+            : `${currentStreak} day streak`
+      }. ${subtitle}`}
       haptic="soft"
       onPress={onPress}
       style={[

@@ -772,7 +772,20 @@ export default function CaptureScreen() {
                 ]}
                 value={title}
               />
-              <Text style={[styles.titleCount, { color: theme.colors.faint }]}>
+              {/* The count only appears once there is something to count; it
+                  keeps its space either way so the card never shifts. */}
+              <Text
+                style={[
+                  styles.titleCount,
+                  {
+                    color:
+                      title.length >= MAX_TITLE_LENGTH - 8
+                        ? theme.colors.amber
+                        : theme.colors.faint,
+                    opacity: title.length > 0 ? 1 : 0,
+                  },
+                ]}
+              >
                 {title.length}/{MAX_TITLE_LENGTH}
               </Text>
             </View>
