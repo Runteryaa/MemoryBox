@@ -99,11 +99,16 @@ export default function HomeScreen() {
     setBurstKey((key) => key + 1);
     setLidOpen(true);
     if (lidTimer.current) clearTimeout(lidTimer.current);
-    lidTimer.current = setTimeout(() => {
-      setLidOpen(false);
-      if (memory) openMemory(memory);
-    }, 720);
-  }, [inspectOpen, memories, openMemory]);
+    // Holding the lid open is pure theatre; with motion reduced there is
+    // nothing to watch, so the memory opens straight away.
+    lidTimer.current = setTimeout(
+      () => {
+        setLidOpen(false);
+        if (memory) openMemory(memory);
+      },
+      reducedMotion ? 160 : 720
+    );
+  }, [inspectOpen, memories, openMemory, reducedMotion]);
 
   // The sensor callback outlives any single render, so it always calls the
   // freshest version of the rummage action.
@@ -208,7 +213,10 @@ export default function HomeScreen() {
               setBurstKey((key) => key + 1);
               haptics.paperRustle();
               if (lidTimer.current) clearTimeout(lidTimer.current);
-              lidTimer.current = setTimeout(() => setLidOpen(false), 700);
+              lidTimer.current = setTimeout(
+                () => setLidOpen(false),
+                reducedMotion ? 160 : 700
+              );
             }}
             shakeKey={shakeKey}
             width={boxWidth}
