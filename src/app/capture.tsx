@@ -840,7 +840,10 @@ export default function CaptureScreen() {
               showsHorizontalScrollIndicator={false}
             >
               <PressableScale
-                accessibilityLabel="Change this memory's place"
+                accessibilityHint="Opens the postmark sheet"
+                accessibilityLabel={
+                  location ? "Change this memory's place" : 'Add a place to this memory'
+                }
                 haptic="tap"
                 onPress={() => {
                   locationTouched.current = true;
