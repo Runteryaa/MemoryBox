@@ -96,8 +96,8 @@ export function UndoToast() {
           <Text style={[styles.hint, { color: theme.colors.faint }]}>letting go in a moment</Text>
         </View>
         <PressableScale
-          accessibilityHint="Restores this memory to your box"
-          accessibilityLabel="Put the memory back"
+          accessibilityHint="Puts this memory back in your box"
+          accessibilityLabel="Undo"
           haptic="success"
           onPress={() => {
             if (timer.current) clearTimeout(timer.current);

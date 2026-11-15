@@ -1051,7 +1051,8 @@ function EmptyState({
         </PressableScale>
       ) : onReset ? (
         <PressableScale
-          accessibilityLabel="Clear filters and searches"
+          accessibilityHint="Removes the search, mood and city filters"
+          accessibilityLabel="Clear the rummage"
           haptic="tap"
           onPress={onReset}
           style={[
