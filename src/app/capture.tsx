@@ -64,7 +64,7 @@ import {
 } from '@/services/locationService';
 import { useMemoryStore } from '@/store/useMemoryStore';
 import { contrastInk, fonts, radii, shadows, useTheme } from '@/theme';
-import type { MemoryLocation, MoodTag } from '@/types';
+import type { MemoryLocation, MoodTag, NewMemoryInput } from '@/types';
 
 type Step = 'camera' | 'arrange';
 
@@ -105,6 +105,10 @@ export default function CaptureScreen() {
 
   const locationTouched = useRef(false);
   const savedRef = useRef(false);
+  // A drop is a one-way trip: once the card is on its way, nothing may cancel it.
+  const droppingRef = useRef(false);
+  // Built the moment a drop starts, so an unmount mid-flight can still keep it.
+  const pendingSaveRef = useRef<NewMemoryInput | null>(null);
   const draftUriRef = useRef<string | null>(null);
   const stageLayout = useRef({ top: 0, height: 0 });
   const boxLayout = useRef({ top: 0 });
@@ -153,11 +157,19 @@ export default function CaptureScreen() {
     () => () => {
       timersRef.current.forEach((timer) => clearTimeout(timer));
       timersRef.current = [];
+      // A card that was already falling into the box keeps its promise, even
+      // if the screen is torn down before the landing animation finishes.
+      const pending = pendingSaveRef.current;
+      if (pending) {
+        addMemory(pending);
+        pendingSaveRef.current = null;
+        return;
+      }
       if (savedRef.current) return;
       const draft = draftUriRef.current;
       if (draft) void deleteMemoryImage(draft);
     },
-    []
+    [addMemory]
   );
 
   const autoDetect = useCallback(() => {
@@ -197,6 +209,8 @@ export default function CaptureScreen() {
       setCardFlipped(false);
       locationTouched.current = false;
       savedRef.current = false;
+      droppingRef.current = false;
+      pendingSaveRef.current = null;
       setSaved(false);
       setStep('arrange');
       setDeveloping(fromCamera);
@@ -279,6 +293,20 @@ export default function CaptureScreen() {
     }
   }, [adoptPhoto, busy]);
 
+  const buildSaveInput = useCallback(
+    (source: CapturedPhoto): NewMemoryInput => ({
+      imageUri: source.uri,
+      shortTitle: title.trim() || 'A little moment',
+      description: description.trim().slice(0, MAX_DESCRIPTION_LENGTH),
+      location,
+      dateCreated: source.dateCreated,
+      moodTag: mood,
+      imageWidth: source.width ?? null,
+      imageHeight: source.height ?? null,
+    }),
+    [description, location, mood, title]
+  );
+
   const finishCapture = useCallback(() => {
     if (savedRef.current || !photo) return;
     savedRef.current = true;
@@ -286,16 +314,7 @@ export default function CaptureScreen() {
     setBurstKey((key) => key + 1);
     haptics.success();
 
-    const input = {
-      imageUri: photo.uri,
-      shortTitle: title.trim() || 'A little moment',
-      description: description.trim().slice(0, MAX_DESCRIPTION_LENGTH),
-      location,
-      dateCreated: photo.dateCreated,
-      moodTag: mood,
-      imageWidth: photo.width ?? null,
-      imageHeight: photo.height ?? null,
-    };
+    const input = buildSaveInput(photo);
 
     timersRef.current.push(
       setTimeout(() => {
@@ -307,12 +326,16 @@ export default function CaptureScreen() {
         // The memory must land before this screen tears down; a deferred timer
         // would be cancelled by the unmount cleanup and silently lose it.
         addMemory(input);
+        pendingSaveRef.current = null;
       }, 260)
     );
-  }, [addMemory, description, location, mood, photo, title]);
+  }, [addMemory, buildSaveInput, photo]);
 
   const dropIntoBox = useCallback(() => {
-    if (savedRef.current) return;
+    if (savedRef.current || droppingRef.current || !photo) return;
+    droppingRef.current = true;
+    // Hold the keepsake ready now, so leaving mid-drop cannot lose it.
+    pendingSaveRef.current = buildSaveInput(photo);
     const cardCenter = stageLayout.current.top + stageLayout.current.height / 2;
     const boxCenter = boxLayout.current.top + 54;
     const distance = Math.max(200, boxCenter - cardCenter);
@@ -351,7 +374,18 @@ export default function CaptureScreen() {
         }
       }, reducedMotion ? 140 : 320)
     );
-  }, [boxBounce, dragOpacity, dragRotate, dragScale, dragY, finishCapture, lidOpen, reducedMotion]);
+  }, [
+    boxBounce,
+    buildSaveInput,
+    dragOpacity,
+    dragRotate,
+    dragScale,
+    dragY,
+    finishCapture,
+    lidOpen,
+    photo,
+    reducedMotion,
+  ]);
 
   const dragGesture = Gesture.Pan()
     .enabled(!cardFlipped && !saved)
@@ -451,6 +485,8 @@ export default function CaptureScreen() {
   };
 
   const resetToCamera = () => {
+    // Retaking mid-drop would cancel the save and strand the photo on disk.
+    if (savedRef.current || droppingRef.current) return;
     setCameraError(null);
     discardDraft();
     if (photo) {
