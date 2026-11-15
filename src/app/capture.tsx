@@ -702,6 +702,7 @@ export default function CaptureScreen() {
 
           <View style={[styles.arrangeHeader, { paddingTop: insets.top + 6 }]}>
             <IconButton
+              accessibilityHint="Goes back to the camera so you can shoot again"
               accessibilityLabel="Retake the photo"
               backgroundColor={theme.colors.surface}
               borderColor={theme.colors.border}
@@ -717,6 +718,7 @@ export default function CaptureScreen() {
               </Text>
             </View>
             <IconButton
+              accessibilityHint="Saves this photo and its story to your box"
               accessibilityLabel="Tuck this memory into the box"
               backgroundColor={theme.colors.rose}
               borderColor={theme.colors.roseDeep}
