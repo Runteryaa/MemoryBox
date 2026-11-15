@@ -858,7 +858,18 @@ export default function CaptureScreen() {
                   ? 'tap “see photo” when the story is done'
                   : 'tap the card to write the story on its back'}
               </Text>
-              <Text style={[styles.storyCount, { color: theme.colors.faint }]}>
+              <Text
+                style={[
+                  styles.storyCount,
+                  {
+                    color:
+                      description.length >= MAX_DESCRIPTION_LENGTH - 40
+                        ? theme.colors.amber
+                        : theme.colors.faint,
+                    opacity: description.length > 0 ? 1 : 0,
+                  },
+                ]}
+              >
                 {description.length}/{MAX_DESCRIPTION_LENGTH}
               </Text>
             </PressableScale>

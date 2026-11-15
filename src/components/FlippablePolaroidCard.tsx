@@ -23,7 +23,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { MOOD_MAP } from '@/constants';
+import { MAX_DESCRIPTION_LENGTH, MOOD_MAP } from '@/constants';
 import { formatCoordinates, formatLongDate, formatMediumDate, formatTime } from '@/lib/date';
 import { haptics } from '@/lib/haptics';
 import { cachedImageRatio, rememberImageRatio } from '@/lib/imageRatio';
@@ -566,7 +566,7 @@ export function FlippablePolaroidCard({
               <TextInput
                 accessibilityLabel="The story on the back of this memory"
                 maxFontSizeMultiplier={1.25}
-                maxLength={1500}
+                maxLength={MAX_DESCRIPTION_LENGTH}
                 multiline
                 ref={storyInputRef}
                 onChangeText={onDescriptionChange}
@@ -585,8 +585,21 @@ export function FlippablePolaroidCard({
                 textAlignVertical="top"
                 value={description}
               />
-              <Text style={[styles.charCount, { color: theme.colors.faint }]}>
-                {(description ?? '').length} / 1500
+              {/* Like the composer, the count only shows once there are words
+                  to count, and warms as the space runs low. */}
+              <Text
+                style={[
+                  styles.charCount,
+                  {
+                    color:
+                      (description ?? '').length >= MAX_DESCRIPTION_LENGTH - 40
+                        ? theme.colors.amber
+                        : theme.colors.faint,
+                    opacity: (description ?? '').length > 0 ? 1 : 0,
+                  },
+                ]}
+              >
+                {(description ?? '').length} / {MAX_DESCRIPTION_LENGTH}
               </Text>
             </ScrollView>
           ) : (
