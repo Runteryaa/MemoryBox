@@ -204,7 +204,16 @@ export default function StreakScreen() {
             Your Streak
           </Text>
         </View>
-        <View style={[styles.longestPill, { backgroundColor: theme.colors.amberSoft, borderColor: theme.colors.amber }]}>
+        <View
+          accessibilityLabel={`Longest streak, ${streak.longestStreak} ${
+            streak.longestStreak === 1 ? 'day' : 'days'
+          }`}
+          accessible
+          style={[
+            styles.longestPill,
+            { backgroundColor: theme.colors.amberSoft, borderColor: theme.colors.amber },
+          ]}
+        >
           <Sparkles color={theme.colors.amber} size={12} strokeWidth={2.4} />
           <Text style={[styles.longestText, { color: theme.colors.inkSoft }]}>
             best {streak.longestStreak}
@@ -246,11 +255,27 @@ export default function StreakScreen() {
             <Text style={[styles.heroHeadline, { color: theme.colors.inkSoft }]}>{headline}</Text>
 
             <View style={styles.heroMeta}>
-              <View style={[styles.heroChip, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+              <View
+                accessibilityLabel={`Days remembered, ${streak.loggedDates.length}`}
+                accessible
+                style={[
+                  styles.heroChip,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                ]}
+              >
                 <Text style={[styles.heroChipLabel, { color: theme.colors.muted }]}>days remembered</Text>
                 <CountUp style={[styles.heroChipValue, { color: theme.colors.rose }]} value={streak.loggedDates.length} />
               </View>
-              <View style={[styles.heroChip, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+              <View
+                accessibilityLabel={`Longest run, ${streak.longestStreak} ${
+                  streak.longestStreak === 1 ? 'day' : 'days'
+                }`}
+                accessible
+                style={[
+                  styles.heroChip,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                ]}
+              >
                 <Text style={[styles.heroChipLabel, { color: theme.colors.muted }]}>longest run</Text>
                 <CountUp style={[styles.heroChipValue, { color: theme.colors.sage }]} value={streak.longestStreak} />
               </View>
