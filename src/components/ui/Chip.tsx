@@ -3,9 +3,11 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Check } from 'lucide-react-native';
 import Animated, {
+  FadeIn,
   ZoomIn,
   interpolateColor,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -33,14 +35,20 @@ export function Chip({
   size = 'md',
 }: ChipProps) {
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const accent = selectedColor ?? color ?? theme.colors.rose;
   const selectedInk = contrastInk(accent);
 
   // Chips glide between their resting and selected colours rather than snapping.
   const progress = useSharedValue(selected ? 1 : 0);
   useEffect(() => {
-    progress.value = withTiming(selected ? 1 : 0, { duration: 190 });
-  }, [progress, selected]);
+    // For a reader who asked for less motion, the chip simply is its colour.
+    progress.value = reducedMotion
+      ? selected
+        ? 1
+        : 0
+      : withTiming(selected ? 1 : 0, { duration: 190 });
+  }, [progress, reducedMotion, selected]);
 
   const surfaceStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
@@ -82,7 +90,13 @@ export function Chip({
           {label}
         </Animated.Text>
         {selected && onPress ? (
-          <Animated.View entering={ZoomIn.springify().damping(12).stiffness(220)}>
+          <Animated.View
+            entering={
+              reducedMotion
+                ? FadeIn.duration(140)
+                : ZoomIn.springify().damping(12).stiffness(220)
+            }
+          >
             <Check color={selectedInk} size={13} strokeWidth={3} />
           </Animated.View>
         ) : null}
