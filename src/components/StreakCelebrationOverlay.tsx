@@ -95,6 +95,7 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
         />
 
         <Animated.View
+          accessibilityViewIsModal
           entering={ZoomIn.springify().damping(14).stiffness(160)}
           style={[
             styles.card,
@@ -149,7 +150,7 @@ export function StreakCelebrationOverlay({ streak, onClose }: StreakCelebrationO
 
           <Animated.View entering={FadeInDown.delay(360)} style={styles.footer}>
             <PressableScale
-              accessibilityLabel="Keep going"
+              accessibilityLabel="Tuck it in"
               haptic="none"
               onPress={() => {
                 haptics.tap();
