@@ -153,28 +153,34 @@ export default function GalleryScreen() {
             Gallery
           </Text>
         </View>
-        <View
-          style={[
-            styles.modeToggle,
-            { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border },
-          ]}
-        >
-          <ModeButton
-            active={mode === 'pile'}
-            icon={Layers}
-            label="Pile"
-            onPress={() => setMode('pile')}
-          />
-          <ModeButton
-            active={mode === 'grid'}
-            icon={Grid2x2}
-            label="Grid"
-            onPress={() => setMode('grid')}
-          />
-        </View>
+        {memories.length > 0 ? (
+          <View
+            style={[
+              styles.modeToggle,
+              { backgroundColor: theme.colors.surfaceRaised, borderColor: theme.colors.border },
+            ]}
+          >
+            <ModeButton
+              active={mode === 'pile'}
+              icon={Layers}
+              label="Pile"
+              onPress={() => setMode('pile')}
+            />
+            <ModeButton
+              active={mode === 'grid'}
+              icon={Grid2x2}
+              label="Grid"
+              onPress={() => setMode('grid')}
+            />
+          </View>
+        ) : null}
       </View>
 
-      <Animated.View style={[styles.searchBar, { backgroundColor: theme.colors.surface }, searchBarStyle]}>
+      {/* An empty box has nothing to search or sift, so the first screen stays
+          quiet and points at the one thing worth doing: capture a memory. */}
+      {memories.length > 0 ? (
+        <>
+          <Animated.View style={[styles.searchBar, { backgroundColor: theme.colors.surface }, searchBarStyle]}>
         <Animated.View
           pointerEvents="none"
           style={[styles.searchGlow, { backgroundColor: theme.colors.roseSoft }, searchGlowStyle]}
@@ -291,6 +297,8 @@ export default function GalleryScreen() {
           </Text>
         ) : null}
       </View>
+        </>
+      ) : null}
 
       {filtered.length > 1 ? (
         <View style={styles.sortRow}>
