@@ -145,13 +145,17 @@ export function FlippablePolaroidCard({
     }
     develop.value = 0;
     const timer = setTimeout(() => {
-      develop.value = withTiming(1, {
-        duration: 1500,
-        easing: Easing.out(Easing.cubic),
-      });
+      // A photo slowly coming up through the paper is pure theatre; with motion
+      // reduced it simply arrives already developed.
+      develop.value = reducedMotion
+        ? 1
+        : withTiming(1, {
+            duration: 1500,
+            easing: Easing.out(Easing.cubic),
+          });
     }, 180);
     return () => clearTimeout(timer);
-  }, [develop, developing, memory.id]);
+  }, [develop, developing, memory.id, reducedMotion]);
 
   useEffect(() => {
     // Turning a card through the air is a big, sweeping motion. A reader who
