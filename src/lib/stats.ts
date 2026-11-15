@@ -53,15 +53,20 @@ export function getStats(memories: Memory[], now = new Date()): MemoryStats {
   };
 }
 
+export function getMemoryCity(memory: Memory): string | null {
+  const raw = memory.location?.city ?? memory.location?.placeName?.split(',')[0];
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  // A failed lookup leaves a placeholder, not a city worth filtering by.
+  if (!trimmed || trimmed === FALLBACK_PLACE_NAME) return null;
+  return trimmed;
+}
+
 export function getDistinctCities(memories: Memory[]): string[] {
   const cities = new Set<string>();
   for (const memory of memories) {
-    const city = memory.location?.city ?? memory.location?.placeName?.split(',')[0];
-    if (!city) continue;
-    const trimmed = city.trim();
-    // A failed lookup leaves a placeholder, not a city worth filtering by.
-    if (!trimmed || trimmed === FALLBACK_PLACE_NAME) continue;
-    cities.add(trimmed);
+    const city = getMemoryCity(memory);
+    if (city) cities.add(city);
   }
   return [...cities].sort((a, b) => a.localeCompare(b));
 }

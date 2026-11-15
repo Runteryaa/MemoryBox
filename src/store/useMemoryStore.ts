@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { MOOD_MAP } from '@/constants';
+import { MAX_DESCRIPTION_LENGTH, MAX_TITLE_LENGTH, MOOD_MAP } from '@/constants';
 import { diffCalendarDays, toDateKey } from '@/lib/date';
 import { createId, randomRotation } from '@/lib/random';
+import { getMemoryCity } from '@/lib/stats';
 import { deleteMemoryImage } from '@/services/fileStorage';
 import { createPersistStorage } from '@/store/storage';
 import type { Memory, MemoryLocation, MoodTag, NewMemoryInput, StreakState } from '@/types';
@@ -160,11 +161,11 @@ export const useMemoryStore = create<MemoryStore>()(
                   ...patch,
                   shortTitle:
                     patch.shortTitle !== undefined
-                      ? patch.shortTitle.trim().slice(0, 60)
+                      ? patch.shortTitle.trim().slice(0, MAX_TITLE_LENGTH)
                       : memory.shortTitle,
                   description:
                     patch.description !== undefined
-                      ? patch.description.trim().slice(0, 1500)
+                      ? patch.description.trim().slice(0, MAX_DESCRIPTION_LENGTH)
                       : memory.description,
                 }
               : memory
@@ -268,10 +269,10 @@ export function filterMemories(memories: Memory[], filters: MemoryFilters): Memo
     if (filters.onlyLoved && !memory.isFavorite) return false;
     if (filters.mood !== 'all' && memory.moodTag !== filters.mood) return false;
     if (filters.city !== 'all') {
-      const locationText = `${memory.location?.city ?? ''} ${
-        memory.location?.placeName ?? ''
-      }`.toLowerCase();
-      if (!locationText.includes(filters.city.toLowerCase())) return false;
+      // Match the same city the filter chip was built from, so one city never
+      // quietly pulls in another whose name merely contains it.
+      const memoryCity = getMemoryCity(memory);
+      if (!memoryCity || memoryCity.toLowerCase() !== filters.city.toLowerCase()) return false;
     }
     if (tokens.length === 0) return true;
     const mood = MOOD_MAP[memory.moodTag];
