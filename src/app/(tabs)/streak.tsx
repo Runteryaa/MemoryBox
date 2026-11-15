@@ -287,6 +287,7 @@ export default function StreakScreen() {
               </View>
               <View style={styles.calendarNav}>
                 <PressableScale
+                  accessibilityHint="Shows the month before"
                   accessibilityLabel="Previous month"
                   haptic="none"
                   onPress={() => {
@@ -297,6 +298,7 @@ export default function StreakScreen() {
                   <ChevronLeft color={theme.colors.inkSoft} size={15} strokeWidth={2.5} />
                 </PressableScale>
                 <PressableScale
+                  accessibilityHint="Shows the month after"
                   accessibilityLabel="Next month"
                   disabled={atCurrentMonth}
                   haptic="none"
@@ -308,7 +310,6 @@ export default function StreakScreen() {
                     {
                       backgroundColor: theme.colors.surfaceRaised,
                       borderColor: theme.colors.border,
-                      opacity: atCurrentMonth ? 0.4 : 1,
                     },
                   ]}
                 >
