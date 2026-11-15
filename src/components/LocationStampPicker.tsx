@@ -357,7 +357,12 @@ export function LocationStampPicker({
               </PressableScale>
 
               {error ? (
-                <Text style={[styles.error, { color: theme.colors.danger }]}>{error}</Text>
+                <Text
+                  accessibilityLiveRegion="assertive"
+                  style={[styles.error, { color: theme.colors.danger }]}
+                >
+                  {error}
+                </Text>
               ) : null}
 
               <View style={styles.fields}>
