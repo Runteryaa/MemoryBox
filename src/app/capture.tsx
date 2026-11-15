@@ -519,6 +519,7 @@ export default function CaptureScreen() {
             />
             <View style={styles.cameraTopRight}>
               <IconButton
+                accessibilityHint="Cycles between off, on and auto"
                 accessibilityLabel={`Flash is ${flash}`}
                 backgroundColor="rgba(28,25,23,0.55)"
                 borderColor="rgba(255,255,255,0.16)"
@@ -529,6 +530,7 @@ export default function CaptureScreen() {
                 }}
               />
               <IconButton
+                accessibilityHint="Turns the camera around"
                 accessibilityLabel="Switch camera"
                 backgroundColor="rgba(28,25,23,0.55)"
                 borderColor="rgba(255,255,255,0.16)"

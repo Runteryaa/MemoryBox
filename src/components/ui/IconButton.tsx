@@ -14,6 +14,8 @@ interface IconButtonProps {
   borderColor?: string;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel: string;
+  /** Tells a screen reader what pressing will do, when the label alone is thin. */
+  accessibilityHint?: string;
   disabled?: boolean;
   haptic?: 'tap' | 'soft' | 'medium' | 'heavy' | 'selection' | 'none';
   /** Lets a toggle icon announce whether it is on. */
@@ -30,6 +32,7 @@ export function IconButton({
   borderColor,
   style,
   accessibilityLabel,
+  accessibilityHint,
   disabled,
   haptic = 'tap',
   selected,
@@ -37,6 +40,7 @@ export function IconButton({
   const theme = useTheme();
   return (
     <PressableScale
+      accessibilityHint={accessibilityHint}
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       haptic={haptic}
