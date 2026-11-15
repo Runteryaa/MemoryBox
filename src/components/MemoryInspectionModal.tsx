@@ -310,7 +310,9 @@ export function MemoryInspectionModal({
                 ]}
               >
                 <Text style={[styles.editLabel, { color: theme.colors.muted }]}>
-                  Front caption · {title.length}/{MAX_TITLE_LENGTH}
+                  {title.length > 0
+                    ? `Front caption · ${title.length}/${MAX_TITLE_LENGTH}`
+                    : 'Front caption'}
                 </Text>
                 <TextInput
                   accessibilityLabel="Rename this memory"
