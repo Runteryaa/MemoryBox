@@ -75,6 +75,10 @@ export default function StreakScreen() {
     () => getMilestoneProgress(memories, streak.longestStreak),
     [memories, streak.longestStreak]
   );
+  const stampedCount = useMemo(
+    () => Object.values(milestones).filter(Boolean).length,
+    [milestones]
+  );
 
   const flamePulse = useSharedValue(1);
   const flameFlicker = useSharedValue(0);
@@ -469,7 +473,9 @@ export default function StreakScreen() {
             >
               Milestone stamps
             </Text>
-            <Text style={[styles.sectionHint, { color: theme.colors.muted }]}>tap a stamp to peek</Text>
+            <Text style={[styles.sectionHint, { color: theme.colors.muted }]}>
+              {stampedCount} of {MILESTONE_DEFINITIONS.length} stamped · tap to peek
+            </Text>
           </View>
 
           <View style={styles.milestoneGrid}>
