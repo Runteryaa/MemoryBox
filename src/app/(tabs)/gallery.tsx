@@ -162,12 +162,14 @@ export default function GalleryScreen() {
           >
             <ModeButton
               active={mode === 'pile'}
+              hint="Shows your memories one card at a time"
               icon={Layers}
               label="Pile"
               onPress={() => setMode('pile')}
             />
             <ModeButton
               active={mode === 'grid'}
+              hint="Shows every keepsake as a small photo"
               icon={Grid2x2}
               label="Grid"
               onPress={() => setMode('grid')}
@@ -397,11 +399,14 @@ function ModeButton({
   active,
   icon: Icon,
   label,
+  hint,
   onPress,
 }: {
   active: boolean;
   icon: typeof Layers;
   label: string;
+  /** Says what choosing this view will show, which the label alone cannot. */
+  hint: string;
   onPress: () => void;
 }) {
   const theme = useTheme();
@@ -444,6 +449,7 @@ function ModeButton({
 
   return (
     <PressableScale
+      accessibilityHint={hint}
       accessibilityLabel={`${label} view`}
       haptic="selection"
       hitSlop={5}
