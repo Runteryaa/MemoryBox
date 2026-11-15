@@ -449,7 +449,7 @@ export default function StreakScreen() {
             </GestureDetector>
 
             <Text style={[styles.calendarFoot, { color: theme.colors.muted }]}>
-              little thumbnails mark the days you remembered
+              swipe sideways to look back · thumbnails mark the days you remembered
             </Text>
           </View>
         </Animated.View>
@@ -463,7 +463,12 @@ export default function StreakScreen() {
 
         <Animated.View entering={FadeInDown.duration(540).delay(210)}>
           <View style={styles.milestoneHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.ink }]}>Milestone stamps</Text>
+            <Text
+              accessibilityRole="header"
+              style={[styles.sectionTitle, { color: theme.colors.ink }]}
+            >
+              Milestone stamps
+            </Text>
             <Text style={[styles.sectionHint, { color: theme.colors.muted }]}>tap a stamp to peek</Text>
           </View>
 
