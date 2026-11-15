@@ -180,123 +180,139 @@ export default function GalleryScreen() {
           quiet and points at the one thing worth doing: capture a memory. */}
       {memories.length > 0 ? (
         <>
-          <Animated.View style={[styles.searchBar, { backgroundColor: theme.colors.surface }, searchBarStyle]}>
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.searchGlow, { backgroundColor: theme.colors.roseSoft }, searchGlowStyle]}
-        />
-        <Search
-          color={searchFocused ? theme.colors.rose : theme.colors.faint}
-          size={17}
-          strokeWidth={2.3}
-        />
-        <TextInput
-          accessibilityHint="Finds memories by title, story, place, mood or date"
-          accessibilityLabel="Search your memories"
-          autoCorrect={false}
-          maxFontSizeMultiplier={1.2}
-          onBlur={() => setSearchFocused(false)}
-          onChangeText={(text) => {
-            setQuery(text);
-            setPileIndex(0);
-          }}
-          onFocus={() => setSearchFocused(true)}
-          onSubmitEditing={() => Keyboard.dismiss()}
-          placeholder="Search titles, stories, places, dates…"
-          placeholderTextColor={theme.colors.faint}
-          returnKeyType="search"
-          selectionColor={theme.colors.rose}
-          style={[styles.searchInput, { color: theme.colors.ink }]}
-          value={query}
-        />
-        {query.length > 0 ? (
-          <PressableScale
-            accessibilityLabel="Clear search"
-            haptic="none"
-            hitSlop={11}
-            onPress={() => {
-              setQuery('');
-              setPileIndex(0);
-            }}
-            style={[styles.clearButton, { backgroundColor: theme.colors.surfaceRaised }]}
+          <Animated.View
+            style={[
+              styles.searchBar,
+              { backgroundColor: theme.colors.surface },
+              searchBarStyle,
+            ]}
           >
-            <X color={theme.colors.muted} size={13} strokeWidth={2.6} />
-          </PressableScale>
-        ) : null}
-      </Animated.View>
-
-      <View>
-        <ScrollView
-          contentContainerStyle={styles.filterContent}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
-          <Chip
-            label="All moods"
-            onPress={() => {
-              setMood('all');
-              setPileIndex(0);
-            }}
-            selected={mood === 'all'}
-            size="sm"
-          />
-          {MOODS.map((option) => (
-            <Chip
-              key={option.id}
-              color={option.color}
-              icon={<Text style={styles.chipEmoji}>{option.emoji}</Text>}
-              label={option.label}
-              onPress={() => {
-                setMood(option.id);
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.searchGlow,
+                { backgroundColor: theme.colors.roseSoft },
+                searchGlowStyle,
+              ]}
+            />
+            <Search
+              color={searchFocused ? theme.colors.rose : theme.colors.faint}
+              size={17}
+              strokeWidth={2.3}
+            />
+            <TextInput
+              accessibilityHint="Finds memories by title, story, place, mood or date"
+              accessibilityLabel="Search your memories"
+              autoCorrect={false}
+              maxFontSizeMultiplier={1.2}
+              onBlur={() => setSearchFocused(false)}
+              onChangeText={(text) => {
+                setQuery(text);
                 setPileIndex(0);
               }}
-              selected={mood === option.id}
-              size="sm"
+              onFocus={() => setSearchFocused(true)}
+              onSubmitEditing={() => Keyboard.dismiss()}
+              placeholder="Search titles, stories, places, dates…"
+              placeholderTextColor={theme.colors.faint}
+              returnKeyType="search"
+              selectionColor={theme.colors.rose}
+              style={[styles.searchInput, { color: theme.colors.ink }]}
+              value={query}
             />
-          ))}
-          {cities.length > 0 ? <View style={[styles.chipDivider, { backgroundColor: theme.colors.borderStrong }]} /> : null}
-          <Chip
-            color={theme.colors.rose}
-            icon={<Heart color={theme.colors.rose} size={11} strokeWidth={2.6} />}
-            label="Loved"
-            onPress={() => {
-              setOnlyLoved((current) => !current);
-              setPileIndex(0);
-            }}
-            selected={onlyLoved}
-            size="sm"
-          />
-          {cities.map((option) => (
-            <Chip
-              key={option}
-              color={theme.colors.sage}
-              icon={<Text style={styles.chipEmoji}>📍</Text>}
-              label={option}
-              onPress={() => {
-                setCity(city === option ? 'all' : option);
-                setPileIndex(0);
-              }}
-              selected={city === option}
-              size="sm"
-            />
-          ))}
-        </ScrollView>
-      </View>
+            {query.length > 0 ? (
+              <PressableScale
+                accessibilityLabel="Clear search"
+                haptic="none"
+                hitSlop={11}
+                onPress={() => {
+                  setQuery('');
+                  setPileIndex(0);
+                }}
+                style={[styles.clearButton, { backgroundColor: theme.colors.surfaceRaised }]}
+              >
+                <X color={theme.colors.muted} size={13} strokeWidth={2.6} />
+              </PressableScale>
+            ) : null}
+          </Animated.View>
 
-      <View style={styles.resultRow}>
-        <Text
-          accessibilityLiveRegion="polite"
-          style={[styles.resultText, { color: theme.colors.muted }]}
-        >
-          {filtered.length} {filtered.length === 1 ? 'memory' : 'memories'}
-          {mood !== 'all' || city !== 'all' || onlyLoved || query.trim() ? ' found' : ' in your box'}
-        </Text>
-        {filtered.length > 0 && mode === 'pile' ? (
-          <Text style={[styles.pileCount, { color: theme.colors.faint }]}>
-            {(pileIndex % filtered.length) + 1} / {filtered.length}
-          </Text>
-        ) : null}
-      </View>
+          <View>
+            <ScrollView
+              contentContainerStyle={styles.filterContent}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              <Chip
+                label="All moods"
+                onPress={() => {
+                  setMood('all');
+                  setPileIndex(0);
+                }}
+                selected={mood === 'all'}
+                size="sm"
+              />
+              {MOODS.map((option) => (
+                <Chip
+                  key={option.id}
+                  color={option.color}
+                  icon={<Text style={styles.chipEmoji}>{option.emoji}</Text>}
+                  label={option.label}
+                  onPress={() => {
+                    setMood(option.id);
+                    setPileIndex(0);
+                  }}
+                  selected={mood === option.id}
+                  size="sm"
+                />
+              ))}
+              {cities.length > 0 ? (
+                <View
+                  style={[styles.chipDivider, { backgroundColor: theme.colors.borderStrong }]}
+                />
+              ) : null}
+              <Chip
+                color={theme.colors.rose}
+                icon={<Heart color={theme.colors.rose} size={11} strokeWidth={2.6} />}
+                label="Loved"
+                onPress={() => {
+                  setOnlyLoved((current) => !current);
+                  setPileIndex(0);
+                }}
+                selected={onlyLoved}
+                size="sm"
+              />
+              {cities.map((option) => (
+                <Chip
+                  key={option}
+                  color={theme.colors.sage}
+                  icon={<Text style={styles.chipEmoji}>📍</Text>}
+                  label={option}
+                  onPress={() => {
+                    setCity(city === option ? 'all' : option);
+                    setPileIndex(0);
+                  }}
+                  selected={city === option}
+                  size="sm"
+                />
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.resultRow}>
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.resultText, { color: theme.colors.muted }]}
+            >
+              {filtered.length} {filtered.length === 1 ? 'memory' : 'memories'}
+              {mood !== 'all' || city !== 'all' || onlyLoved || query.trim()
+                ? ' found'
+                : ' in your box'}
+            </Text>
+            {filtered.length > 0 && mode === 'pile' ? (
+              <Text style={[styles.pileCount, { color: theme.colors.faint }]}>
+                {(pileIndex % filtered.length) + 1} / {filtered.length}
+              </Text>
+            ) : null}
+          </View>
         </>
       ) : null}
 
