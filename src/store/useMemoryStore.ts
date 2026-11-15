@@ -104,8 +104,8 @@ export const useMemoryStore = create<MemoryStore>()(
         const memory: Memory = {
           id: input.id ?? createId(),
           imageUri: input.imageUri,
-          shortTitle: input.shortTitle.trim().slice(0, 60) || 'A little moment',
-          description: input.description.trim().slice(0, 1500),
+          shortTitle: input.shortTitle.trim().slice(0, MAX_TITLE_LENGTH) || 'A little moment',
+          description: input.description.trim().slice(0, MAX_DESCRIPTION_LENGTH),
           location: input.location,
           dateCreated: input.dateCreated ?? new Date().toISOString(),
           moodTag: input.moodTag,
