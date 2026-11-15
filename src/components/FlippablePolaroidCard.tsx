@@ -636,7 +636,7 @@ export function FlippablePolaroidCard({
           <View style={[styles.backFooter, { paddingHorizontal: 18 * scale, paddingBottom: 12 * scale }]}>
             {memory.location ? (
               <Pressable
-                accessibilityLabel="Edit this memory's location"
+                accessibilityLabel={`${placeLabel || 'a place worth keeping'} — edit this memory's location`}
                 disabled={!onEditLocation}
                 onPress={() => {
                   haptics.tap();
@@ -679,7 +679,8 @@ export function FlippablePolaroidCard({
             )}
 
             <Pressable
-              accessibilityLabel="Flip back to the photo"
+              accessibilityLabel="See photo"
+              accessibilityHint="Turns the card back to the front"
               onPress={() => {
                 haptics.paperRustle();
                 setFlipped(false);
