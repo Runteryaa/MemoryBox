@@ -206,6 +206,7 @@ export function MemoryInspectionModal({
               </View>
               <View style={styles.topActions}>
                 <IconButton
+                  accessibilityHint="Saves any changes and puts the memory away"
                   accessibilityLabel="Close memory"
                   backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
                   borderColor="transparent"
@@ -230,6 +231,11 @@ export function MemoryInspectionModal({
                     />
                   </Animated.View>
                   <IconButton
+                    accessibilityHint={
+                      editing
+                        ? 'Keeps your changes to the caption, story and mood'
+                        : 'Lets you change the caption, story or mood'
+                    }
                     accessibilityLabel={editing ? 'Save changes' : 'Edit this memory'}
                     backgroundColor={
                       editing
@@ -250,6 +256,7 @@ export function MemoryInspectionModal({
                     }}
                   />
                   <IconButton
+                    accessibilityHint="Asks before letting this memory go"
                     accessibilityLabel="Delete this memory"
                     backgroundColor={theme.isDark ? 'rgba(28,25,23,0.65)' : 'rgba(255,255,255,0.16)'}
                     borderColor="transparent"
