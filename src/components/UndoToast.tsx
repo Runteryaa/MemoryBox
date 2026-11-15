@@ -93,9 +93,10 @@ export function UndoToast() {
           <Text numberOfLines={1} style={[styles.title, { color: theme.colors.background }]}>
             {trash.shortTitle}
           </Text>
-          <Text style={[styles.hint, { color: theme.colors.faint }]}>let go of this memory</Text>
+          <Text style={[styles.hint, { color: theme.colors.faint }]}>letting go in a moment</Text>
         </View>
         <PressableScale
+          accessibilityHint="Restores this memory to your box"
           accessibilityLabel="Put the memory back"
           haptic="success"
           onPress={() => {
