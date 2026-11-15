@@ -158,7 +158,11 @@ export default function StreakScreen() {
       if (shouldShift) {
         runOnJS(shiftMonth)(event.translationX > 0 ? -1 : 1);
       }
-      swipeX.value = withSpring(0, { damping: 18, stiffness: 220 });
+      // The card should not spring back across the screen for a reader who
+      // asked for less motion — it simply returns to rest.
+      swipeX.value = reducedMotion
+        ? withTiming(0, { duration: 120 })
+        : withSpring(0, { damping: 18, stiffness: 220 });
     });
 
   const monthSwipeStyle = useAnimatedStyle(() => ({
@@ -321,7 +325,11 @@ export default function StreakScreen() {
             <GestureDetector gesture={monthSwipe}>
               <Animated.View style={monthSwipeStyle}>
                 <Animated.View
-                  entering={(monthDir > 0 ? FadeInRight : FadeInLeft).duration(260)}
+                  entering={
+                    reducedMotion
+                      ? FadeIn.duration(160)
+                      : (monthDir > 0 ? FadeInRight : FadeInLeft).duration(260)
+                  }
                   key={`month-${monthKey}`}
                   style={styles.calendarBody}
                 >
