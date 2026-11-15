@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Canvas, Circle, Group, Path, RoundedRect, useClock } from '@shopify/react-native-skia';
-import {
+import Animated, {
+  useAnimatedStyle,
   useDerivedValue,
   useReducedMotion,
   useSharedValue,
+  withSequence,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
@@ -85,6 +87,9 @@ export function SparkleBurst({ burstKey, color, particleCount = 26 }: SparkleBur
   const reducedMotion = useReducedMotion();
   const [size, setSize] = useState({ width: 0, height: 0 });
   const progress = useSharedValue(0);
+  // The warm glow under the sparks is a breath, not a lamp: it fades away with
+  // the burst instead of staying lit behind the box forever.
+  const glowOpacity = useSharedValue(0);
 
   const particles = useMemo<ParticleConfig[]>(
     () =>
@@ -103,8 +108,23 @@ export function SparkleBurst({ burstKey, color, particleCount = 26 }: SparkleBur
   useEffect(() => {
     if (burstKey <= 0) return;
     progress.value = 0;
+    if (reducedMotion) {
+      // A single still breath of light, then nothing left glowing.
+      progress.value = 1;
+      glowOpacity.value = 1;
+      const timer = setTimeout(() => {
+        glowOpacity.value = 0;
+      }, 650);
+      return () => clearTimeout(timer);
+    }
+    glowOpacity.value = withSequence(
+      withTiming(1, { duration: 120 }),
+      withTiming(0, { duration: 950 })
+    );
     progress.value = withTiming(1, { duration: 1250 });
-  }, [burstKey, progress]);
+  }, [burstKey, glowOpacity, progress, reducedMotion]);
+
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glowOpacity.value }));
 
   if (burstKey <= 0) return null;
 
@@ -133,13 +153,14 @@ export function SparkleBurst({ burstKey, color, particleCount = 26 }: SparkleBur
         </Canvas>
       ) : null}
       {/* With motion reduced, the burst becomes a single warm breath of light. */}
-      <View
+      <Animated.View
         pointerEvents="none"
         style={[
           styles.glow,
           {
             backgroundColor: theme.isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.18)',
           },
+          glowStyle,
         ]}
       />
     </View>
